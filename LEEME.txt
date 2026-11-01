@@ -1,0 +1,8 @@
+MI DESPENSA - INSTALAR EN ANDROID
+
+1. Publica TODOS los archivos de esta carpeta en un alojamiento HTTPS (por ejemplo GitHub Pages o Netlify Drop). No basta con abrir index.html desde Descargas.
+2. Abre la dirección HTTPS de la app en Chrome de Android.
+3. Menú ⋮ > Instalar aplicación o Añadir a pantalla de inicio.
+4. Abre Mi Despensa desde su icono. Tras la primera visita, funciona sin conexión.
+
+IMPORTANTE: Los datos se guardan localmente en ese navegador/dispositivo. Si ya usabas la versión HTML local, sus datos no se transfieren automáticamente. Usa la exportación/importación de la app para moverlos. No borres los datos del navegador sin tener copia.
