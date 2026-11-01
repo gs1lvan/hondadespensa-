@@ -1,5 +1,5 @@
 // Mi Despensa: prioriza siempre la version publicada cuando hay conexion.
-const CACHE = 'mi-despensa-pwa-v6';
+const CACHE = 'mi-despensa-pwa-v7';
 const ASSETS = ['./index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
