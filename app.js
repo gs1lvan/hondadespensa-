@@ -1,0 +1,337 @@
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// Conexión pública de la aplicación existente: la seguridad depende de RLS en Supabase.
+const SUPABASE_URL = 'https://yqumpnoxmzkmnxnjrkjl.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_WcQCzIlbBTktSMzva2qsQw_VnwYD4Aq';
+const LOCAL_KEY = 'despensa_segunda_vivienda_v1';
+const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const $ = id => document.getElementById(id);
+
+// Se conserva el listado de respaldo original, usado ÚNICAMENTE en la importación
+// inicial de una despensa vacía (nunca para reemplazar datos existentes de Supabase).
+const initial = {
+ '🥛 Leche, desayunos y bebidas':['Leche UHT semidesnatada','Leche en polvo','Leche condensada','Bebidas vegetales UHT','Café soluble','Café molido al vacío','Infusiones','Cacao soluble','Chocolate negro','Cereales de desayuno','Galletas','Mermelada','Miel'],
+ '🫒 Aceites y vinagres':['Aceite de oliva virgen extra','Aceite de girasol','Aceite de sésamo','Vinagre de vino','Vinagre balsámico'],
+ '🍅 Salsas y aderezos':['Ketchup','Mostaza','Salsa de soja','Salsa barbacoa','Salsa Worcestershire (Perrins)','Tabasco','Salsa picante','Salsa teriyaki','Salsa agridulce','Mayonesa industrial','Tomate frito','Tomate triturado','Tomate concentrado','Salsa de tomate para pasta'],
+ '🌿 Especias y condimentos':['Sal','Pimienta negra','Pimienta blanca','Pimentón dulce','Pimentón picante','Comino','Curry','Cúrcuma','Orégano','Tomillo','Romero','Albahaca seca','Perejil seco','Laurel','Ajo en polvo','Cebolla en polvo','Canela','Nuez moscada','Jengibre en polvo','Azafrán','Hierbas provenzales','Caldo concentrado en pastillas'],
+ '🍚 Arroz, pasta y cereales':['Arroz blanco','Arroz basmati','Pasta seca','Fideos','Cuscús','Puré de patatas en copos','Fideos instantáneos'],
+ '🫘 Legumbres y proteínas vegetales':['Garbanzos secos','Lentejas secas','Alubias secas','Soja seca','Soja texturizada','Garbanzos cocidos en conserva','Lentejas cocidas en conserva','Alubias cocidas en conserva','Guisantes en conserva'],
+ '🐟 Pescados y mariscos en conserva':['Atún en aceite','Sardinas en aceite','Caballa en conserva','Melva en conserva','Mejillones en escabeche','Berberechos al natural','Almejas en conserva','Anchoas en aceite','Calamares en conserva','Pulpo en conserva'],
+ '🥩 Carnes y platos preparados':['Paté en lata esterilizado','Albóndigas en lata','Fabada en conserva','Cocido madrileño en conserva','Callos en conserva','Lentejas preparadas','Garbanzos con espinacas','Sopas en lata','Cremas de verduras en brick','Caldos en brick'],
+ '🥕 Verduras y encurtidos':['Maíz dulce en conserva','Guisantes en conserva','Judías verdes en conserva','Zanahorias en conserva','Espárragos en conserva','Pimientos asados en conserva','Champiñones en conserva','Alcachofas en conserva','Aceitunas','Pepinillos en vinagre','Cebollitas en vinagre','Remolacha en conserva','Tomates secos envasados','Verduras deshidratadas'],
+ '🥜 Frutos secos y aperitivos':['Almendras','Nueces','Avellanas','Cacahuetes tostados','Pistachos','Anacardos','Semillas de calabaza','Semillas de girasol','Semillas de chía','Semillas de sésamo','Crema de cacahuete','Barritas proteicas','Patatas fritas de bolsa','Maíz para palomitas','Fruta deshidratada'],
+ '🍞 Harinas y repostería':['Harina de trigo blanca','Harina de maíz','Pan rallado','Azúcar blanco','Azúcar moreno','Levadura química','Levadura seca de panadería','Bicarbonato','Gelatina en polvo','Cacao puro en polvo','Coco rallado','Esencia de vainilla','Sirope de chocolate'],
+ '🧃 Bebidas y suplementos':['Agua mineral','Refrescos en lata','Bebidas isotónicas']
+};
+
+const esCompare = (a,b) => String(a).localeCompare(String(b),'es',{sensitivity:'base',numeric:true});
+const folded = s => String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const bareCategory = s => String(s).replace(/^[^\p{L}\p{N}]+/u,'').trim();
+// Icono específico en el extremo izquierdo; nunca se añade un icono genérico extra.
+const categoryEmojis = [
+ [/especia|condimento/, '🌿'],
+ [/salsa|aderezo/, '🍅'],
+ [/arroz|pasta|cereal|cuscus/, '🍚'],
+ [/harina|reposteria|pan/, '🍞'],
+ [/pescado|marisco/, '🐟'],
+ [/legumbre|proteina vegetal/, '🫘'],
+ [/aceite|vinagre/, '🫒'],
+ [/leche|lacteo|desayuno/, '🥛'],
+ [/fruto seco|aperitivo/, '🥜'],
+ [/verdura|hortaliza|encurtido/, '🥕'],
+ [/carne|embutido/, '🥩'],
+ [/bebida|suplemento/, '🧃'],
+ [/fruta/, '🍎'],
+ [/azucar|endulzante/, '🍯'],
+ [/dulce|mermelada/, '🍬'],
+ [/conserva/, '🥫'],
+ [/congelado/, '❄️'],
+ [/mascota/, '🐾'],
+ [/limpieza/, '🧽'],
+ [/higiene/, '🧴'],
+ [/hogar|papel/, '🏠'],
+ [/bebe/, '🍼']
+];
+function categoryIcon(category) {
+ const box=document.createElement('span');
+ box.className='cat-icon';box.setAttribute('aria-hidden','true');
+ const match=String(category).match(/^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/u);
+ const suggested=categoryEmojis.find(([re])=>re.test(folded(bareCategory(category))));
+ box.textContent=suggested?.[1]||match?.[1]||'🧺';
+ return box;
+}
+function categoryHeader(category,countText) {
+ const summary=document.createElement('summary');summary.className='category-header';
+ const label=document.createElement('span');label.className='cat-name';label.textContent=bareCategory(category);
+ const count=document.createElement('small');count.className='cat-count';count.textContent=countText;
+ const arrow=document.createElement('span');arrow.className='chevron';arrow.setAttribute('aria-hidden','true');
+ summary.append(categoryIcon(category),label,count,arrow);
+ return summary;
+}
+
+let data=[],session=null,channel=null,catalogChannel=null,busy=false,catalogRows=[],catalogReady=false,adminMode=false;
+const openCategories=new Set(),catalogOpen=new Set();
+const categoryOptions=()=>[...new Set([...Object.keys(initial),...data.map(x=>x.category),...catalogRows.map(x=>x.categoria)])];
+function adminMessage(message) {$('adminMessage').textContent=message||'';}
+function setStatus(message) {$('status').textContent=message;}
+function localItems(){
+ try{const saved=JSON.parse(localStorage.getItem(LOCAL_KEY));if(Array.isArray(saved))return saved;}catch{}
+ return Object.entries(initial).flatMap(([category,names])=>names.map(name=>({id:crypto.randomUUID(),category,name,have:false})));
+}
+function showApp(visible){
+ if(!visible)adminMode=false;
+ $('adminToggle').hidden=!visible;
+ $('adminToggle').textContent=adminMode?'← Volver a despensa':'⚙️ Administrar';
+ $('adminPanel').hidden=!visible||!adminMode;
+ for(const id of ['stats','toolbar','items'])$(id).hidden=!visible||adminMode;
+ $('addForm').hidden=!visible||!adminMode;
+ $('auth').hidden=visible;
+ $('loginForm').hidden=visible;
+ $('status').hidden=visible;
+ if(!visible)$('migration').hidden=true;
+}
+function categories(){
+ const sel=$('newCategory'),old=sel.value;sel.replaceChildren();
+ for(const c of categoryOptions().sort(esCompare)){
+  const opt=document.createElement('option');opt.value=c;opt.textContent=bareCategory(c);sel.append(opt);
+ }
+ if(old&&[...sel.options].some(x=>x.value===old))sel.value=old;
+}
+function render(){
+ const q=folded($('search').value.trim()),filter=$('filter').value;
+ $('total').textContent=data.length;
+ $('have').textContent=data.filter(x=>x.have).length;
+ $('missing').textContent=data.filter(x=>!x.have).length;
+ const shown=data.filter(x=>folded(x.name).includes(q)&&(filter==='all'||(filter==='have'?x.have:!x.have)));
+ const main=$('items');main.replaceChildren();
+ if(!shown.length){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';main.append(p);}
+ for(const category of [...new Set(data.map(x=>x.category))].sort(esCompare)){
+  const rows=shown.filter(x=>x.category===category).sort((a,b)=>esCompare(a.name,b.name));
+  if(!rows.length)continue;
+  const details=document.createElement('details');details.className='category';details.open=openCategories.has(category)||!!q;
+  details.addEventListener('toggle',()=>{if(details.open)openCategories.add(category);else openCategories.delete(category)});
+  details.append(categoryHeader(category,`${rows.filter(x=>x.have).length}/${rows.length}`));
+  for(const x of rows){
+   const row=document.createElement('div');row.className='item'+(x.have?' done':'');
+   const check=document.createElement('input');check.type='checkbox';check.checked=x.have;check.disabled=busy;
+   check.setAttribute('aria-label','Tengo '+x.name);
+   check.onchange=async()=>{
+    check.disabled=true;
+    const {error}=await db.from('alimentos').update({disponible:check.checked}).eq('id',x.id);
+    if(error)alert('No se pudo guardar: '+error.message);
+    await refresh();
+   };
+   const name=document.createElement('span');name.textContent=x.name;row.append(check,name);details.append(row);
+  }
+  main.append(details);
+ }
+ categories();if(adminMode)renderAdmin();
+}
+async function refresh(){
+ if(!session)return;
+ const {data:rows,error}=await db.from('alimentos').select('id,nombre,categoria,disponible').order('creado_en',{ascending:true});
+ if(error){setStatus('Sin conexión o sin permisos: '+error.message);$('auth').hidden=false;$('status').hidden=false;return;}
+ const next=(rows||[]).map(x=>({id:x.id,name:x.nombre,category:x.categoria,have:!!x.disponible}));
+ const changed=JSON.stringify(next)!==JSON.stringify(data);
+ data=next;if(changed)render();
+ setStatus('☁️ Lista compartida · '+data.length+' alimentos · Sincronizada');
+ $('migration').hidden=data.length!==0;
+ $('auth').hidden=data.length!==0;
+ $('status').hidden=data.length!==0;
+}
+async function signedIn(currentSession){
+ session=currentSession;showApp(!!currentSession);
+ if(channel){await db.removeChannel(channel);channel=null;}
+ if(catalogChannel){await db.removeChannel(catalogChannel);catalogChannel=null;}
+ if(!currentSession){setStatus('Inicia sesión con tu cuenta de HondaDespensa.');$('auth').hidden=false;$('status').hidden=false;$('loginForm').hidden=false;return;}
+ const u=currentSession.user||{};
+ $('accountName').textContent=u.user_metadata?.display_name||u.user_metadata?.full_name||u.email?.split('@')[0]||'Usuario';
+ setStatus('Cargando lista compartida…');await refresh();await loadCatalog();
+ channel=db.channel('alimentos-honda-v21').on('postgres_changes',{event:'*',schema:'public',table:'alimentos'},()=>refresh()).subscribe();
+ catalogChannel=db.channel('catalogo-honda-v21').on('postgres_changes',{event:'*',schema:'public',table:'catalogo'},()=>loadCatalog()).subscribe();
+}
+
+$('loginForm').onsubmit=async event=>{
+ event.preventDefault();const button=$('loginForm').querySelector('button');button.disabled=true;
+ setStatus('Iniciando sesión…');
+ const {data:result,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+ button.disabled=false;
+ if(error){setStatus('Error de acceso: '+error.message);return;}
+ $('password').value='';await signedIn(result.session);
+};
+$('signOut').onclick=async()=>{
+ if(!session||!confirm('¿Quieres cerrar sesión?'))return;
+ const {error}=await db.auth.signOut();
+ if(error){adminMessage('No se pudo cerrar sesión: '+error.message);return;}
+ await signedIn(null);
+};
+$('adminToggle').onclick=()=>{
+ adminMode=!adminMode;showApp(true);
+ if(adminMode)renderAdmin();else render();
+ window.scrollTo({top:0,behavior:'smooth'});
+};
+
+$('upload').onclick=async()=>{
+ if(busy)return;
+ const {count,error:countError}=await db.from('alimentos').select('id',{count:'exact',head:true});
+ if(countError){alert(countError.message);return;}
+ if(count!==0){alert('La nube ya contiene alimentos. No se importará otra lista.');await refresh();return;}
+ const local=localItems();
+ if(!confirm(`Vas a subir ${local.length} alimentos desde ESTE móvil. Hazlo solo desde el móvil con la lista correcta. ¿Continuar?`))return;
+ busy=true;$('upload').disabled=true;
+ const rows=local.map(x=>({id:x.id,nombre:x.name,categoria:x.category,disponible:!!x.have}));
+ for(let i=0;i<rows.length;i+=100){
+  const {error}=await db.from('alimentos').insert(rows.slice(i,i+100));
+  if(error){alert('Error al importar: '+error.message+'; algunos productos podrían haberse subido. No repitas la importación sin revisar la nube.');break;}
+ }
+ busy=false;$('upload').disabled=false;await refresh();
+};
+
+async function addSharedFood(name,category){
+ if(!session)return false;
+ if(data.some(x=>folded(x.name)===folded(name)&&x.category===category)){alert('Ese alimento ya está en la lista.');return false;}
+ const {error}=await db.from('alimentos').insert({nombre:name,categoria:category,disponible:false});
+ if(error){alert('No se pudo añadir: '+error.message);return false;}
+ await refresh();return true;
+}
+$('addForm').onsubmit=async e=>{
+ e.preventDefault();const name=$('newName').value.trim(),category=$('newCategory').value;
+ if(!name||!category)return;
+ if(await addSharedFood(name,category))$('newName').value='';
+};
+$('search').oninput=render;$('filter').onchange=render;
+
+async function loadCatalog(){
+ if(!session)return;
+ const {data:rows,error}=await db.from('catalogo').select('id,nombre,categoria').order('categoria').order('nombre');
+ if(error){catalogReady=false;adminMessage('No se pudo acceder al catálogo: '+error.message);}
+ else{
+  const next=rows||[];const changed=JSON.stringify(next)!==JSON.stringify(catalogRows);
+  catalogRows=next;catalogReady=true;
+  if(changed&&adminMode)renderAdmin();
+  return;
+ }
+ if(adminMode)renderAdmin();
+}
+function renderCatalog(){
+ const holder=$('catalogItems'),q=folded($('catalogSearch').value.trim());holder.replaceChildren();
+ let remaining=0;
+ const groups=catalogReady?Object.entries(catalogRows.reduce((acc,x)=>{(acc[x.categoria]??=[]).push(x.nombre);return acc;},{})):Object.entries(initial);
+ for(const [category,names] of groups.sort((a,b)=>esCompare(a[0],b[0]))){
+  const available=names.filter(name=>!data.some(x=>x.category===category&&folded(x.name)===folded(name))&&folded(name).includes(q));
+  if(!available.length)continue;remaining+=available.length;
+  const details=document.createElement('details');details.className='catalog-category';details.open=catalogOpen.has(category)||!!q;
+  details.addEventListener('toggle',()=>{if(details.open)catalogOpen.add(category);else catalogOpen.delete(category)});
+  const summary=document.createElement('summary');summary.textContent=bareCategory(category)+' · '+available.length;details.append(summary);
+  const products=document.createElement('div');products.className='catalog-products';
+  for(const name of available){
+   const button=document.createElement('button');button.type='button';button.textContent='＋ '+name;
+   button.onclick=async()=>{button.disabled=true;if(!await addSharedFood(name,category))button.disabled=false;else renderCatalog();};
+   products.append(button);
+  }
+  details.append(products);holder.append(details);
+ }
+ if(!remaining){const p=document.createElement('p');p.className='empty';p.textContent=q?'No hay alimentos disponibles con esa búsqueda.':'Todos los alimentos del catálogo ya están añadidos.';holder.append(p);}
+}
+function makeAdminRow(item,type){
+ const row=document.createElement('div');row.className='admin-row';
+ const label=document.createElement('div');label.className='admin-label';
+ const name=document.createElement('strong');name.textContent=type==='food'?item.name:item.nombre;
+ const cat=document.createElement('small');cat.textContent=bareCategory(type==='food'?item.category:item.categoria);
+ label.append(name,cat);
+ const actions=document.createElement('div');actions.className='admin-actions';
+ const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Editar';
+ const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Eliminar';
+ actions.append(edit,del);row.append(label,actions);
+ edit.onclick=()=>{
+  if(row.querySelector('.admin-edit')){row.querySelector('.admin-edit').remove();return;}
+  const form=document.createElement('form');form.className='admin-edit';
+  const n=document.createElement('input');n.required=true;n.maxLength=100;n.value=type==='food'?item.name:item.nombre;n.setAttribute('aria-label','Nombre del alimento');
+  const c=document.createElement('input');c.required=true;c.maxLength=120;c.value=type==='food'?item.category:item.categoria;c.setAttribute('list','adminCategories');c.setAttribute('aria-label','Categoría');
+  const save=document.createElement('button');save.type='submit';save.textContent='Guardar cambios';form.append(n,c,save);row.append(form);
+  form.onsubmit=async e=>{
+   e.preventDefault();const nombre=n.value.trim(),categoria=c.value.trim();if(!nombre||!categoria)return;
+   save.disabled=true;
+   const table=type==='food'?'alimentos':'catalogo';
+   const {error}=await db.from(table).update({nombre,categoria}).eq('id',item.id);
+   if(error){adminMessage('Error: '+error.message);save.disabled=false;return;}
+   await refresh();if(type==='catalog')await loadCatalog();adminMessage('Cambios guardados.');
+  };
+ };
+ del.onclick=async()=>{
+  if(!confirm('¿Eliminar «'+(type==='food'?item.name:item.nombre)+'» '+(type==='food'?'de la despensa':'del catálogo')+'?'))return;
+  del.disabled=true;
+  const {error}=await db.from(type==='food'?'alimentos':'catalogo').delete().eq('id',item.id);
+  if(error){adminMessage('Error: '+error.message);del.disabled=false;return;}
+  await refresh();if(type==='catalog')await loadCatalog();adminMessage('Alimento eliminado.');
+ };
+ return row;
+}
+function renderGroupedAdmin(container,rows,type,query){
+ container.replaceChildren();const groups=new Map();
+ for(const item of rows){
+  const category=type==='food'?item.category:item.categoria;
+  const name=type==='food'?item.name:item.nombre;
+  if(!folded(name+' '+category).includes(query))continue;
+  if(!groups.has(category))groups.set(category,[]);
+  groups.get(category).push(item);
+ }
+ for(const category of [...groups.keys()].sort(esCompare)){
+  const section=document.createElement('details');section.className='category admin-category';
+  section.append(categoryHeader(category,groups.get(category).length+' alimentos'));
+  for(const item of groups.get(category).sort((a,b)=>esCompare(type==='food'?a.name:a.nombre,type==='food'?b.name:b.nombre)))section.append(makeAdminRow(item,type));
+  if(query)section.open=true;container.append(section);
+ }
+ if(!groups.size){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';container.append(p);}
+}
+function renderAdmin(){
+ if(!adminMode)return;
+ renderGroupedAdmin($('adminFoods'),data,'food',folded($('adminFoodSearch').value.trim()));
+ renderGroupedAdmin($('adminCatalogRows'),catalogRows,'catalog',folded($('adminCatalogSearch').value.trim()));
+ renderCatalog();
+ const dl=$('adminCategories');dl.replaceChildren();
+ for(const category of categoryOptions().sort(esCompare)){const opt=document.createElement('option');opt.value=category;dl.append(opt);}
+}
+$('adminAddMount').append($('addForm'));
+$('adminFoodSearch').oninput=renderAdmin;
+$('adminCatalogSearch').oninput=renderAdmin;
+$('catalogSearch').oninput=renderCatalog;
+$('catalogAddForm').onsubmit=async e=>{
+ e.preventDefault();
+ const nombre=$('catalogNewName').value.trim(),categoria=$('catalogNewCategory').value.trim();
+ if(!nombre||!categoria||!session)return;
+ if(catalogRows.some(x=>folded(x.nombre)===folded(nombre)&&x.categoria===categoria)){adminMessage('Ese alimento ya figura en el catálogo.');return;}
+ const button=$('catalogAddForm').querySelector('button');button.disabled=true;
+ const {error}=await db.from('catalogo').insert({nombre,categoria});button.disabled=false;
+ if(error){adminMessage('Error: '+error.message);return;}
+ $('catalogNewName').value='';await loadCatalog();adminMessage('Alimento añadido al catálogo.');
+};
+$('dedup').onclick=async()=>{
+ const groups=new Map();
+ for(const x of data){const key=folded(x.name.trim())+'|'+folded(x.category.trim());if(!groups.has(key))groups.set(key,[]);groups.get(key).push(x);}
+ const dup=[...groups.values()].filter(group=>group.length>1);
+ const extra=dup.reduce((n,g)=>n+g.length-1,0);
+ if(!extra){adminMessage('No hay duplicados por nombre y categoría.');return;}
+ if(!confirm('Se eliminarán '+extra+' registros duplicados. Se conservará una copia por nombre y categoría y la marca «Ya tengo» si alguna copia la tiene. ¿Continuar?'))return;
+ $('dedup').disabled=true;let removed=0;
+ for(const group of dup){
+  const keep=group.find(x=>x.have)||group[0];
+  if(group.some(x=>x.have)&&!keep.have){const {error}=await db.from('alimentos').update({disponible:true}).eq('id',keep.id);if(error){adminMessage(error.message);break;}}
+  for(const x of group){
+   if(x.id===keep.id)continue;
+   const {error}=await db.from('alimentos').delete().eq('id',x.id);
+   if(error){adminMessage('Limpieza interrumpida: '+error.message);await refresh();$('dedup').disabled=false;return;}
+   removed++;
+  }
+ }
+ await refresh();$('dedup').disabled=false;adminMessage('Duplicados eliminados: '+removed+'.');
+};
+
+const {data:authData,error:authError}=await db.auth.getSession();
+if(authError)setStatus('Error de sesión: '+authError.message);
+await signedIn(authData.session);
+db.auth.onAuthStateChange((event,s)=>{
+ if(event==='SIGNED_OUT'&&session)signedIn(null);
+});
+setInterval(()=>{if(session&&!document.hidden)refresh();},12000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&session)refresh();});

@@ -1,8 +1,18 @@
-MI DESPENSA - INSTALAR EN ANDROID
+HONDA DESPENSA — Versión integrada 21 (2 noviembre 2026)
 
-1. Publica TODOS los archivos de esta carpeta en un alojamiento HTTPS (por ejemplo GitHub Pages o Netlify Drop). No basta con abrir index.html desde Descargas.
-2. Abre la dirección HTTPS de la app en Chrome de Android.
-3. Menú ⋮ > Instalar aplicación o Añadir a pantalla de inicio.
-4. Abre Mi Despensa desde su icono. Tras la primera visita, funciona sin conexión.
+CONTENIDO
+- index.html: estructura de la aplicación
+- styles.css: diseño azul con márgenes y Polaroid
+- app.js: conexión a Supabase, inventario y administración
+- sw.js y manifest.webmanifest: instalación PWA
+- iconos y carpeta assets/
 
-IMPORTANTE: Los datos se guardan localmente en ese navegador/dispositivo. Si ya usabas la versión HTML local, sus datos no se transfieren automáticamente. Usa la exportación/importación de la app para moverlos. No borres los datos del navegador sin tener copia.
+INSTALACIÓN EN GITHUB PAGES
+1. Conserva una copia de seguridad de tu repositorio actual.
+2. Extrae este ZIP. Sube su CONTENIDO (no la carpeta) a la raíz de la rama main.
+3. Mantén GitHub Pages apuntando a main / (root).
+4. Abre la aplicación con Internet para cargar Supabase y verificar que aparecen tus alimentos.
+5. Si la aplicación instalada sigue mostrando el diseño anterior, cierra/reabre; si persiste, elimina el almacenamiento del sitio e instálala de nuevo (la despensa está en Supabase, pero antes revisa si hay alguna lista local que debas conservar).
+
+IMPORTANTE
+No se han ejecutado cambios SQL ni eliminado datos. Todas las operaciones dependen de los permisos RLS de Supabase. Se ha comprobado sintaxis y estructura local; no es posible probar desde este entorno una sesión real con tu cuenta de Supabase.

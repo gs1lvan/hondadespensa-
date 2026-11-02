@@ -1,232 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071c32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="description" content="HondaDespensa: inventario compartido de alimentos">
+  <title>HondaDespensa</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css?v=21">
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero" aria-label="HondaDespensa">
+      <img class="polaroid" src="assets/foto-apartamento.png" alt="Polaroid de un edificio de apartamentos junto a la playa">
+      <div class="hero-copy">
+        <h1>HondaDespensa</h1>
+        <button id="adminToggle" class="admin-link" type="button" hidden>⚙️ Administrar</button>
+      </div>
+    </header>
 
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HondaDespensa</title><style>:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#172b46;background:#f2f6fc}*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0}.wrap{max-width:900px;margin:auto;padding:20px 14px 60px}header{background:#174b83;color:white;padding:24px;border-radius:20px}h1{margin:0;font-size:26px}header p{opacity:.85;margin:8px 0 0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.stat{background:white;border-radius:14px;padding:16px;text-align:center}.stat b{font-size:27px;display:block}.stat small{color:#61738b}.toolbar,.add{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.toolbar input,.toolbar select,.add input,.add select{border:1px solid #c8d8ea;border-radius:10px;padding:12px;font:inherit;background:white;min-width:0;flex:1}.toolbar input{flex:2}button{border:0;border-radius:10px;padding:11px 14px;background:#2563a0;color:white;font:inherit;cursor:pointer}button.secondary{background:#e1ecf9;color:#174b83}button.danger{background:#fff0ed;color:#9c372c}.category{background:white;border-radius:16px;margin:12px 0;overflow:hidden}.category summary{font-size:17px;font-weight:700;padding:16px;background:#e7f0fc;display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none}.category summary::-webkit-details-marker{display:none}.category summary:after{content:"⌄";margin-left:10px}.category[open] summary:after{content:"⌃"}.category summary:focus-visible{outline:3px solid #2476bf;outline-offset:-3px}.category summary small{font-weight:400;color:#526e90}.item{display:flex;align-items:center;gap:12px;padding:11px 15px;border-top:1px solid #eaf0f8}.item input{width:20px;height:20px;accent-color:#2476bf}.item span{flex:1;overflow-wrap:anywhere}.item.done span{text-decoration:line-through;color:#8293a8}.item button{padding:5px 9px;font-size:14px}h3{margin:22px 0 8px}.notice{font-size:13px;color:#607891}.empty{text-align:center;padding:28px;color:#687d95}#file{display:none}@media(max-width:500px){.stats{gap:6px}.stat{padding:12px 6px}.stat b{font-size:23px}.add input,.add select{flex-basis:100%}header{padding:20px}}.auth{background:white;padding:16px;border-radius:16px;margin:16px 0}.auth p{color:#526e90}.auth input{min-width:140px}.auth #logged{margin-top:8px}.auth #migration{border-top:1px solid #dce7f4;margin-top:12px;padding-top:12px}.auth summary{font-weight:700;cursor:pointer;list-style:revert}.auth details:not([open]){padding:0}
-.catalog{background:white;border-radius:16px;padding:14px;margin:12px 0 18px}.catalog>summary{font-weight:700;cursor:pointer;padding:6px 2px}.catalog-help{font-size:13px;color:#607891}.catalog-search{width:100%;border:1px solid #c8d8ea;border-radius:10px;padding:12px;font:inherit;margin:8px 0}.catalog-category{border:1px solid #dfeaf7;border-radius:12px;margin:8px 0;overflow:hidden}.catalog-category summary{padding:12px;background:#e7f0fc;font-weight:650;cursor:pointer}.catalog-products{display:flex;flex-wrap:wrap;gap:8px;padding:12px}.catalog-products button{background:#e1ecf9;color:#174b83;text-align:left;padding:10px 12px}.catalog-products button:disabled{opacity:.55}.catalog-empty{color:#607891;font-size:14px;padding:8px}
+    <section class="auth" id="auth">
+      <p id="status" role="status">Conectando con Supabase…</p>
+      <form id="loginForm" class="add" hidden>
+        <input id="email" type="email" autocomplete="username" placeholder="Correo electrónico" aria-label="Correo electrónico" required>
+        <input id="password" type="password" autocomplete="current-password" placeholder="Contraseña" aria-label="Contraseña" required>
+        <button type="submit">Entrar</button>
+      </form>
+      <div id="migration" hidden>
+        <p>La lista compartida está vacía. Importa la lista local solo desde el móvil que tenga los datos correctos.</p>
+        <button id="upload" type="button">Subir mi lista local a la nube</button>
+      </div>
+    </section>
 
-.admin-launch{margin-top:12px;background:#d7e8fa;color:#174b83}.admin-panel{background:white;border-radius:16px;padding:16px;margin:14px 0}.admin-panel h2{margin:0 0 12px}.admin-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid #eaf0f8;padding:10px 0}.admin-row .admin-label{flex:1;min-width:0;overflow-wrap:anywhere}.admin-row small{display:block;color:#61738b}.admin-actions{display:flex;gap:5px}.admin-actions button{padding:7px 9px}.admin-panel input,.admin-panel select{font:inherit;border:1px solid #c8d8ea;border-radius:9px;padding:10px;min-width:0}.admin-panel .admin-edit{display:grid;grid-template-columns:1fr;gap:7px;padding:10px;background:#f2f6fc;border-radius:10px}.admin-panel .admin-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.admin-panel .admin-toolbar input{flex:1}.admin-panel .admin-toolbar select{flex:1}.admin-panel .admin-msg{color:#9c372c;font-size:13px}.admin-panel .admin-section{margin-top:16px;border-top:1px solid #dfe9f5;padding-top:14px}.admin-panel .admin-list{max-height:55vh;overflow:auto}.admin-panel button:disabled{opacity:.6}.admin-category{border:1px solid #dfeaf7}.admin-category .admin-row{padding:11px 12px}.admin-category .admin-edit{flex-basis:100%}.admin-category .admin-row{flex-wrap:wrap}.admin-category .admin-row .admin-edit{width:100%}.admin-list{max-height:none!important}
-.admin-add-collapsible{border-top:0!important;padding-top:0!important}.admin-add-collapsible>summary{font-size:19px;font-weight:700;cursor:pointer;padding:12px 0;list-style:none}.admin-add-collapsible>summary::-webkit-details-marker{display:none}.admin-add-collapsible>summary:after{content:" ▾"}.admin-add-collapsible[open]>summary:after{content:" ▴"}.admin-add-collapsible .add{margin:12px 0 4px}
-.header-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.header-user{font-size:inherit;opacity:1;overflow-wrap:anywhere;text-align:center;background:#d7e8fa;color:#174b83;border:0;padding:11px 14px;cursor:pointer;border-radius:10px}.header-actions .admin-launch,.header-actions .header-user{margin-top:0;flex:1;min-width:0}.header-actions{flex-wrap:nowrap}.header-actions .header-user{font-size:clamp(11px,3vw,16px)}.header-user:focus-visible{outline:2px solid white;outline-offset:3px}.header-actions .admin-launch{margin-top:12px}.header-actions{align-items:stretch}.header-actions .admin-launch,.header-actions .header-user{margin:0;flex:1 1 0;width:0;min-width:0;min-height:48px;padding:11px 8px;font-size:clamp(12px,3.2vw,16px);font-weight:400;line-height:1.3;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;box-sizing:border-box}
-/* Visualización y modo oscuro */
-.visualization{margin-top:-5px}.visualization summary{font-weight:700;cursor:pointer}.theme-choice{padding:15px 0 3px}.theme-choice label{display:flex;align-items:center;gap:12px;cursor:pointer}.theme-choice input{width:20px;height:20px;accent-color:#6ab4ff}
-html.dark{color-scheme:dark;background:#101827;color:#eaf3ff}
-html.dark body{background:#101827;color:#eaf3ff}
-html.dark header{background:#13385f}
-html.dark .stat,html.dark .auth,html.dark .admin-panel,html.dark .category,html.dark .catalog{background:#1b2a40;color:#eaf3ff}
-html.dark .category summary,html.dark .catalog-category summary{background:#2b4363;color:#f0f6ff}
-html.dark .category summary small,html.dark .stat small,html.dark .notice,html.dark .empty,html.dark .auth p,html.dark .admin-row small,html.dark .catalog-help,html.dark .catalog-empty{color:#b4c7df}
-html.dark .item,html.dark .admin-row{border-color:#354b68}
-html.dark .item.done span{color:#9eafc5}
-html.dark .admin-panel .admin-section{border-color:#354b68}
-html.dark .admin-panel .admin-edit{background:#253954}
-html.dark .admin-category,.dark .catalog-category{border-color:#3b5779}
-html.dark input:not([type=checkbox]),html.dark select,html.dark .toolbar input,html.dark .toolbar select,html.dark .add input,html.dark .add select,html.dark .admin-panel input,html.dark .admin-panel select,html.dark .catalog-search{background:#142238;color:#f0f6ff;border-color:#536d91}
-html.dark input::placeholder{color:#a7bad2}
-html.dark button.secondary,html.dark .admin-launch,html.dark .catalog-products button{background:#34577f;color:#f0f6ff}
-html.dark button.danger{background:#512c2b;color:#ffd8d3}
-html.dark button:not(.secondary):not(.danger):not(.admin-launch){background:#2c6da9;color:#fff}
-html.dark .header-user{background:#34577f;color:#f0f6ff}
-html.dark .admin-panel .admin-msg{color:#ffb5a8}
-/* Espaciado uniforme de cabecera y secciones */
-header h1{margin:0 0 18px}
-.header-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch}
-.header-actions .admin-launch,.header-actions .header-user{width:100%;height:52px;min-height:52px;margin:0;padding:8px 6px;box-sizing:border-box}
-.visualization{margin-top:16px}
-@media(max-width:500px){header h1{margin-bottom:16px}.header-actions{gap:12px}}
+    <section id="adminPanel" class="admin-panel" hidden aria-label="Panel de administración">
+      <div class="admin-account">
+        <div><small>CUENTA ACTIVA</small><strong id="accountName">Usuario</strong></div>
+        <button id="signOut" class="text-action" type="button">Cerrar sesión</button>
+      </div>
+      <details class="admin-section admin-add-collapsible">
+        <summary>➕ Añadir alimento</summary>
+        <div id="adminAddMount"></div>
+      </details>
+      <section class="admin-section">
+        <h2>Alimentos de vuestra despensa</h2>
+        <div class="admin-toolbar">
+          <input id="adminFoodSearch" placeholder="Buscar alimento…" aria-label="Buscar alimentos en administración">
+          <button id="dedup" class="secondary" type="button">Eliminar duplicados</button>
+        </div>
+        <div id="adminFoods" class="admin-list"></div>
+      </section>
+      <details class="admin-section admin-catalog">
+        <summary>📚 Añadir desde el catálogo</summary>
+        <p class="hint">Selecciona alimentos para incorporarlos a la despensa compartida.</p>
+        <input id="catalogSearch" placeholder="Buscar en el catálogo…" aria-label="Buscar en catálogo">
+        <div id="catalogItems"></div>
+      </details>
+      <details class="admin-section admin-catalog">
+        <summary>✏️ Administrar catálogo</summary>
+        <p class="hint">Los cambios en el catálogo se comparten con todos los usuarios autorizados.</p>
+        <div class="admin-toolbar"><input id="adminCatalogSearch" placeholder="Buscar en catálogo…" aria-label="Buscar alimentos del catálogo para editar"></div>
+        <div id="adminCatalogRows" class="admin-list"></div>
+        <form id="catalogAddForm" class="add">
+          <input id="catalogNewName" placeholder="Nuevo alimento del catálogo" maxlength="100" required>
+          <input id="catalogNewCategory" placeholder="Categoría" list="adminCategories" maxlength="120" required>
+          <button type="submit">Añadir al catálogo</button>
+        </form>
+      </details>
+      <datalist id="adminCategories"></datalist>
+      <p id="adminMessage" class="admin-msg" role="status"></p>
+    </section>
 
-/* HONDA DESPENSA · EDICIÓN CONSERVAS · rediseño visible */
-:root{color:#f4f8ff;background:#071c32;--panel:#102c48;--line:#547595;--blue:#008be9}
-html,html.dark{background:#071c32;color:#f4f8ff;color-scheme:dark}
-body,html.dark body{color:#f4f8ff;background-color:#071c32;background-image:radial-gradient(ellipse at 17% 13%,#31557655,transparent 48%),radial-gradient(ellipse at 80% 75%,#23476544,transparent 55%),url('textura-azul.svg');background-size:auto,auto,220px 220px;background-attachment:fixed}
-.wrap{max-width:1050px;padding:16px 15px 90px}
-header,html.dark header{position:relative;isolation:isolate;overflow:visible;background:linear-gradient(140deg,#0b2948dd,#071b31dd);border:1px solid #476b90;border-radius:22px 22px 8px 8px;padding:24px 24px 45px;box-shadow:0 12px 35px #0007,inset 0 1px #ffffff33;margin-bottom:38px}
-header:after{content:'';position:absolute;left:-1px;right:-1px;bottom:-29px;height:45px;background:url('papel-rasgado.svg') center/100% 100% no-repeat;pointer-events:none;z-index:1}
-header:before{content:'';position:absolute;bottom:-51px;left:50%;transform:translateX(-50%) rotate(-13deg);width:62px;height:83px;background:url('anilla-lata.svg') center/contain no-repeat;z-index:3;filter:drop-shadow(2px 5px 4px #0009);pointer-events:none}
-header h1{font-size:clamp(27px,5vw,46px);font-weight:850;font-style:italic;letter-spacing:-1.7px;text-shadow:1px 3px 3px #0008;margin:0 0 22px;padding-left:clamp(0px,16vw,170px);position:relative}
-header h1:after{content:'';display:block;height:7px;max-width:350px;margin:6px 0 0;background:#06a6fa;border-radius:100% 10% 100% 10%;transform:rotate(-2deg)}
-header h1:before{content:'';position:absolute;left:0;top:-12px;width:clamp(72px,14vw,135px);height:clamp(72px,14vw,135px);background:url('icon-192.png') center/cover;border:7px solid #f4f0e5;box-shadow:0 7px 12px #0008;transform:rotate(-7deg)}
-.header-actions{gap:12px;position:relative;z-index:4}
-.header-actions .admin-launch,.header-actions .header-user{height:54px;border:1px solid #6c94bd;border-radius:30px;background:linear-gradient(155deg,#183b5d,#0b213a);color:white;font-weight:700;box-shadow:inset 0 1px #ffffff33,0 4px 10px #0006}
-button,html.dark button:not(.secondary):not(.danger):not(.admin-launch){background:linear-gradient(155deg,#079ffa,#0050b2);color:#fff;border:1px solid #4ab8ff;border-radius:13px;box-shadow:inset 0 2px 2px #ffffff44,0 3px 9px #0005;font-weight:650}
-button.secondary,html.dark button.secondary,html.dark .admin-launch{background:linear-gradient(155deg,#284d72,#112b47);color:#f4f8ff;border:1px solid #668ab1}
-button.danger,html.dark button.danger{background:linear-gradient(150deg,#622e40,#3b1a2b);color:#fff;border:1px solid #f06375}
-.stat,.auth,.admin-panel,.category,.catalog,html.dark .stat,html.dark .auth,html.dark .admin-panel,html.dark .category,html.dark .catalog{background:linear-gradient(135deg,#183753ed,#0b223bea);color:#f5f8ff;border:1px solid #456a8e;box-shadow:inset 0 1px #ffffff1c,0 7px 17px #0005;border-radius:19px}
-.stats{gap:12px;margin-top:54px}.stat{padding:18px 9px}.stat b{color:#fff;text-shadow:0 2px 3px #0007}.stat small{color:#b8d1ea}
-.category{margin:16px 0;overflow:hidden;position:relative;border-left:7px solid #70d85d}
-.category:nth-of-type(3n){border-left-color:#f7b63a}
-.category summary,.catalog-category summary,html.dark .category summary,html.dark .catalog-category summary{background:linear-gradient(130deg,#224767,#102a47);color:#fff;border-bottom:1px solid #456887;font-size:18px}
-.category summary:before{content:'';display:inline-block;width:28px;height:28px;flex:none;margin-right:10px;background:url('lata-icono.svg') center/contain no-repeat}
-.category summary small{color:#c1d8ee}
-.item{border-top:1px solid #355675;padding:14px 15px;min-height:64px}.item span{color:#f3f7fd}.item.done span{color:#9eb2c8}
-.toolbar input,.toolbar select,.add input,.add select,.admin-panel input,.admin-panel select,.catalog-search,html.dark input:not([type=checkbox]),html.dark select{background:#0c243c;color:#fff;border:1px solid #6c8dae;border-radius:14px;min-height:48px}
-input::placeholder{color:#b4c9dc!important}
-.auth p,.notice,.empty,.catalog-help,.admin-row small{color:#b8cce0!important}
-.catalog-products button{background:linear-gradient(145deg,#234a6e,#112b47)!important;color:white!important;border:1px solid #6484a6}
-.admin-panel .admin-edit{background:#173553!important}
-.visualization{margin-top:16px}
-@media(max-width:560px){header{padding:18px 14px 39px}header h1{font-size:clamp(24px,6vw,34px);padding-left:82px;min-height:74px;letter-spacing:-1px}header h1:before{width:66px;height:66px;border-width:4px}.header-actions{gap:8px}.header-actions .admin-launch,.header-actions .header-user{height:50px;font-size:clamp(11px,3vw,14px);padding:5px}.stats{margin-top:57px}.stat{padding:14px 5px}.category summary{font-size:16px}.wrap{padding:12px 10px 80px}}
+    <section class="stats" id="stats" hidden aria-label="Resumen del inventario">
+      <div class="stat"><b id="total">0</b><small aria-label="Total de alimentos">&nbsp;</small></div>
+      <div class="stat"><b id="have">0</b><small>Ya tengo</small></div>
+      <div class="stat"><b id="missing">0</b><small>Me faltan</small></div>
+    </section>
 
-/* Cabecera integrada, sin efecto de papel rasgado ni anilla separadora */
-header,html.dark header{margin-bottom:0;padding-bottom:22px;border-radius:22px 22px 0 0;border-bottom:0;box-shadow:none}
-header::after,header::before{content:none!important;display:none!important}
-.stats{margin-top:0!important;gap:12px;background:linear-gradient(140deg,#0b2948dd,#071b31dd);border:1px solid #476b90;border-top:0;border-radius:0 0 22px 22px;padding:14px 12px 18px;margin-bottom:18px}
-@media(max-width:560px){header,html.dark header{padding-bottom:18px}.stats{margin-top:0!important;padding:10px 7px 14px}}
-</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#071c32"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"></head><body><div class="wrap"><header><h1>🏖️ HondaDespensa</h1><div class="header-actions"><button id="adminToggle" class="admin-launch" type="button" hidden>⚙️ Administrar</button><button id="headerUser" class="header-user" type="button" title="Cerrar sesión" hidden></button></div></header>
-<section class="auth" id="auth"><p id="status" role="status">Conectando con Supabase…</p>
-<form id="loginForm" class="add" hidden><input id="email" type="email" autocomplete="username" placeholder="Correo electrónico" required><input id="password" type="password" autocomplete="current-password" placeholder="Contraseña" required><button type="submit">Entrar</button></form>
+    <div class="toolbar" id="toolbar" hidden>
+      <input id="search" placeholder="🔎 Buscar alimentos…" aria-label="Buscar alimentos">
+      <select id="filter" aria-label="Filtrar alimentos">
+        <option value="all">Todos</option>
+        <option value="have">Ya tengo</option>
+        <option value="missing">Me faltan</option>
+      </select>
+    </div>
 
-<div id="migration" hidden><p>La lista compartida está vacía. Importa la lista local solo desde el móvil que tenga los datos correctos.</p><button type="button" id="upload">Subir mi lista local a la nube</button></div></section>
-<section id="adminPanel" class="admin-panel" hidden>
-<details class="admin-section admin-add-collapsible"><summary>➕ Añadir alimento</summary><div id="adminAddMount"></div></details><div class="admin-section"><h3>Alimentos de vuestra despensa</h3><div class="admin-toolbar"><input id="adminFoodSearch" placeholder="Buscar alimento…" aria-label="Buscar alimentos"><button id="dedup" class="secondary" type="button">Eliminar duplicados</button></div><div id="adminFoods" class="admin-list"></div></div>
-
-<p id="adminMessage" class="admin-msg" role="status"></p></section>
-<section class="stats" id="stats" hidden><div class="stat"><b id="total">0</b><small aria-label="Total de alimentos">&nbsp;</small></div><div class="stat"><b id="have">0</b><small>Ya tengo</small></div><div class="stat"><b id="missing">0</b><small>Me faltan</small></div></section>
-<div class="toolbar" id="toolbar" hidden><input id="search" placeholder="🔎 Buscar alimentos…" aria-label="Buscar alimentos"><select id="filter"><option value="all">Todos</option><option value="have">Ya tengo</option><option value="missing">Me faltan</option></select></div>
-<form id="addForm" class="add" hidden><input id="newName" placeholder="Nombre del alimento" required maxlength="100"><select id="newCategory"></select><button type="submit">Añadir</button></form><main id="items" hidden></main></div>
-<script type="module">
-import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-const initial={
-'🥛 Leche, desayunos y bebidas':['Leche UHT semidesnatada','Leche en polvo','Leche condensada','Bebidas vegetales UHT','Café soluble','Café molido al vacío','Infusiones','Cacao soluble','Chocolate negro','Cereales de desayuno','Galletas','Mermelada','Miel'],
-'🫒 Aceites y vinagres':['Aceite de oliva virgen extra','Aceite de girasol','Aceite de sésamo','Vinagre de vino','Vinagre balsámico'],
-'🍅 Salsas y aderezos':['Ketchup','Mostaza','Salsa de soja','Salsa barbacoa','Salsa Worcestershire (Perrins)','Tabasco','Salsa picante','Salsa teriyaki','Salsa agridulce','Mayonesa industrial','Tomate frito','Tomate triturado','Tomate concentrado','Salsa de tomate para pasta'],
-'🌿 Especias y condimentos':['Sal','Pimienta negra','Pimienta blanca','Pimentón dulce','Pimentón picante','Comino','Curry','Cúrcuma','Orégano','Tomillo','Romero','Albahaca seca','Perejil seco','Laurel','Ajo en polvo','Cebolla en polvo','Canela','Nuez moscada','Jengibre en polvo','Azafrán','Hierbas provenzales','Caldo concentrado en pastillas'],
-'🍚 Arroz, pasta y cereales':['Arroz blanco','Arroz basmati','Pasta seca','Fideos','Cuscús','Puré de patatas en copos','Fideos instantáneos'],
-'🫘 Legumbres y proteínas vegetales':['Garbanzos secos','Lentejas secas','Alubias secas','Soja seca','Soja texturizada','Garbanzos cocidos en conserva','Lentejas cocidas en conserva','Alubias cocidas en conserva','Guisantes en conserva'],
-'🐟 Pescados y mariscos en conserva':['Atún en aceite','Sardinas en aceite','Caballa en conserva','Melva en conserva','Mejillones en escabeche','Berberechos al natural','Almejas en conserva','Anchoas en aceite','Calamares en conserva','Pulpo en conserva'],
-'🥩 Carnes y platos preparados':['Paté en lata esterilizado','Albóndigas en lata','Fabada en conserva','Cocido madrileño en conserva','Callos en conserva','Lentejas preparadas','Garbanzos con espinacas','Sopas en lata','Cremas de verduras en brick','Caldos en brick'],
-'🥕 Verduras y encurtidos':['Maíz dulce en conserva','Guisantes en conserva','Judías verdes en conserva','Zanahorias en conserva','Espárragos en conserva','Pimientos asados en conserva','Champiñones en conserva','Alcachofas en conserva','Aceitunas','Pepinillos en vinagre','Cebollitas en vinagre','Remolacha en conserva','Tomates secos envasados','Verduras deshidratadas'],
-'🥜 Frutos secos y aperitivos':['Almendras','Nueces','Avellanas','Cacahuetes tostados','Pistachos','Anacardos','Semillas de calabaza','Semillas de girasol','Semillas de chía','Semillas de sésamo','Crema de cacahuete','Barritas proteicas','Patatas fritas de bolsa','Maíz para palomitas','Fruta deshidratada'],
-'🍞 Harinas y repostería':['Harina de trigo blanca','Harina de maíz','Pan rallado','Azúcar blanco','Azúcar moreno','Levadura química','Levadura seca de panadería','Bicarbonato','Gelatina en polvo','Cacao puro en polvo','Coco rallado','Esencia de vainilla','Sirope de chocolate'],
-'🧃 Bebidas y suplementos':['Agua mineral','Refrescos en lata','Bebidas isotónicas']};
-const URL='https://yqumpnoxmzkmnxnjrkjl.supabase.co';
-const PUBLIC_KEY='sb_publishable_WcQCzIlbBTktSMzva2qsQw_VnwYD4Aq';
-const KEY='despensa_segunda_vivienda_v1';
-const db=createClient(URL,PUBLIC_KEY);
-const $=id=>document.getElementById(id);
-document.documentElement.classList.add('dark');
-const openCategories=new Set();
-const esCompare=(a,b)=>a.localeCompare(b,'es',{sensitivity:'base',numeric:true});
-function renderGroupedAdmin(container,rows,type,query){
- container.replaceChildren();
- const groups=new Map();
- for(const item of rows){
-  const category=type==='food'?item.category:item.categoria;
-  const name=type==='food'?item.name:item.nombre;
-  if(!(name+' '+category).toLocaleLowerCase('es').includes(query))continue;
-  if(!groups.has(category))groups.set(category,[]);
-  groups.get(category).push(item);
- }
- for(const category of [...groups.keys()].sort(esCompare)){
-  const section=document.createElement('details');section.className='category admin-category';
-  const summary=document.createElement('summary');
-  const heading=document.createElement('span');heading.textContent=category;
-  const count=document.createElement('small');count.textContent=groups.get(category).length+' alimentos';
-  summary.append(heading,count);section.append(summary);
-  for(const item of groups.get(category).sort((a,b)=>esCompare(type==='food'?a.name:a.nombre,type==='food'?b.name:b.nombre)))section.append(makeAdminRow(item,type));
-  if(query)section.open=true;
-  container.append(section);
- }
- if(!groups.size){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';container.append(p)}
-}
-
-let data=[],session=null,channel=null,busy=false,catalogRows=[],catalogReady=false,adminMode=false;
-const categoryOptions=()=>[...new Set([...Object.keys(initial),...data.map(x=>x.category),...catalogRows.map(x=>x.categoria)])];
-function adminMessage(t){$('adminMessage').textContent=t||'';}
-
-function localItems(){try{const saved=JSON.parse(localStorage.getItem(KEY));if(Array.isArray(saved))return saved}catch{}return Object.entries(initial).flatMap(([category,names])=>names.map(name=>({id:crypto.randomUUID(),category,name,have:false})));}
-function setStatus(message){$('status').textContent=message;}
-function showApp(visible){if(!visible)adminMode=false;$('adminToggle').hidden=!visible;$('adminToggle').textContent=adminMode?'← Volver a despensa':'⚙️ Administrar';$('adminPanel').hidden=!visible||!adminMode;for(const id of ['stats','toolbar','items'])$(id).hidden=!visible||adminMode;$('addForm').hidden=!visible||!adminMode; $('auth').hidden=visible;$('loginForm').hidden=visible;$('status').hidden=visible;if(!visible)$('migration').hidden=true;}
-function categories(){const sel=$('newCategory'),old=sel.value;sel.replaceChildren();for(const c of categoryOptions().sort(esCompare)){const o=document.createElement('option');o.value=c;o.textContent=c;sel.append(o)}if(old&&[...sel.options].some(x=>x.value===old))sel.value=old;}
-function render(){const q=$('search').value.trim().toLocaleLowerCase('es'),f=$('filter').value;$('total').textContent=data.length;$('have').textContent=data.filter(x=>x.have).length;$('missing').textContent=data.filter(x=>!x.have).length;const shown=data.filter(x=>x.name.toLocaleLowerCase('es').includes(q)&&(f==='all'||(f==='have'?x.have:!x.have)));const main=$('items');main.replaceChildren();if(!shown.length){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';main.append(p)}for(const category of [...new Set(data.map(x=>x.category))].sort(esCompare)){const arr=shown.filter(x=>x.category===category).sort((a,b)=>esCompare(a.name,b.name));if(!arr.length)continue;const section=document.createElement('details');section.className='category';section.open=openCategories.has(category);section.addEventListener('toggle',()=>{if(section.open)openCategories.add(category);else openCategories.delete(category)});const h=document.createElement('summary');const title=document.createElement('span');title.textContent=category;h.append(title);const count=document.createElement('small');count.textContent=`${arr.filter(x=>x.have).length}/${arr.length}`;h.append(count);section.append(h);for(const x of arr){const row=document.createElement('div');row.className='item'+(x.have?' done':'');const check=document.createElement('input');check.type='checkbox';check.checked=x.have;check.disabled=busy;check.setAttribute('aria-label','Tengo '+x.name);check.onchange=async()=>{check.disabled=true;const {error}=await db.from('alimentos').update({disponible:check.checked}).eq('id',x.id);if(error)alert('No se pudo guardar: '+error.message);await refresh();};const span=document.createElement('span');span.textContent=x.name;row.append(check,span);section.append(row)}main.append(section)}categories();if(adminMode)renderAdmin();}
-async function refresh(){if(!session)return;const {data:rows,error}=await db.from('alimentos').select('id,nombre,categoria,disponible').order('creado_en',{ascending:true});if(error){setStatus('Sin conexión o sin permisos: '+error.message);return;}data=rows.map(x=>({id:x.id,name:x.nombre,category:x.categoria,have:x.disponible}));render();setStatus('☁️ Lista compartida · '+data.length+' alimentos · Sincronizada');$('migration').hidden=data.length!==0;$('auth').hidden=data.length!==0;}
-async function signedIn(s){session=s;showApp(!!s);if(s){const user=s.user||{};const name=user.user_metadata?.display_name||user.user_metadata?.full_name||user.email?.split('@')[0]||'Usuario';$('headerUser').textContent='👤 '+name;$('headerUser').hidden=false;}else{$('headerUser').textContent='';$('headerUser').hidden=true;}if(channel){await db.removeChannel(channel);channel=null;}if(!s){setStatus('Inicia sesión con tu cuenta de HondaDespensa.');return;}setStatus('Cargando lista compartida…');await refresh();await loadCatalog();channel=db.channel('alimentos-honda').on('postgres_changes',{event:'*',schema:'public',table:'alimentos'},()=>refresh()).subscribe();}
-$('loginForm').onsubmit=async e=>{e.preventDefault();const button=$('loginForm').querySelector('button');button.disabled=true;setStatus('Iniciando sesión…');const {data:result,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});button.disabled=false;if(error){setStatus('Error de acceso: '+error.message);return;}$('password').value='';await signedIn(result.session);};
-$('headerUser').onclick=async()=>{if(!session)return;if(!confirm('¿Quieres cerrar sesión?'))return;await db.auth.signOut();await signedIn(null);};
-$('upload').onclick=async()=>{if(busy)return;const {count,error:countError}=await db.from('alimentos').select('id',{count:'exact',head:true});if(countError){alert(countError.message);return;}if(count!==0){alert('La nube ya contiene alimentos. No se importará otra lista.');await refresh();return;}const local=localItems();if(!confirm(`Vas a subir ${local.length} alimentos desde ESTE móvil. Hazlo solo desde el móvil con la lista correcta. ¿Continuar?`))return;busy=true;$('upload').disabled=true;const rows=local.map(x=>({id:x.id,nombre:x.name,categoria:x.category,disponible:!!x.have}));for(let i=0;i<rows.length;i+=100){const {error}=await db.from('alimentos').insert(rows.slice(i,i+100));if(error){alert('Error al importar: '+error.message+'; algunos productos podrían haberse subido. No repitas la importación sin revisar la nube.');break;}}busy=false;$('upload').disabled=false;await refresh();};
-
-const catalogOpen=new Set();
-async function addSharedFood(name,category){
- if(!session)return;
- if(data.some(x=>x.name.toLocaleLowerCase('es')===name.toLocaleLowerCase('es')&&x.category===category)){alert('Ese alimento ya está en la lista.');return;}
- const {error}=await db.from('alimentos').insert({nombre:name,categoria:category,disponible:false});
- if(error){alert('No se pudo añadir: '+error.message);return;}
- await refresh();
-}
-function renderCatalog(){
- const holder=$('catalogItems');if(!holder)return;
- const q=$('catalogSearch').value.trim().toLocaleLowerCase('es');
- holder.replaceChildren();let remaining=0;
- for(const [category,names] of (catalogReady?Object.entries(catalogRows.reduce((acc,x)=>{(acc[x.categoria]??=[]).push(x.nombre);return acc},{})):Object.entries(initial)).sort((a,b)=>esCompare(a[0],b[0]))){
-  const available=names.filter(name=>!data.some(x=>x.category===category&&x.name.toLocaleLowerCase('es')===name.toLocaleLowerCase('es'))&&name.toLocaleLowerCase('es').includes(q));
-  if(!available.length)continue;
-  remaining+=available.length;
-  const details=document.createElement('details');details.className='catalog-category';details.open=catalogOpen.has(category)||!!q;
-  details.addEventListener('toggle',()=>{if(details.open)catalogOpen.add(category);else catalogOpen.delete(category)});
-  const summary=document.createElement('summary');summary.textContent=category+' · '+available.length;details.append(summary);
-  const products=document.createElement('div');products.className='catalog-products';
-  for(const name of available){const button=document.createElement('button');button.type='button';button.textContent='＋ '+name;button.onclick=async()=>{button.disabled=true;await addSharedFood(name,category)};products.append(button)}
-  details.append(products);holder.append(details);
- }
- if(!remaining){const p=document.createElement('p');p.className='catalog-empty';p.textContent=q?'No hay alimentos disponibles con esa búsqueda.':'Ya habéis añadido todos los alimentos del catálogo.';holder.append(p)}
-}
-
-async function loadCatalog(){
- const {data:rows,error}=await db.from('catalogo').select('id,nombre,categoria').order('categoria').order('nombre');
- if(error){catalogReady=false;adminMessage('El catálogo editable requiere ejecutar el archivo configurar_supabase.sql una sola vez. '+error.message);}
- else{catalogRows=rows||[];catalogReady=true;adminMessage('');}
- if(adminMode)renderAdmin();
-}
-function makeAdminRow(item,type){
- const row=document.createElement('div');row.className='admin-row';
- const label=document.createElement('div');label.className='admin-label';
- const name=document.createElement('strong');name.textContent=type==='food'?item.name:item.nombre;
- const cat=document.createElement('small');cat.textContent=type==='food'?item.category:item.categoria;
- label.append(name,cat);
- const actions=document.createElement('div');actions.className='admin-actions';
- const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Editar';
- const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Eliminar';
- actions.append(edit,del);row.append(label,actions);
- edit.onclick=()=>{
-  if(row.querySelector('.admin-edit')){row.querySelector('.admin-edit').remove();return;}
-  const form=document.createElement('form');form.className='admin-edit';form.style.gridColumn='1/-1';
-  const n=document.createElement('input');n.required=true;n.maxLength=100;n.value=type==='food'?item.name:item.nombre;n.setAttribute('aria-label','Nombre del alimento');
-  const c=document.createElement('input');c.required=true;c.maxLength=120;c.value=type==='food'?item.category:item.categoria;c.setAttribute('list','adminCategories');c.setAttribute('aria-label','Categoría');
-  const save=document.createElement('button');save.type='submit';save.textContent='Guardar cambios';form.append(n,c,save);row.append(form);
-  form.onsubmit=async e=>{e.preventDefault();const nombre=n.value.trim(),categoria=c.value.trim();if(!nombre||!categoria)return;save.disabled=true;
-   const table=type==='food'?'alimentos':'catalogo';const {error}=await db.from(table).update({nombre,categoria}).eq('id',item.id);
-   if(error){adminMessage('Error: '+error.message);save.disabled=false;return;}
-   await refresh();if(type==='catalog')await loadCatalog();adminMessage('Cambios guardados.');};
- };
- del.onclick=async()=>{if(!confirm('¿Eliminar «'+(type==='food'?item.name:item.nombre)+'» '+(type==='food'?'de la despensa':'del catálogo')+'?'))return;
-  del.disabled=true;const {error}=await db.from(type==='food'?'alimentos':'catalogo').delete().eq('id',item.id);
-  if(error){adminMessage('Error: '+error.message);del.disabled=false;return;}
-  await refresh();if(type==='catalog')await loadCatalog();adminMessage('Alimento eliminado.');};
- return row;
-}
-function renderAdmin(){if(!adminMode)return;
- const foodQ=$('adminFoodSearch').value.trim().toLocaleLowerCase('es');
- const foods=$('adminFoods');foods.replaceChildren();renderGroupedAdmin(foods,data,'food',foodQ);
-
- const dl=$('adminCategories');dl.replaceChildren();for(const category of categoryOptions().sort(esCompare)){const o=document.createElement('option');o.value=category;dl.append(o)}
-}
-$('adminAddMount').append($('addForm'));
-$('adminToggle').onclick=()=>{adminMode=!adminMode;showApp(true);if(adminMode){renderAdmin();}else{render();}window.scrollTo({top:0,behavior:'smooth'});};
-$('adminFoodSearch').oninput=renderAdmin;
-$('dedup').onclick=async()=>{
- const groups=new Map();for(const x of data){const k=x.name.trim().toLocaleLowerCase('es')+'|'+x.category.trim().toLocaleLowerCase('es');(groups.get(k)||groups.set(k,[]).get(k)).push(x)}
- const dup=[...groups.values()].filter(g=>g.length>1);const extra=dup.reduce((n,g)=>n+g.length-1,0);
- if(!extra){adminMessage('No hay duplicados por nombre y categoría.');return;}
- if(!confirm('Se eliminarán '+extra+' registros duplicados. Se conservará una copia por nombre y categoría y la marca «Ya tengo» si alguna copia la tiene. ¿Continuar?'))return;
- $('dedup').disabled=true;let removed=0;
- for(const group of dup){const keep=group.find(x=>x.have)||group[0];if(group.some(x=>x.have)&&!keep.have){const {error}=await db.from('alimentos').update({disponible:true}).eq('id',keep.id);if(error){adminMessage(error.message);break;}}
-  for(const x of group){if(x.id===keep.id)continue;const {error}=await db.from('alimentos').delete().eq('id',x.id);if(error){adminMessage('Limpieza interrumpida: '+error.message);await refresh();$('dedup').disabled=false;return;}removed++;}
- }
- await refresh();$('dedup').disabled=false;adminMessage('Duplicados eliminados: '+removed+'.');
-};
-
-
-$('addForm').onsubmit=async e=>{e.preventDefault();const name=$('newName').value.trim(),category=$('newCategory').value;if(!name)return;await addSharedFood(name,category);$('newName').value='';};
-$('search').oninput=render;$('filter').onchange=render;
-const {data:authData,error:authError}=await db.auth.getSession();if(authError)setStatus('Error de sesión: '+authError.message);await signedIn(authData.session);
-db.auth.onAuthStateChange((event,s)=>{if(event==='SIGNED_OUT'&&session)signedIn(null);});
-setInterval(()=>{if(session&&!document.hidden)refresh();},12000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&session)refresh();});
-</script><script>if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));}</script></body></html>
+    <form id="addForm" class="add" hidden>
+      <input id="newName" placeholder="Nombre del alimento" required maxlength="100">
+      <select id="newCategory" aria-label="Categoría"></select>
+      <button type="submit">Añadir</button>
+    </form>
+    <main id="items" hidden aria-label="Categorías y alimentos"></main>
+  </div>
+  <script type="module" src="app.js?v=21"></script>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js', { updateViaCache:'none' })
+        .then(r => r.update()).catch(() => {}));
+    }
+  </script>
+</body>
+</html>
