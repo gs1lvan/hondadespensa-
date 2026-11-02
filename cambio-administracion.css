@@ -1,0 +1,11 @@
+/* Acceso Administración sin badge y usuario dentro del panel */
+.header-actions {display:flex;justify-content:flex-start;align-items:center;gap:0}
+.header-actions .admin-launch.admin-link-simple {
+  flex:initial;min-width:0;width:auto;margin:0;padding:4px 0;
+  background:none!important;border:0!important;border-radius:0!important;
+  box-shadow:none!important;color:inherit!important;font-weight:700;
+  cursor:pointer;text-decoration:none;
+}
+.header-actions .admin-launch.admin-link-simple:hover{text-decoration:underline}
+.admin-account-slot{margin:16px 0 4px;padding-top:14px;border-top:1px solid #6d89a744}
+.admin-account-slot .admin-user-control{display:block;max-width:100%;width:auto;margin:0;padding:8px 10px}
