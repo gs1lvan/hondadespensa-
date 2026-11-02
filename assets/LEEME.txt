@@ -1,0 +1,6 @@
+HondaDespensa - Iconos de categorías
+
+20 iconos PNG individuales extraídos del boceto aprobado.
+Cada PNG conserva el fondo azul de su tarjeta y su etiqueta. Las esquinas son transparentes.
+Son recursos gráficos, no categorías verificadas en la base de datos.
+Para usarlos en la aplicación, subir la carpeta iconos-categorias y referenciar el PNG adecuado.
