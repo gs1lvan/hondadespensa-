@@ -32,36 +32,38 @@ header h1{margin:0 0 18px}
 .visualization{margin-top:16px}
 @media(max-width:500px){header h1{margin-bottom:16px}.header-actions{gap:12px}}
 
-/* HondaDespensa · edición Conservas: textura de papel y metal, sin imágenes externas */
-:root{--hd-ink:#213a50;--hd-blue:#285d82;--hd-line:#cad7d9;--hd-paper:#f8f5ed;--hd-shadow:0 5px 20px rgba(35,61,75,.09);color:var(--hd-ink);background:#e9e8df}
-body{color:var(--hd-ink);background-color:#e9e8df;background-image:repeating-linear-gradient(0deg,rgba(71,89,92,.023) 0px,rgba(71,89,92,.023) 1px,transparent 1px,transparent 5px),radial-gradient(ellipse at 15% 10%,rgba(255,255,255,.75),transparent 65%);min-height:100vh}
-.wrap{max-width:940px;padding:18px 15px 70px}
-header{position:relative;overflow:hidden;background:linear-gradient(125deg,#204b6a,#36789a);border:1px solid #153e59;border-radius:20px;padding:25px 24px 22px;box-shadow:var(--hd-shadow)}
-header:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.23;background:repeating-linear-gradient(100deg,transparent 0 3px,rgba(255,255,255,.12) 4px,transparent 5px 10px)}
-header:after{content:"";position:absolute;right:17px;top:14px;width:50px;height:50px;border:5px solid rgba(239,244,241,.23);border-radius:50%;box-shadow:inset 0 0 0 4px rgba(16,45,63,.2),0 0 0 2px rgba(255,255,255,.09);pointer-events:none}
-header h1{position:relative;font-size:clamp(24px,5vw,32px);letter-spacing:.3px;margin-bottom:19px}
-.header-actions{position:relative}
-.header-actions .admin-launch,.header-actions .header-user{background:#e9edf0;color:#234a67;border:1px solid #c6d4dd;border-radius:11px;font-weight:600;box-shadow:0 2px 0 rgba(0,0,0,.08)}
-.header-actions .admin-launch:hover,.header-actions .header-user:hover{background:#fff}
-.stat,.auth,.admin-panel,.category,.catalog{background:var(--hd-paper);border:1px solid var(--hd-line);box-shadow:var(--hd-shadow);border-radius:16px}
-.stat{position:relative;overflow:hidden}.stat:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#a4b5bd,#dce5e6,#a4b5bd)}
-.stat b{color:#235c80;font-weight:800}.stat small{color:#60717b}
-.category summary,.catalog-category summary{background:linear-gradient(180deg,#edf1ef,#dfe8e9);color:#244b65;border-bottom:1px solid #d2dcdd}
-.category summary:before{content:"";width:18px;height:18px;border-radius:50%;flex:0 0 18px;margin-right:10px;background:radial-gradient(circle at center,#d6e0e1 0 23%,#7b98a7 25% 36%,#eaf0ef 39% 58%,#a8bdc4 60% 100%);box-shadow:0 1px 2px #9eb0b5}
-.item{border-top-color:#e3e8e5}.item:nth-child(even){background:rgba(226,233,231,.28)}
-button{background:#2c668a;border:1px solid rgba(25,72,101,.22);font-weight:600;transition:background .15s,transform .15s}button:hover{filter:brightness(1.06)}button:active{transform:translateY(1px)}
-button.secondary,.catalog-products button{background:#e3ebed;color:#24536f}
-.toolbar input,.toolbar select,.add input,.add select,.admin-panel input,.admin-panel select,.catalog-search{border-color:#b9cbd0;background:#fffefa;color:#233f51}
-input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #80b3d0;outline-offset:2px}
-.visualization{background:#f8f5ed}.notice,.catalog-help{color:#5a707d}
-/* Mantener legible y separado el modo oscuro existente */
-html.dark body{background-color:#15212c;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 5px)}
-html.dark .stat,html.dark .auth,html.dark .admin-panel,html.dark .category,html.dark .catalog{background:#1b2a40;border-color:#38536a;color:#eaf3ff}
-html.dark .category summary,html.dark .catalog-category summary{background:linear-gradient(#304c65,#263d54);color:#edf5ff;border-color:#476077}
-html.dark .stat b{color:#d0e8fa}html.dark .stat small{color:#b5c7d5}
-html.dark .visualization{background:#1b2a40}
-@media(max-width:500px){.wrap{padding:12px 10px 55px}header{padding:22px 17px 19px}header:after{width:35px;height:35px;right:13px;top:12px}.header-actions{gap:9px}.header-actions .admin-launch,.header-actions .header-user{font-size:clamp(11px,3vw,14px);padding:8px 4px}.stats{gap:8px}.stat{padding:13px 5px}}
-</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#285d82"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"></head><body><div class="wrap"><header><h1>🏖️ HondaDespensa</h1><div class="header-actions"><button id="adminToggle" class="admin-launch" type="button" hidden>⚙️ Administrar</button><button id="headerUser" class="header-user" type="button" title="Cerrar sesión" hidden></button></div></header>
+/* HONDA DESPENSA · EDICIÓN CONSERVAS · rediseño visible */
+:root{color:#f4f8ff;background:#071c32;--panel:#102c48;--line:#547595;--blue:#008be9}
+html,html.dark{background:#071c32;color:#f4f8ff;color-scheme:dark}
+body,html.dark body{color:#f4f8ff;background-color:#071c32;background-image:radial-gradient(ellipse at 17% 13%,#31557655,transparent 48%),radial-gradient(ellipse at 80% 75%,#23476544,transparent 55%),url('textura-azul.svg');background-size:auto,auto,220px 220px;background-attachment:fixed}
+.wrap{max-width:1050px;padding:16px 15px 90px}
+header,html.dark header{position:relative;isolation:isolate;overflow:visible;background:linear-gradient(140deg,#0b2948dd,#071b31dd);border:1px solid #476b90;border-radius:22px 22px 8px 8px;padding:24px 24px 45px;box-shadow:0 12px 35px #0007,inset 0 1px #ffffff33;margin-bottom:38px}
+header:after{content:'';position:absolute;left:-1px;right:-1px;bottom:-29px;height:45px;background:url('papel-rasgado.svg') center/100% 100% no-repeat;pointer-events:none;z-index:1}
+header:before{content:'';position:absolute;bottom:-51px;left:50%;transform:translateX(-50%) rotate(-13deg);width:62px;height:83px;background:url('anilla-lata.svg') center/contain no-repeat;z-index:3;filter:drop-shadow(2px 5px 4px #0009);pointer-events:none}
+header h1{font-size:clamp(27px,5vw,46px);font-weight:850;font-style:italic;letter-spacing:-1.7px;text-shadow:1px 3px 3px #0008;margin:0 0 22px;padding-left:clamp(0px,16vw,170px);position:relative}
+header h1:after{content:'';display:block;height:7px;max-width:350px;margin:6px 0 0;background:#06a6fa;border-radius:100% 10% 100% 10%;transform:rotate(-2deg)}
+header h1:before{content:'';position:absolute;left:0;top:-12px;width:clamp(72px,14vw,135px);height:clamp(72px,14vw,135px);background:url('icon-192.png') center/cover;border:7px solid #f4f0e5;box-shadow:0 7px 12px #0008;transform:rotate(-7deg)}
+.header-actions{gap:12px;position:relative;z-index:4}
+.header-actions .admin-launch,.header-actions .header-user{height:54px;border:1px solid #6c94bd;border-radius:30px;background:linear-gradient(155deg,#183b5d,#0b213a);color:white;font-weight:700;box-shadow:inset 0 1px #ffffff33,0 4px 10px #0006}
+button,html.dark button:not(.secondary):not(.danger):not(.admin-launch){background:linear-gradient(155deg,#079ffa,#0050b2);color:#fff;border:1px solid #4ab8ff;border-radius:13px;box-shadow:inset 0 2px 2px #ffffff44,0 3px 9px #0005;font-weight:650}
+button.secondary,html.dark button.secondary,html.dark .admin-launch{background:linear-gradient(155deg,#284d72,#112b47);color:#f4f8ff;border:1px solid #668ab1}
+button.danger,html.dark button.danger{background:linear-gradient(150deg,#622e40,#3b1a2b);color:#fff;border:1px solid #f06375}
+.stat,.auth,.admin-panel,.category,.catalog,html.dark .stat,html.dark .auth,html.dark .admin-panel,html.dark .category,html.dark .catalog{background:linear-gradient(135deg,#183753ed,#0b223bea);color:#f5f8ff;border:1px solid #456a8e;box-shadow:inset 0 1px #ffffff1c,0 7px 17px #0005;border-radius:19px}
+.stats{gap:12px;margin-top:54px}.stat{padding:18px 9px}.stat b{color:#fff;text-shadow:0 2px 3px #0007}.stat small{color:#b8d1ea}
+.category{margin:16px 0;overflow:hidden;position:relative;border-left:7px solid #70d85d}
+.category:nth-of-type(3n){border-left-color:#f7b63a}
+.category summary,.catalog-category summary,html.dark .category summary,html.dark .catalog-category summary{background:linear-gradient(130deg,#224767,#102a47);color:#fff;border-bottom:1px solid #456887;font-size:18px}
+.category summary:before{content:'';display:inline-block;width:28px;height:28px;flex:none;margin-right:10px;background:url('lata-icono.svg') center/contain no-repeat}
+.category summary small{color:#c1d8ee}
+.item{border-top:1px solid #355675;padding:14px 15px;min-height:64px}.item span{color:#f3f7fd}.item.done span{color:#9eb2c8}
+.toolbar input,.toolbar select,.add input,.add select,.admin-panel input,.admin-panel select,.catalog-search,html.dark input:not([type=checkbox]),html.dark select{background:#0c243c;color:#fff;border:1px solid #6c8dae;border-radius:14px;min-height:48px}
+input::placeholder{color:#b4c9dc!important}
+.auth p,.notice,.empty,.catalog-help,.admin-row small{color:#b8cce0!important}
+.catalog-products button{background:linear-gradient(145deg,#234a6e,#112b47)!important;color:white!important;border:1px solid #6484a6}
+.admin-panel .admin-edit{background:#173553!important}
+.visualization{margin-top:16px}
+@media(max-width:560px){header{padding:18px 14px 39px}header h1{font-size:clamp(24px,6vw,34px);padding-left:82px;min-height:74px;letter-spacing:-1px}header h1:before{width:66px;height:66px;border-width:4px}.header-actions{gap:8px}.header-actions .admin-launch,.header-actions .header-user{height:50px;font-size:clamp(11px,3vw,14px);padding:5px}.stats{margin-top:57px}.stat{padding:14px 5px}.category summary{font-size:16px}.wrap{padding:12px 10px 80px}}
+</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#071c32"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"></head><body><div class="wrap"><header><h1>🏖️ HondaDespensa</h1><div class="header-actions"><button id="adminToggle" class="admin-launch" type="button" hidden>⚙️ Administrar</button><button id="headerUser" class="header-user" type="button" title="Cerrar sesión" hidden></button></div></header>
 <section class="auth" id="auth"><p id="status" role="status">Conectando con Supabase…</p>
 <form id="loginForm" class="add" hidden><input id="email" type="email" autocomplete="username" placeholder="Correo electrónico" required><input id="password" type="password" autocomplete="current-password" placeholder="Contraseña" required><button type="submit">Entrar</button></form>
 
