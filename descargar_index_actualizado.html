@@ -1,0 +1,11 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Descargar HondaDespensa actualizado</title><style>body{font:16px system-ui;max-width:620px;margin:50px auto;padding:20px;color:#172b46}button{background:#2563a0;color:white;border:0;border-radius:12px;padding:15px;font:inherit}p{line-height:1.6}</style><h1>HondaDespensa</h1><p>Genera el <b>index.html</b> actualizado desde la versión actual del repositorio. Quita «Despensa compartida» y muestra el usuario en la cabecera.</p><button id="go">Descargar index.html actualizado</button><p id="msg"></p><script>
+document.getElementById('go').onclick=async()=>{const msg=document.getElementById('msg');try{msg.textContent='Obteniendo versión del repositorio…';const res=await fetch('https://raw.githubusercontent.com/gs1lvan/hondadespensa-/main/index.html?cache='+Date.now());if(!res.ok)throw Error('HTTP '+res.status);let s=await res.text();const edits=[
+['<p style="font-size:12px;opacity:.8;margin:6px 0 0">Panel de administración · versión 18</p>','<p id="headerUser" style="font-size:12px;opacity:.8;margin:6px 0 0" hidden></p>'],
+['<details id="authDetails" open><summary>🔐 Despensa compartida</summary>',''],
+['</div></details></section>\n<section class="auth visualization"','</div></section>\n<section class="auth visualization"'],
+["$('authDetails').open=!visible;",''],
+["$('currentUser').textContent='👤 '+name;","$('currentUser').textContent='👤 '+name;$('headerUser').textContent='👤 '+name;$('headerUser').hidden=false;"],
+["$('currentUser').textContent='';","$('currentUser').textContent='';$('headerUser').textContent='';$('headerUser').hidden=true;"]];
+for(const [a,b] of edits){if(s.split(a).length!==2)throw Error('La versión del repositorio ha cambiado. No se modificó nada.');s=s.replace(a,b)}
+const blob=new Blob([s],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='index.html';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);msg.textContent='Archivo generado. Súbelo al repositorio sustituyendo index.html.';}catch(e){msg.textContent='Error: '+e.message+' (necesitas conexión a Internet).'}};
+</script></html>
