@@ -99,7 +99,7 @@ async function saveCategoryOrder(next){
  finally{savingCategoryOrder=false;renderAdmin();}
 }
 function categoryOrderControls(category){
- const ordered=orderedCategories(data.map(x=>x.category)),index=ordered.indexOf(category);
+ const ordered=orderedCategories(pantryCategories()),index=ordered.indexOf(category);
  const actions=document.createElement('span');actions.className='category-order-actions';
  actions.style.cssText='display:flex;gap:6px;grid-column:3;grid-row:2';
  for(const [delta,text,label] of [[-1,'↑','Subir'],[1,'↓','Bajar']]){
@@ -179,6 +179,93 @@ function mountStylePanel(){
  renderStylePanel();
 }
 
+
+let customCategories=[],categoryMutation=false;
+const pantryCategories=()=>[...new Set([...customCategories,...data.map(x=>x.category)])];
+const categoryIdentity=name=>folded(bareCategory(name)).trim();
+async function storeCategories(categories,order=categoryOrder){
+ const {data:result,error}=await db.auth.updateUser({data:{pantry_categories:categories,category_order:order}});
+ if(error)throw error;
+ session.user=result.user;customCategories=readCategoryOrder(result.user.user_metadata?.pantry_categories);
+ categoryOrder=readCategoryOrder(result.user.user_metadata?.category_order);
+}
+function categoryExists(name,except){
+ return pantryCategories().some(c=>c!==except&&categoryIdentity(c)===categoryIdentity(name));
+}
+async function createPantryCategory(name){
+ name=name.trim();if(!name||!categoryIdentity(name)||!session||categoryMutation)return false;
+ if(categoryExists(name)){adminMessage('Ya existe una categoría con ese nombre.');return false;}
+ categoryMutation=true;
+ try{
+  await storeCategories([...customCategories,name]);
+  adminOpenCategories.food.add(name);render();adminMessage('Categoría creada.');return true;
+ }catch(error){adminMessage('No se pudo crear la categoría: '+error.message);return false;}
+ finally{categoryMutation=false;}
+}
+async function renamePantryCategory(category,name){
+ name=name.trim();if(!name||!categoryIdentity(name)||!session||categoryMutation)return;
+ if(name===category)return;
+ if(categoryExists(name,category)){adminMessage('Ya existe una categoría con ese nombre.');return;}
+ categoryMutation=true;
+ const previous=[...customCategories],previousOrder=[...categoryOrder];
+ try{
+  const categories=[...new Set([...customCategories.filter(c=>c!==category),name])];
+  const order=orderedCategories(pantryCategories()).map(c=>c===category?name:c);
+  await storeCategories(categories,order);
+  const {error}=await db.from('alimentos').update({categoria:name}).eq('categoria',category);
+  if(error){
+   await storeCategories(previous,previousOrder);throw error;
+  }
+  data=data.map(x=>x.category===category?{...x,category:name}:x);
+  if(adminOpenCategories.food.delete(category))adminOpenCategories.food.add(name);
+  if(openCategories.delete(category))openCategories.add(name);
+  if(categoryFoodDrafts.has(category)){categoryFoodDrafts.set(name,categoryFoodDrafts.get(category));categoryFoodDrafts.delete(category);}
+  render();await refresh();adminMessage('Nombre de categoría guardado.');
+ }catch(error){adminMessage('No se pudo completar el cambio de categoría: '+error.message);await refresh();render();}
+ finally{categoryMutation=false;}
+}
+async function deletePantryCategory(category){
+ if(!session||categoryMutation)return;
+ if(data.some(x=>x.category===category)){adminMessage('Vacía esta categoría antes de eliminarla.');return;}
+ if(!confirm('¿Eliminar la categoría «'+bareCategory(category)+'»?'))return;
+ categoryMutation=true;
+ try{
+  await storeCategories(customCategories.filter(c=>c!==category),categoryOrder.filter(c=>c!==category));
+  adminOpenCategories.food.delete(category);openCategories.delete(category);categoryFoodDrafts.delete(category);
+  render();adminMessage('Categoría eliminada.');
+ }catch(error){adminMessage('No se pudo eliminar la categoría: '+error.message);}
+ finally{categoryMutation=false;}
+}
+function categoryManagement(category){
+ const holder=document.createElement('div');holder.className='admin-row';
+ const actions=document.createElement('div');actions.className='admin-actions';
+ const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Editar categoría';
+ const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Eliminar categoría';
+ actions.append(edit,del);holder.append(actions);
+ edit.onclick=()=>{
+  if(holder.querySelector('form')){holder.querySelector('form').remove();return;}
+  const form=document.createElement('form');form.className='admin-edit';
+  const input=document.createElement('input');input.required=true;input.maxLength=120;input.value=bareCategory(category);input.setAttribute('aria-label','Nombre de la categoría');
+  const save=document.createElement('button');save.type='submit';save.textContent='Guardar nombre';
+  form.append(input,save);holder.append(form);input.focus();
+  form.onsubmit=async event=>{event.preventDefault();save.disabled=true;await renamePantryCategory(category,input.value);save.disabled=false;};
+ };
+ del.onclick=()=>deletePantryCategory(category);
+ return holder;
+}
+function mountCategoryCreator(){
+ const plus=$('dedup');plus.id='addCategoryToggle';plus.textContent='+';plus.setAttribute('aria-label','Crear categoría');plus.setAttribute('aria-expanded','false');
+ const form=document.createElement('form');form.className='add';form.hidden=true;
+ const input=document.createElement('input');input.required=true;input.maxLength=120;input.placeholder='Nombre de la nueva categoría';input.setAttribute('aria-label','Nombre de la nueva categoría');
+ const add=document.createElement('button');add.type='submit';add.textContent='Añadir';
+ const cancel=document.createElement('button');cancel.type='button';cancel.className='secondary';cancel.textContent='Cancelar';
+ form.append(input,add,cancel);plus.parentElement.append(form);
+ const close=()=>{form.hidden=true;plus.hidden=false;plus.setAttribute('aria-expanded','false');input.value='';plus.focus();};
+ plus.onclick=()=>{plus.hidden=true;plus.setAttribute('aria-expanded','true');form.hidden=false;input.focus();};
+ cancel.onclick=close;
+ form.onsubmit=async event=>{event.preventDefault();add.disabled=cancel.disabled=true;try{if(await createPantryCategory(input.value))close();}finally{add.disabled=cancel.disabled=false;}};
+}
+
 const categoryOptions=()=>[...new Set([...Object.keys(initial),...data.map(x=>x.category),...catalogRows.map(x=>x.categoria)])];
 function adminMessage(message) {$('adminMessage').textContent=message||'';}
 function setStatus(message) {$('status').textContent=message;}
@@ -205,9 +292,9 @@ function render(){
  const shown=data.filter(x=>folded(x.name).includes(q)&&(filter==='all'||(filter==='have'?x.have:!x.have)));
  const main=$('items');main.replaceChildren();
  if(!shown.length){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';main.append(p);}
- for(const category of orderedCategories(data.map(x=>x.category))){
+ for(const category of orderedCategories(pantryCategories())){
   const rows=shown.filter(x=>x.category===category).sort((a,b)=>esCompare(a.name,b.name));
-  if(!rows.length)continue;
+  if(!rows.length&&(q||filter!=='all'))continue;
   const details=document.createElement('details');details.className='category';details.open=openCategories.has(category)||!!q;
   details.addEventListener('toggle',()=>{if(details.open)openCategories.add(category);else openCategories.delete(category)});
   details.append(categoryHeader(category,`${rows.filter(x=>x.have).length}/${rows.length}`));
@@ -244,6 +331,7 @@ async function signedIn(currentSession){
  recentAdminFoods.clear();
  applyViewStyle(currentSession?.user?.user_metadata?.view_style);
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
+ customCategories=readCategoryOrder(currentSession?.user?.user_metadata?.pantry_categories);
  showApp(!!currentSession);
  if(channel){await db.removeChannel(channel);channel=null;}
  if(catalogChannel){await db.removeChannel(catalogChannel);catalogChannel=null;}
@@ -404,6 +492,7 @@ function renderGroupedAdmin(container,rows,type,query){
   if(section.open)open.add(section.dataset.category);else open.delete(section.dataset.category);
  }
  container.replaceChildren();const groups=new Map();
+ if(type==='food')for(const category of pantryCategories())if(!query||folded(category).includes(query))groups.set(category,[]);
  for(const item of rows){
   const category=type==='food'?item.category:item.categoria;
   const name=type==='food'?item.name:item.nombre;
@@ -423,7 +512,7 @@ function renderGroupedAdmin(container,rows,type,query){
    header.append(categoryOrderControls(category));
   }
   section.append(header);
-  if(type==='food')section.append(categoryAddFoodForm(category));
+  if(type==='food')section.append(categoryManagement(category),categoryAddFoodForm(category));
   for(const item of groups.get(category).sort(type==='food'?compareAdminFoods:(a,b)=>esCompare(a.nombre,b.nombre)))section.append(makeAdminRow(item,type));
   section.dataset.category=category;
   section.open=open.has(category)||!!query;container.append(section);
@@ -455,26 +544,7 @@ $('catalogAddForm').onsubmit=async e=>{
  if(error){adminMessage('Error: '+error.message);return;}
  $('catalogNewName').value='';await loadCatalog();adminMessage('Alimento añadido al catálogo.');
 };
-$('dedup').onclick=async()=>{
- const groups=new Map();
- for(const x of data){const key=folded(x.name.trim())+'|'+folded(x.category.trim());if(!groups.has(key))groups.set(key,[]);groups.get(key).push(x);}
- const dup=[...groups.values()].filter(group=>group.length>1);
- const extra=dup.reduce((n,g)=>n+g.length-1,0);
- if(!extra){adminMessage('No hay duplicados por nombre y categoría.');return;}
- if(!confirm('Se eliminarán '+extra+' registros duplicados. Se conservará una copia por nombre y categoría y la marca «Ya tengo» si alguna copia la tiene. ¿Continuar?'))return;
- $('dedup').disabled=true;let removed=0;
- for(const group of dup){
-  const keep=group.find(x=>x.have)||group[0];
-  if(group.some(x=>x.have)&&!keep.have){const {error}=await db.from('alimentos').update({disponible:true}).eq('id',keep.id);if(error){adminMessage(error.message);break;}}
-  for(const x of group){
-   if(x.id===keep.id)continue;
-   const {error}=await db.from('alimentos').delete().eq('id',x.id);
-   if(error){adminMessage('Limpieza interrumpida: '+error.message);await refresh();$('dedup').disabled=false;return;}
-   removed++;
-  }
- }
- await refresh();$('dedup').disabled=false;adminMessage('Duplicados eliminados: '+removed+'.');
-};
+mountCategoryCreator();
 
 const {data:authData,error:authError}=await db.auth.getSession();
 if(authError)setStatus('Error de sesión: '+authError.message);
