@@ -192,18 +192,10 @@ function showApp(visible){
  $('adminToggle').textContent=adminMode?'← Volver a despensa':'⚙️ Administrar';
  $('adminPanel').hidden=!visible||!adminMode;
  for(const id of ['stats','toolbar','items'])$(id).hidden=!visible||adminMode;
- $('addForm').hidden=!visible||!adminMode;
  $('auth').hidden=visible;
  $('loginForm').hidden=visible;
  $('status').hidden=visible;
  if(!visible)$('migration').hidden=true;
-}
-function categories(){
- const sel=$('newCategory'),old=sel.value;sel.replaceChildren();
- for(const c of categoryOptions().sort(esCompare)){
-  const opt=document.createElement('option');opt.value=c;opt.textContent=bareCategory(c);sel.append(opt);
- }
- if(old&&[...sel.options].some(x=>x.value===old))sel.value=old;
 }
 function render(){
  const q=folded($('search').value.trim()),filter=$('filter').value;
@@ -233,7 +225,7 @@ function render(){
   }
   main.append(details);
  }
- categories();if(adminMode)renderAdmin();
+ if(adminMode)renderAdmin();
 }
 async function refresh(){
  if(!session)return;
@@ -307,11 +299,6 @@ async function addSharedFood(name,category,recentFirst=false){
  if(recentFirst)recentAdminFoods.set(adminFoodKey({name,category}),++recentAdminFoodSequence);
  await refresh();return true;
 }
-$('addForm').onsubmit=async e=>{
- e.preventDefault();const name=$('newName').value.trim(),category=$('newCategory').value;
- if(!name||!category)return;
- if(await addSharedFood(name,category))$('newName').value='';
-};
 $('search').oninput=render;$('filter').onchange=render;
 
 async function loadCatalog(){
@@ -455,7 +442,8 @@ function renderAdmin(){
 }
 mountStylePanel();
 // El alta se realiza dentro de cada categoría, sin selector global.
-$('adminAddMount').parentElement.hidden=true;
+$('adminAddMount').parentElement.remove();
+$('addForm').remove();
 $('adminFoodSearch').oninput=renderAdmin;
 $('adminCatalogSearch').oninput=renderAdmin;
 $('catalogSearch').oninput=renderCatalog;
