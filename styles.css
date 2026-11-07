@@ -231,3 +231,6 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
 :root .background-dialog .background-preview .background-preview-card{width:100%;margin:0;color:var(--textColor,var(--ink));border-color:var(--borderColor,var(--card-edge,#6795b9))}
 :root .background-dialog .background-preview .cat-count{color:var(--textColor,var(--muted))}
 .background-preview-card>summary{cursor:default}
+
+.background-hex{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;width:100%}
+.background-hex input{font-family:ui-monospace,monospace}

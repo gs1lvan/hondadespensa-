@@ -332,16 +332,50 @@ function mountBackground(panel){
  reset.textContent='Restablecer este color';
  const customControls=document.createElement('div');
  customControls.className='background-color-controls';
- customControls.append(targets,wheel,exact,reset);
+ const hexRow=document.createElement('div');
+ hexRow.className='background-hex';
+ const hex=document.createElement('input');
+ hex.type='text';
+ hex.maxLength=7;
+ hex.spellcheck=false;
+ hex.setAttribute('aria-label','Código HEX del color');
+ hex.onchange=()=>{
+  if(/^#[0-9a-f]{6}$/i.test(hex.value.trim())){
+   exact.value=hex.value.trim();
+   exact.oninput();
+  }
+  syncColor();
+ };
+ const copy=document.createElement('button');
+ copy.type='button';
+ copy.className='secondary';
+ copy.textContent='Copiar';
+ const copied=document.createElement('small');
+ copied.setAttribute('role','status');
+ copy.onclick=async()=>{
+  try{
+   await navigator.clipboard.writeText(exact.value.toUpperCase());
+   copied.textContent='Código copiado';
+  }catch{
+   hex.focus();
+   hex.select();
+   copied.textContent='Código seleccionado para copiar';
+  }
+ };
+ hexRow.append(hex,copy);
+ customControls.append(targets,wheel,exact,hexRow,copied,reset);
  dialog.append(customControls);
  let draft;
  function syncColor(){
   exact.value=draft[target]??customColorDefaults[target];
+  hex.value=exact.value.toUpperCase();
+  copied.textContent='';
   for(const button of targets.children)button.setAttribute('aria-pressed',String(button.dataset.colorTarget===target));
  }
 
  exact.oninput=()=>{
   draft[target]=exact.value;
+  syncColor();
   updatePreview();
  };
  reset.onclick=()=>{
