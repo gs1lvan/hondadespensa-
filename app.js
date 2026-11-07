@@ -116,6 +116,62 @@ function categoryOrderControls(category){
  }
  return actions;
 }
+
+const viewStyles=[
+ {id:'ampliado',name:'Ampliado',description:'Tarjetas grandes, iconos destacados y más espacio.'},
+ {id:'compactado',name:'Compactado',description:'Tarjetas y filas más pequeñas para ver más alimentos.'}
+];
+let viewStyle='ampliado',savingViewStyle=false;
+function applyViewStyle(value){
+ viewStyle=viewStyles.some(x=>x.id===value)?value:'ampliado';
+ document.documentElement.dataset.viewStyle=viewStyle;
+ renderStylePanel();
+}
+function renderStylePanel(){
+ const panel=$('styleOptions');if(!panel)return;
+ for(const button of panel.querySelectorAll('button')){
+  const selected=button.dataset.style===viewStyle;
+  button.setAttribute('aria-pressed',String(selected));
+  button.disabled=savingViewStyle;
+  button.querySelector('.style-state').textContent=selected?'Seleccionado':'Elegir estilo';
+ }
+ panel.setAttribute('aria-busy',String(savingViewStyle));
+}
+async function saveViewStyle(next){
+ if(!session||savingViewStyle||next===viewStyle)return;
+ const previous=viewStyle;
+ savingViewStyle=true;applyViewStyle(next);
+ $('styleMessage').textContent='Guardando estilo…';
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{view_style:next}});
+  if(error)throw error;
+  session.user=result.user;
+  $('styleMessage').textContent='Estilo guardado en tu cuenta.';
+ }catch(error){
+  applyViewStyle(previous);
+  $('styleMessage').textContent='No se pudo guardar el estilo: '+error.message;
+ }finally{savingViewStyle=false;renderStylePanel();}
+}
+function mountStylePanel(){
+ const panel=document.createElement('details');panel.className='admin-section admin-catalog style-panel';
+ const title=document.createElement('summary');title.textContent='🎨 Panel de estilos';
+ const hint=document.createElement('p');hint.className='hint';hint.textContent='Elige cómo quieres ver la aplicación. Tu elección se guarda automáticamente en tu cuenta.';
+ const options=document.createElement('div');options.id='styleOptions';options.className='style-options';options.setAttribute('role','group');options.setAttribute('aria-label','Estilo de visualización');
+ for(const style of viewStyles){
+  const button=document.createElement('button');button.type='button';button.className='style-option';button.dataset.style=style.id;
+  const preview=document.createElement('span');preview.className='style-preview preview-'+style.id;preview.setAttribute('aria-hidden','true');
+  for(const text of ['🌿 Especias','🍅 Salsas','🍚 Cereales']){const row=document.createElement('span');row.textContent=text;preview.append(row);}
+  const name=document.createElement('strong');name.textContent=style.name;
+  const description=document.createElement('span');description.className='style-description';description.textContent=style.description;
+  const state=document.createElement('span');state.className='style-state';
+  button.append(preview,name,description,state);button.onclick=()=>saveViewStyle(style.id);options.append(button);
+ }
+ const message=document.createElement('p');message.id='styleMessage';message.className='hint';message.setAttribute('role','status');
+ panel.append(title,hint,options,message);
+ $('adminPanel').insertBefore(panel,$('adminAddMount').parentElement);
+ renderStylePanel();
+}
+
 const categoryOptions=()=>[...new Set([...Object.keys(initial),...data.map(x=>x.category),...catalogRows.map(x=>x.categoria)])];
 function adminMessage(message) {$('adminMessage').textContent=message||'';}
 function setStatus(message) {$('status').textContent=message;}
@@ -186,6 +242,7 @@ async function refresh(){
 }
 async function signedIn(currentSession){
  session=currentSession;
+ applyViewStyle(currentSession?.user?.user_metadata?.view_style);
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
  showApp(!!currentSession);
  if(channel){await db.removeChannel(channel);channel=null;}
@@ -354,6 +411,7 @@ function renderAdmin(){
  const dl=$('adminCategories');dl.replaceChildren();
  for(const category of categoryOptions().sort(esCompare)){const opt=document.createElement('option');opt.value=category;dl.append(opt);}
 }
+mountStylePanel();
 $('adminAddMount').append($('addForm'));
 $('adminFoodSearch').oninput=renderAdmin;
 $('adminCatalogSearch').oninput=renderAdmin;
