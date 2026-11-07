@@ -204,3 +204,5 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 [data-bg-color=marino]{--card-light:#1a4868ee;--card-dark:#0a2945f5;--card-edge:#6795b9;--card-inner:#09243b91}
 
 .toolbar #search,.toolbar #filter{background-color:var(--card-dark,#0a2945);border-color:var(--card-edge,#6795b9)}
+
+.toolbar #search{background-image:none}
