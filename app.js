@@ -380,7 +380,10 @@ function mountBackground(panel){
  dialog.append(customControls);
  let draft,hue=0,saturation=0;
  function syncColor(keepChannels=false){
-  exact.value=draft[target]??customColorDefaults[target];
+  const preset=target==='customBackground'
+   ?getComputedStyle(preview).getPropertyValue('--app-bg-color').trim()
+   :customColorDefaults[target];
+  exact.value=draft[target]??(preset||customColorDefaults[target]);
   if(!keepChannels){
    const [red,green,blue]=exact.value.slice(1).match(/../g).map(part=>parseInt(part,16)/255);
    const max=Math.max(red,green,blue),min=Math.min(red,green,blue);
@@ -405,8 +408,8 @@ function mountBackground(panel){
  };
  reset.onclick=()=>{
   draft[target]=null;
-  syncColor();
   updatePreview();
+  syncColor();
  };
  function pickHue(event){
   const rect=wheel.getBoundingClientRect();
@@ -447,8 +450,8 @@ function mountBackground(panel){
  texture.onchange=updatePreview;
  color.onchange=()=>{
   draft.customBackground=null;
-  syncColor();
   updatePreview();
+  syncColor();
  };
  const actions=document.createElement('div');
  actions.className='font-dialog-actions';
@@ -467,10 +470,11 @@ function mountBackground(panel){
  picker.onclick=()=>{
   const saved=backgroundPreference(session?.user?.user_metadata?.app_background);
   draft=saved;
+  target='customBackground';
   color.value=saved.color;
-  syncColor();
   texture.value=saved.texture;
   updatePreview();
+  syncColor();
   dialog.showModal();
  };
  apply.onclick=async()=>{
