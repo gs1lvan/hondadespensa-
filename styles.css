@@ -226,7 +226,8 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
 :root[style*="--textColor"] .wrap input::placeholder{color:var(--textColor);opacity:.8}
 :root[style*="--borderColor"] .wrap :is(.category,.item,.admin-panel,button,input,select,fieldset,dialog){border-color:var(--borderColor)}
 
-.background-preview-card{display:flex;align-items:center;gap:8px;width:100%;padding:10px;border:1px solid var(--borderColor,var(--card-edge,var(--line)));border-radius:14px;background:linear-gradient(130deg,var(--card-light,#1a4868ee),var(--card-dark,#0a2945f5));color:var(--textColor,var(--ink))}
-.background-preview-card .cat-icon{width:34px;height:34px}
-.background-preview-card .cat-count{color:inherit;font-size:12px}
-.background-preview-card .chevron{border-width:1.5px;margin-inline-end:4px}
+
+.background-preview{--customBackground:initial;--textColor:initial;--borderColor:initial;padding-block:25px 12px}
+:root .background-dialog .background-preview .background-preview-card{width:100%;margin:0;color:var(--textColor,var(--ink));border-color:var(--borderColor,var(--card-edge,#6795b9))}
+:root .background-dialog .background-preview .cat-count{color:var(--textColor,var(--muted))}
+.background-preview-card>summary{cursor:default}
