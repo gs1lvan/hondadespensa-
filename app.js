@@ -82,41 +82,39 @@ function orderedCategories(values){
 }
 async function saveCategoryOrder(next){
  if(!session||savingCategoryOrder)return false;
- savingCategoryOrder=true;renderCategoryOrder();
+ savingCategoryOrder=true;renderAdmin();
  try{
   const {data:result,error}=await db.auth.updateUser({data:{category_order:next}});
   if(error)throw error;
   session.user=result.user;categoryOrder=readCategoryOrder(result.user.user_metadata?.category_order);
   render();adminMessage('Orden guardado en tu cuenta.');return true;
  }catch(error){adminMessage('No se pudo guardar el orden: '+error.message);return false;}
- finally{savingCategoryOrder=false;renderCategoryOrder();}
+ finally{savingCategoryOrder=false;renderAdmin();}
 }
-function renderCategoryOrder(){
- const holder=$('categoryOrderList');holder.setAttribute('aria-busy',String(savingCategoryOrder));holder.replaceChildren();
- const ordered=orderedCategories(data.map(x=>x.category));
- if(!ordered.length){const p=document.createElement('p');p.className='hint';p.textContent='Añade alimentos para ordenar sus categorías.';holder.append(p);}
- ordered.forEach((category,index)=>{
-  const row=document.createElement('div');row.className='admin-row';
-  const label=document.createElement('span');label.className='admin-label';label.textContent=(index+1)+'. '+bareCategory(category);
-  const actions=document.createElement('div');actions.className='admin-actions';
-  for(const [delta,text] of [[-1,'↑ Subir'],[1,'↓ Bajar']]){
-   const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=text;
-   button.setAttribute('aria-label',text+' '+bareCategory(category));
-   button.disabled=savingCategoryOrder||index+delta<0||index+delta>=ordered.length;
-   button.onclick=async()=>{
-    const next=[...ordered];[next[index],next[index+delta]]=[next[index+delta],next[index]];
-    // Conservar también las preferencias de categorías temporalmente vacías.
-    next.push(...categoryOrder.filter(x=>!next.includes(x)));
-    const saved=await saveCategoryOrder(next);
-    const position=saved?index+delta:index;
-    const buttons=holder.children[position]?.querySelectorAll('button');
-    if(buttons){const preferred=buttons[delta===-1?0:1];(preferred.disabled?[...buttons].find(x=>!x.disabled):preferred)?.focus();}
-   };
-   actions.append(button);
-  }
-  row.append(label,actions);holder.append(row);
- });
- $('resetCategoryOrder').disabled=savingCategoryOrder||!categoryOrder.length;
+function categoryOrderControls(category){
+ const ordered=orderedCategories(data.map(x=>x.category)),index=ordered.indexOf(category);
+ const actions=document.createElement('span');actions.className='category-order-actions';
+ actions.style.cssText='display:flex;gap:6px;grid-column:3;grid-row:2';
+ for(const [delta,text,label] of [[-1,'↑','Subir'],[1,'↓','Bajar']]){
+  const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=text;
+  button.dataset.direction=String(delta);
+  button.setAttribute('aria-label',label+' '+bareCategory(category));
+  button.title=label+' categoría';
+  button.style.cssText='min-width:44px;min-height:44px;padding:6px;font-size:20px;line-height:1';
+  button.disabled=savingCategoryOrder||index+delta<0||index+delta>=ordered.length;
+  button.onclick=async event=>{
+   event.preventDefault();event.stopPropagation();
+   if(savingCategoryOrder)return;
+   const next=[...ordered];[next[index],next[index+delta]]=[next[index+delta],next[index]];
+   next.push(...categoryOrder.filter(x=>!next.includes(x)));
+   await saveCategoryOrder(next);
+   const section=[...$('adminFoods').querySelectorAll('details.admin-category')].find(x=>x.dataset.category===category);
+   const buttons=section?.querySelectorAll('.category-order-actions button');
+   if(buttons){const preferred=[...buttons].find(x=>x.dataset.direction===String(delta));(preferred?.disabled?[...buttons].find(x=>!x.disabled):preferred)?.focus();}
+  };
+  actions.append(button);
+ }
+ return actions;
 }
 const categoryOptions=()=>[...new Set([...Object.keys(initial),...data.map(x=>x.category),...catalogRows.map(x=>x.categoria)])];
 function adminMessage(message) {$('adminMessage').textContent=message||'';}
@@ -330,9 +328,18 @@ function renderGroupedAdmin(container,rows,type,query){
   if(!groups.has(category))groups.set(category,[]);
   groups.get(category).push(item);
  }
- for(const category of [...groups.keys()].sort(esCompare)){
+ for(const category of (type==='food'?orderedCategories(groups.keys()):[...groups.keys()].sort(esCompare))){
   const section=document.createElement('details');section.className='category admin-category';
-  section.append(categoryHeader(category,groups.get(category).length+' alimentos'));
+  const header=categoryHeader(category,groups.get(category).length+' alimentos');
+  if(type==='food'){
+   header.style.cssText='display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px 10px';
+   header.querySelector('.cat-icon').style.cssText='grid-column:1;grid-row:1';
+   header.querySelector('.cat-name').style.cssText='grid-column:2;grid-row:1';
+   header.querySelector('.chevron').style.cssText='grid-column:3;grid-row:1;justify-self:end;margin-right:6px';
+   header.querySelector('.cat-count').style.cssText='grid-column:2;grid-row:2;white-space:normal';
+   header.append(categoryOrderControls(category));
+  }
+  section.append(header);
   for(const item of groups.get(category).sort((a,b)=>esCompare(type==='food'?a.name:a.nombre,type==='food'?b.name:b.nombre)))section.append(makeAdminRow(item,type));
   section.dataset.category=category;
   section.open=open.has(category)||!!query;container.append(section);
@@ -341,21 +348,12 @@ function renderGroupedAdmin(container,rows,type,query){
 }
 function renderAdmin(){
  if(!adminMode)return;
- renderCategoryOrder();
  renderGroupedAdmin($('adminFoods'),data,'food',folded($('adminFoodSearch').value.trim()));
  renderGroupedAdmin($('adminCatalogRows'),catalogRows,'catalog',folded($('adminCatalogSearch').value.trim()));
  renderCatalog();
  const dl=$('adminCategories');dl.replaceChildren();
  for(const category of categoryOptions().sort(esCompare)){const opt=document.createElement('option');opt.value=category;dl.append(opt);}
 }
-const categoryOrderPanel=document.createElement('details');categoryOrderPanel.className='admin-section admin-catalog';
-const categoryOrderTitle=document.createElement('summary');categoryOrderTitle.textContent='↕ Orden de las categorías';
-const categoryOrderHint=document.createElement('p');categoryOrderHint.className='hint';categoryOrderHint.textContent='Sube o baja las categorías para elegir cómo aparecen en el inicio. Se guarda automáticamente en tu cuenta.';
-const categoryOrderList=document.createElement('div');categoryOrderList.id='categoryOrderList';categoryOrderList.setAttribute('aria-busy','false');
-const resetCategoryOrder=document.createElement('button');resetCategoryOrder.id='resetCategoryOrder';resetCategoryOrder.type='button';resetCategoryOrder.className='secondary';resetCategoryOrder.textContent='Restablecer orden original';
-resetCategoryOrder.onclick=()=>saveCategoryOrder([]);
-categoryOrderPanel.append(categoryOrderTitle,categoryOrderHint,categoryOrderList,resetCategoryOrder);
-$('adminPanel').insertBefore(categoryOrderPanel,$('adminFoods').parentElement);
 $('adminAddMount').append($('addForm'));
 $('adminFoodSearch').oninput=renderAdmin;
 $('adminCatalogSearch').oninput=renderAdmin;
