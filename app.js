@@ -371,7 +371,7 @@ function categoryAddFoodForm(category){
  form.style.cssText='padding:10px 12px;margin:0;border-top:1px solid #476581';
  form.setAttribute('aria-label','Añadir alimento en '+bareCategory(category));
  const input=document.createElement('input');input.type='text';input.required=true;input.maxLength=100;
- input.placeholder='Nuevo alimento…';input.setAttribute('aria-label','Nombre del nuevo alimento en '+bareCategory(category));
+ input.placeholder='Añadir a esta categoría';input.setAttribute('aria-label','Nombre del nuevo alimento en '+bareCategory(category));
  input.value=categoryFoodDrafts.get(category)||'';
  input.oninput=()=>categoryFoodDrafts.set(category,input.value);
  const button=document.createElement('button');button.type='submit';button.textContent='＋ Añadir alimento';
