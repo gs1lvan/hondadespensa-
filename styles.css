@@ -180,3 +180,5 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 .font-dialog[data-sampleweight=negrita]{--sample-weight:700}
 
 .stats{display:none}
+
+.category>summary>.chevron{border-width:1.5px;margin-inline-end:6px}
