@@ -120,3 +120,5 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 [data-view-style=compactado] .category>summary .category-sprite{top:-13px;left:8px;width:60px}
 
 .category>summary>.cat-icon + .cat-name{margin-inline-start:6px}
+
+[data-icon-family=estencil-sin-envases],[data-family=estencil-sin-envases] .category-sprite{--category-icons:url('./assets/iconos-estencil-sin-envases.webp')}

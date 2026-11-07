@@ -194,7 +194,8 @@ function mountStylePanel(){
 const iconFamilies=[
  {id:'ilustrados',name:'Iconos ilustrados'},
  {id:'sencillos',name:'Iconos sencillos'},
- {id:'estencil',name:'Iconos esténcil'}
+ {id:'estencil',name:'Iconos esténcil'},
+ {id:'estencil-sin-envases',name:'Esténcil sin envases'}
 ];
 function applyIconFamily(value){
  const family=iconFamilies.some(option=>option.id===value)?value:'ilustrados';
