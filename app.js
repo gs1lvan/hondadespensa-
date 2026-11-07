@@ -247,6 +247,7 @@ function applyTypography(value){
 }
 const backgroundColors={marino:'Azul marino',petroleo:'Azul petróleo',bosque:'Verde bosque',grafito:'Gris grafito',ciruela:'Ciruela'};
 const backgroundTextures={grano:'Grano fino',liso:'Liso',tejido:'Tejido',puntos:'Puntos finos'};
+const backgroundPresetTextures={marino:'grano',petroleo:'liso',bosque:'tejido',grafito:'grano',ciruela:'liso'};
 const customColorFields={customBackground:'Fondo',textColor:'Texto',borderColor:'Bordes'};
 const customColorDefaults={customBackground:'#071c32',textColor:'#f5f9ff',borderColor:'#6795b9'};
 function applyCustomColors(element,value){
@@ -292,7 +293,7 @@ function mountBackground(panel){
  card.append(header);
  preview.append(card);
  const controls=[];
- for(const [label,options] of [['Color',backgroundColors],['Textura',backgroundTextures]]){
+ for(const [label,options] of [['Tema',{...backgroundColors,personal:'Personal'}],['Textura',backgroundTextures]]){
   const field=document.createElement('label');
   field.className='icon-size-control';
   field.textContent=label;
@@ -303,6 +304,7 @@ function mountBackground(panel){
   dialog.append(field);
  }
  const [color,texture]=controls;
+ color.querySelector('[value=personal]').disabled=true;
  const targets=document.createElement('div');
  targets.className='background-color-targets';
  targets.setAttribute('role','group');
@@ -380,9 +382,8 @@ function mountBackground(panel){
  dialog.append(customControls);
  let draft,hue=0,saturation=0;
  function syncColor(keepChannels=false){
-  const preset=target==='customBackground'
-   ?getComputedStyle(preview).getPropertyValue('--app-bg-color').trim()
-   :customColorDefaults[target];
+  const property={customBackground:'--app-bg-color',textColor:'--ink',borderColor:'--card-edge'}[target];
+  const preset=getComputedStyle(preview).getPropertyValue(property).trim();
   exact.value=draft[target]??(preset||customColorDefaults[target]);
   if(!keepChannels){
    const [red,green,blue]=exact.value.slice(1).match(/../g).map(part=>parseInt(part,16)/255);
@@ -444,12 +445,17 @@ function mountBackground(panel){
  };
  function updatePreview(){
   applyCustomColors(preview,draft);
-  preview.dataset.bgColor=color.value;
+  preview.dataset.bgColor=draft.color;
   preview.dataset.bgTexture=texture.value;
+  const personal=texture.value!==backgroundPresetTextures[draft.color]
+   ||Object.keys(customColorFields).some(key=>draft[key]!==null);
+  color.value=personal?'personal':draft.color;
  }
  texture.onchange=updatePreview;
  color.onchange=()=>{
-  draft.customBackground=null;
+  const preset=color.value;
+  draft=backgroundPreference({color:preset,texture:backgroundPresetTextures[preset]});
+  texture.value=draft.texture;
   updatePreview();
   syncColor();
  };
@@ -481,7 +487,7 @@ function mountBackground(panel){
   const current=session;
   if(!current||savingIconFamily)return;
   const previous=current.user?.user_metadata?.app_background;
-  const choice={...draft,color:color.value,texture:texture.value};
+  const choice={...draft,texture:texture.value};
   dialog.close();
   savingIconFamily=true;
   picker.disabled=true;
