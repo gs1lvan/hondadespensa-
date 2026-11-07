@@ -226,7 +226,7 @@ async function renamePantryCategory(category,name){
 }
 async function deletePantryCategory(category){
  if(!session||categoryMutation)return;
- if(data.some(x=>x.category===category)){adminMessage('Vacía esta categoría antes de eliminarla.');return;}
+ if(data.some(x=>x.category===category)){const message='La categoría aún contiene alimentos. Para borrarla, primero debes eliminar todos sus alimentos.';adminMessage(message);alert(message);return;}
  if(!confirm('¿Eliminar la categoría «'+bareCategory(category)+'»?'))return;
  categoryMutation=true;
  try{
