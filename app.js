@@ -227,7 +227,7 @@ function applyIconFamily(value,adminValue){
 }
 let savingIconFamily=false;
 const typographyFields=[
- {key:'font',label:'Fuente',options:{sistema:'Del sistema',sans:'Arial',serif:'Georgia',mono:'Monoespaciada'},initial:'sistema'},
+ {key:'font',label:'Fuente',options:{sistema:'Del sistema',sans:'Arial',serif:'Georgia',mono:'Monoespaciada',humanista:'Verdana',redonda:'Trebuchet',clasica:'Times',editorial:'Palatino',tecnica:'Courier'},initial:'sistema'},
  {key:'weight',label:'Grosor',options:{original:'Original',normal:'Normal',negrita:'Negrita'},initial:'original'},
  {key:'size',label:'Tamaño de letra',options:{pequeno:'Pequeño',mediano:'Mediano',grande:'Grande'},initial:'mediano'}
 ];
@@ -239,7 +239,10 @@ function applyTypography(value){
   document.documentElement.dataset['text'+key]=choice;
   $('text-'+key).value=choice;
  }
- return result;
+ $('fontPicker').textContent=typographyFields[0].options[result.font]+' · Cambiar fuente';
+ for(const button of $('fontSamples').children){
+  button.setAttribute('aria-pressed',String(button.dataset.textfont===result.font));
+ }
 }
 function mountTypography(panel){
  const group=document.createElement('fieldset');
@@ -248,7 +251,47 @@ function mountTypography(panel){
  const title=document.createElement('legend');
  title.textContent='Tipografía de categorías y alimentos';
  group.append(title);
- for(const {key,label,options} of typographyFields){
+ const font=document.createElement('input');
+ font.type='hidden';
+ font.id='text-font';
+ const picker=document.createElement('button');
+ picker.type='button';
+ picker.id='fontPicker';
+ picker.setAttribute('aria-haspopup','dialog');
+ const dialog=document.createElement('dialog');
+ dialog.className='font-dialog';
+ dialog.setAttribute('aria-labelledby','fontDialogTitle');
+ const heading=document.createElement('h2');
+ heading.id='fontDialogTitle';
+ heading.textContent='Elige una fuente';
+ const samples=document.createElement('div');
+ samples.id='fontSamples';
+ samples.className='font-samples';
+ for(const [value,name] of Object.entries(typographyFields[0].options)){
+  const button=document.createElement('button');
+  button.type='button';
+  button.dataset.textfont=value;
+  const sample=document.createElement('span');
+  sample.className='font-sample';
+  sample.textContent='Aa';
+  sample.setAttribute('aria-hidden','true');
+  button.append(sample,name);
+  button.onclick=()=>{
+   font.value=value;
+   dialog.close();
+   saveTypography();
+  };
+  samples.append(button);
+ }
+ const close=document.createElement('button');
+ close.type='button';
+ close.className='secondary';
+ close.textContent='Cerrar';
+ close.onclick=()=>dialog.close();
+ picker.onclick=()=>dialog.showModal();
+ dialog.append(heading,samples,close);
+ group.append(font,picker,dialog);
+ for(const {key,label,options} of typographyFields.slice(1)){
   const field=document.createElement('label');
   field.textContent=label;
   const select=document.createElement('select');
