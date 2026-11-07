@@ -72,6 +72,13 @@ function categoryHeader(category,countText) {
 let data=[],session=null,channel=null,catalogChannel=null,busy=false,catalogRows=[],catalogReady=false,adminMode=false;
 const openCategories=new Set(),catalogOpen=new Set();
 const adminOpenCategories={food:new Set(),catalog:new Set()};
+const recentAdminFoods=new Map();
+let recentAdminFoodSequence=0;
+const adminFoodKey=item=>JSON.stringify([item.category,folded(item.name)]);
+function compareAdminFoods(a,b){
+ const recent=(recentAdminFoods.get(adminFoodKey(b))||0)-(recentAdminFoods.get(adminFoodKey(a))||0);
+ return recent||esCompare(a.name,b.name);
+}
 let categoryOrder=[],savingCategoryOrder=false;
 function readCategoryOrder(value){
  return Array.isArray(value)?[...new Set(value.filter(x=>typeof x==='string'))]:[];
@@ -242,6 +249,7 @@ async function refresh(){
 }
 async function signedIn(currentSession){
  session=currentSession;
+ recentAdminFoods.clear();
  applyViewStyle(currentSession?.user?.user_metadata?.view_style);
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
  showApp(!!currentSession);
@@ -270,7 +278,7 @@ $('signOut').onclick=async()=>{
  await signedIn(null);
 };
 $('adminToggle').onclick=()=>{
- adminMode=!adminMode;showApp(true);
+ adminMode=!adminMode;recentAdminFoods.clear();showApp(true);
  if(adminMode)renderAdmin();else render();
  window.scrollTo({top:0,behavior:'smooth'});
 };
@@ -291,11 +299,12 @@ $('upload').onclick=async()=>{
  busy=false;$('upload').disabled=false;await refresh();
 };
 
-async function addSharedFood(name,category){
+async function addSharedFood(name,category,recentFirst=false){
  if(!session)return false;
  if(data.some(x=>folded(x.name)===folded(name)&&x.category===category)){alert('Ese alimento ya está en la lista.');return false;}
  const {error}=await db.from('alimentos').insert({nombre:name,categoria:category,disponible:false});
  if(error){alert('No se pudo añadir: '+error.message);return false;}
+ if(recentFirst)recentAdminFoods.set(adminFoodKey({name,category}),++recentAdminFoodSequence);
  await refresh();return true;
 }
 $('addForm').onsubmit=async e=>{
@@ -389,7 +398,7 @@ function categoryAddFoodForm(category){
   categoryFoodDrafts.set(category,input.value);categoryFoodSaving.add(category);
   input.disabled=button.disabled=true;button.textContent='Añadiendo…';
   try{
-   if(await addSharedFood(name,category)){
+   if(await addSharedFood(name,category,true)){
     categoryFoodDrafts.delete(category);
     adminMessage('Alimento añadido en '+bareCategory(category)+'.');
    }
@@ -430,7 +439,7 @@ function renderGroupedAdmin(container,rows,type,query){
   }
   section.append(header);
   if(type==='food')section.append(categoryAddFoodForm(category));
-  for(const item of groups.get(category).sort((a,b)=>esCompare(type==='food'?a.name:a.nombre,type==='food'?b.name:b.nombre)))section.append(makeAdminRow(item,type));
+  for(const item of groups.get(category).sort(type==='food'?compareAdminFoods:(a,b)=>esCompare(a.nombre,b.nombre)))section.append(makeAdminRow(item,type));
   section.dataset.category=category;
   section.open=open.has(category)||!!query;container.append(section);
  }
