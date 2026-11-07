@@ -198,6 +198,7 @@ function mountStylePanel(){
  sizeLabel.append(size);
  panel.append(sizeLabel);
  mountTypography(panel);
+ mountBackground(panel);
  mountIconOptions(panel);
  $('adminPanel').insertBefore(panel,$('adminAddMount').parentElement);
  renderStylePanel();
@@ -243,6 +244,108 @@ function applyTypography(value){
  for(const button of $('fontSamples').children){
   button.setAttribute('aria-pressed',String(button.dataset.textfont===result.font));
  }
+}
+const backgroundColors={marino:'Azul marino',petroleo:'Azul petróleo',bosque:'Verde bosque',grafito:'Gris grafito',ciruela:'Ciruela'};
+const backgroundTextures={grano:'Grano fino',liso:'Liso',tejido:'Tejido',puntos:'Puntos finos'};
+function backgroundPreference(value){
+ return {
+  color:Object.hasOwn(backgroundColors,value?.color)?value.color:'marino',
+  texture:Object.hasOwn(backgroundTextures,value?.texture)?value.texture:'grano'
+ };
+}
+function applyBackground(value){
+ const {color,texture}=backgroundPreference(value);
+ document.documentElement.dataset.bgColor=color;
+ document.documentElement.dataset.bgTexture=texture;
+}
+function mountBackground(panel){
+ const section=document.createElement('div');
+ section.className='icon-size-control';
+ const picker=document.createElement('button');
+ picker.type='button';
+ picker.textContent='Ajustar fondo';
+ picker.setAttribute('aria-haspopup','dialog');
+ const dialog=document.createElement('dialog');
+ dialog.className='font-dialog background-dialog';
+ dialog.setAttribute('aria-labelledby','backgroundTitle');
+ const title=document.createElement('h2');
+ title.id='backgroundTitle';
+ title.textContent='Fondo de la aplicación';
+ const preview=document.createElement('div');
+ preview.className='background-preview';
+ const card=document.createElement('span');
+ card.textContent='Vista previa de la despensa';
+ preview.append(card);
+ const controls=[];
+ for(const [label,options] of [['Color',backgroundColors],['Textura',backgroundTextures]]){
+  const field=document.createElement('label');
+  field.className='icon-size-control';
+  field.textContent=label;
+  const select=document.createElement('select');
+  for(const [value,name] of Object.entries(options))select.add(new Option(name,value));
+  field.append(select);
+  controls.push(select);
+  dialog.append(field);
+ }
+ const [color,texture]=controls;
+ function updatePreview(){
+  preview.dataset.bgColor=color.value;
+  preview.dataset.bgTexture=texture.value;
+ }
+ color.onchange=texture.onchange=updatePreview;
+ const actions=document.createElement('div');
+ actions.className='font-dialog-actions';
+ const cancel=document.createElement('button');
+ cancel.type='button';
+ cancel.className='secondary';
+ cancel.textContent='Cancelar';
+ cancel.onclick=()=>dialog.close();
+ const apply=document.createElement('button');
+ apply.type='button';
+ apply.textContent='Aplicar';
+ const message=document.createElement('p');
+ message.id='backgroundMessage';
+ message.className='hint';
+ message.setAttribute('role','status');
+ picker.onclick=()=>{
+  const saved=backgroundPreference(session?.user?.user_metadata?.app_background);
+  color.value=saved.color;
+  texture.value=saved.texture;
+  updatePreview();
+  dialog.showModal();
+ };
+ apply.onclick=async()=>{
+  const current=session;
+  if(!current||savingIconFamily)return;
+  const previous=current.user?.user_metadata?.app_background;
+  const choice={color:color.value,texture:texture.value};
+  dialog.close();
+  savingIconFamily=true;
+  picker.disabled=true;
+  applyBackground(choice);
+  message.textContent='Guardando fondo…';
+  try{
+   const {data:result,error}=await db.auth.updateUser({data:{app_background:choice}});
+   if(error)throw error;
+   if(session===current){
+    current.user=result.user;
+    message.textContent='Fondo guardado en tu cuenta.';
+   }
+  }catch(error){
+   if(session===current){
+    applyBackground(previous);
+    message.textContent='No se pudo guardar el fondo: '+error.message;
+   }
+  }finally{
+   savingIconFamily=false;
+   picker.disabled=false;
+  }
+ };
+ actions.append(cancel,apply);
+ dialog.prepend(title,preview);
+ dialog.append(actions);
+ section.append(picker,dialog,message);
+ panel.append(section);
 }
 function mountTypography(panel){
  const group=document.createElement('fieldset');
@@ -638,6 +741,8 @@ async function signedIn(currentSession){
  $('iconMessage').textContent='';
  $('typographyMessage').textContent='';
  applyTypography(currentSession?.user?.user_metadata?.list_typography);
+ applyBackground(currentSession?.user?.user_metadata?.app_background);
+ $('backgroundMessage').textContent='';
  applyPantryIconSize(currentSession?.user?.user_metadata?.pantry_icon_size);
  applyIconFamily(currentSession?.user?.user_metadata?.icon_family,currentSession?.user?.user_metadata?.admin_icon_family);
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
