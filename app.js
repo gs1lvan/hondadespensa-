@@ -371,6 +371,38 @@ function makeAdminRow(item,type){
  };
  return row;
 }
+const categoryFoodDrafts=new Map(),categoryFoodSaving=new Set();
+function categoryAddFoodForm(category){
+ const form=document.createElement('form');form.className='add category-add-food';
+ form.style.cssText='padding:10px 12px;margin:0;border-top:1px solid #476581';
+ form.setAttribute('aria-label','Añadir alimento en '+bareCategory(category));
+ const input=document.createElement('input');input.type='text';input.required=true;input.maxLength=100;
+ input.placeholder='Nuevo alimento…';input.setAttribute('aria-label','Nombre del nuevo alimento en '+bareCategory(category));
+ input.value=categoryFoodDrafts.get(category)||'';
+ input.oninput=()=>categoryFoodDrafts.set(category,input.value);
+ const button=document.createElement('button');button.type='submit';button.textContent='＋ Añadir alimento';
+ input.disabled=button.disabled=categoryFoodSaving.has(category);
+ form.append(input,button);
+ form.onsubmit=async event=>{
+  event.preventDefault();const name=input.value.trim();
+  if(!name||categoryFoodSaving.has(category))return;
+  categoryFoodDrafts.set(category,input.value);categoryFoodSaving.add(category);
+  input.disabled=button.disabled=true;button.textContent='Añadiendo…';
+  try{
+   if(await addSharedFood(name,category)){
+    categoryFoodDrafts.delete(category);
+    adminMessage('Alimento añadido en '+bareCategory(category)+'.');
+   }
+  }catch(error){adminMessage('No se pudo añadir: '+error.message);}
+  finally{
+   categoryFoodSaving.delete(category);renderAdmin();
+   const section=[...$('adminFoods').querySelectorAll('details.admin-category')].find(x=>x.dataset.category===category);
+   section?.querySelector('.category-add-food input')?.focus();
+  }
+ };
+ return form;
+}
+
 function renderGroupedAdmin(container,rows,type,query){
  const open=adminOpenCategories[type];
  // Leer el estado actual antes de reconstruir la lista, sin esperar al evento toggle.
@@ -397,6 +429,7 @@ function renderGroupedAdmin(container,rows,type,query){
    header.append(categoryOrderControls(category));
   }
   section.append(header);
+  if(type==='food')section.append(categoryAddFoodForm(category));
   for(const item of groups.get(category).sort((a,b)=>esCompare(type==='food'?a.name:a.nombre,type==='food'?b.name:b.nombre)))section.append(makeAdminRow(item,type));
   section.dataset.category=category;
   section.open=open.has(category)||!!query;container.append(section);
@@ -412,7 +445,8 @@ function renderAdmin(){
  for(const category of categoryOptions().sort(esCompare)){const opt=document.createElement('option');opt.value=category;dl.append(opt);}
 }
 mountStylePanel();
-$('adminAddMount').append($('addForm'));
+// El alta se realiza dentro de cada categoría, sin selector global.
+$('adminAddMount').parentElement.hidden=true;
 $('adminFoodSearch').oninput=renderAdmin;
 $('adminCatalogSearch').oninput=renderAdmin;
 $('catalogSearch').oninput=renderCatalog;
