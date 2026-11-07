@@ -363,11 +363,29 @@ function mountBackground(panel){
   }
  };
  hexRow.append(hex,copy);
- customControls.append(targets,wheel,exact,hexRow,copied,reset);
+ const wheelRow=document.createElement('div');
+ wheelRow.className='background-wheel-row';
+ const brightness=document.createElement('input');
+ brightness.type='range';
+ brightness.min=0;
+ brightness.max=100;
+ brightness.step=0.1;
+ brightness.setAttribute('aria-label','Luminosidad del color');
+ wheelRow.append(exact,wheel,brightness);
+ customControls.append(targets,wheelRow,hexRow,copied,reset);
  dialog.append(customControls);
- let draft;
- function syncColor(){
+ let draft,hue=0,saturation=0;
+ function syncColor(keepChannels=false){
   exact.value=draft[target]??customColorDefaults[target];
+  if(!keepChannels){
+   const [red,green,blue]=exact.value.slice(1).match(/../g).map(part=>parseInt(part,16)/255);
+   const max=Math.max(red,green,blue),min=Math.min(red,green,blue);
+   const lightness=(max+min)/2,delta=max-min;
+   saturation=delta?delta/(1-Math.abs(2*lightness-1)):0;
+   hue=delta?(60*(max===red?(green-blue)/delta:max===green?2+(blue-red)/delta:4+(red-green)/delta)+360)%360:0;
+   brightness.value=lightness*100;
+  }
+  brightness.style.setProperty('--middle-color',`hsl(${hue} ${saturation*100}% 50%)`);
   hex.value=exact.value.toUpperCase();
   copied.textContent='';
   for(const button of targets.children)button.setAttribute('aria-pressed',String(button.dataset.colorTarget===target));
@@ -387,18 +405,22 @@ function mountBackground(panel){
   const rect=wheel.getBoundingClientRect();
   const x=(event.clientX-rect.left)/rect.width-.5;
   const y=(event.clientY-rect.top)/rect.height-.5;
-  const hue=(Math.atan2(x,-y)*180/Math.PI+360)%360;
-  const saturation=Math.min(1,Math.hypot(x,y)*2);
-  const lightness={customBackground:.19,textColor:.79,borderColor:.57}[target];
+  hue=(Math.atan2(x,-y)*180/Math.PI+360)%360;
+  saturation=Math.min(1,Math.hypot(x,y)*2);
+  updateWheelColor();
+ }
+ function updateWheelColor(){
+  const lightness=Number(brightness.value)/100;
   const channel=n=>{
    const k=(n+hue/30)%12;
    const intensity=saturation*Math.min(lightness,1-lightness);
    return Math.round(255*(lightness-intensity*Math.max(-1,Math.min(k-3,9-k,1)))).toString(16).padStart(2,'0');
   };
   draft[target]='#'+channel(0)+channel(8)+channel(4);
-  syncColor();
+  syncColor(true);
   updatePreview();
  }
+ brightness.oninput=updateWheelColor;
  wheel.onpointerdown=event=>{
   wheel.setPointerCapture(event.pointerId);
   pickHue(event);
