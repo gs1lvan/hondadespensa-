@@ -193,10 +193,11 @@ function mountStylePanel(){
 
 const iconFamilies=[
  {id:'ilustrados',name:'Iconos ilustrados'},
- {id:'sencillos',name:'Iconos sencillos'}
+ {id:'sencillos',name:'Iconos sencillos'},
+ {id:'estencil',name:'Iconos esténcil'}
 ];
 function applyIconFamily(value){
- const family=value==='sencillos'?'sencillos':'ilustrados';
+ const family=iconFamilies.some(option=>option.id===value)?value:'ilustrados';
  document.documentElement.dataset.iconFamily=family;
  for(const button of $('iconOptions').querySelectorAll('button')){
   const selected=button.dataset.family===family;
