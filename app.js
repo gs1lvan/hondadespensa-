@@ -337,8 +337,7 @@ function makeAdminRow(item,type){
  const row=document.createElement('div');row.className='admin-row';
  const label=document.createElement('div');label.className='admin-label';
  const name=document.createElement('strong');name.textContent=type==='food'?item.name:item.nombre;
- const cat=document.createElement('small');cat.textContent=bareCategory(type==='food'?item.category:item.categoria);
- label.append(name,cat);
+ label.append(name);
  const actions=document.createElement('div');actions.className='admin-actions';
  const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Editar';
  const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Eliminar';
