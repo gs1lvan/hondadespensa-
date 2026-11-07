@@ -241,3 +241,33 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
 
 .background-hex{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;width:100%}
 .background-hex input{font-family:ui-monospace,monospace}
+
+:root:is([data-bg-color]:not([data-bg-color=marino]),[style*="--customBackground"]){
+ --theme-edge:var(--borderColor,var(--card-edge));
+ --theme-accent:color-mix(in srgb,var(--card-light),white 22%);
+}
+:root[style*="--customBackground"],:root[data-bg-color]:not([data-bg-color=marino]){background-color:var(--customBackground,var(--app-bg-color))}
+:where(:root:is([data-bg-color]:not([data-bg-color=marino]),[style*="--customBackground"])) :is(.auth,.admin-panel){
+ background:linear-gradient(140deg,var(--card-light),var(--card-dark));
+ border-color:var(--theme-edge);
+}
+:where(:root:is([data-bg-color]:not([data-bg-color=marino]),[style*="--customBackground"])) :is(.admin-account,.admin-panel input:not([type=color],[type=range],[type=checkbox]),.admin-panel select,.font-dialog,.style-preview){
+ background:var(--card-inner);
+ border-color:var(--theme-edge);
+}
+:where(:root:is([data-bg-color]:not([data-bg-color=marino]),[style*="--customBackground"])) :is(.admin-edit,.catalog-category summary,.catalog-products button,.style-preview span,.style-option,.font-samples button,button.secondary){
+ background:var(--card-dark);
+ border-color:var(--theme-edge);
+}
+:where(:root:is([data-bg-color]:not([data-bg-color=marino]),[style*="--customBackground"])) :is(.admin-section,.admin-row,.catalog-category,.typography-options,.background-preview){
+ border-color:var(--theme-edge);
+}
+:where(:root:is([data-bg-color]:not([data-bg-color=marino]),[style*="--customBackground"])) :is(.admin-panel,.auth) button:not(.secondary,.danger,.text-action,.style-option,[aria-pressed]){
+ background:linear-gradient(135deg,var(--card-light),var(--card-dark));
+ border-color:var(--theme-edge);
+}
+:where(:root:is([data-bg-color]:not([data-bg-color=marino]),[style*="--customBackground"])) :is(.style-option,.font-samples button,.background-color-targets button)[aria-pressed=true]{
+ background:var(--card-light);
+ border-color:var(--theme-edge);
+ box-shadow:inset 0 0 0 1px var(--theme-accent);
+}
