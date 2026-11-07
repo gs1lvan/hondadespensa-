@@ -178,3 +178,5 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 .font-dialog[data-samplesize=grande]{--sample-size:1.08}
 .font-dialog[data-sampleweight=normal]{--sample-weight:400}
 .font-dialog[data-sampleweight=negrita]{--sample-weight:700}
+
+.stats{display:none}
