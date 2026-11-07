@@ -118,3 +118,5 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 }
 [data-view-style=compactado] .category>summary>.cat-icon:has(.category-sprite){width:50px}
 [data-view-style=compactado] .category>summary .category-sprite{top:-13px;left:8px;width:60px}
+
+.category>summary>.cat-icon + .cat-name{margin-inline-start:6px}
