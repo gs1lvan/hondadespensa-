@@ -249,7 +249,7 @@ function mountTypography(panel){
  group.id='typographyOptions';
  group.className='typography-options';
  const title=document.createElement('legend');
- title.textContent='Tipografía de categorías y alimentos';
+ title.textContent='Tipografía de toda la aplicación';
  group.append(title);
  const font=document.createElement('input');
  font.type='hidden';
