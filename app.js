@@ -301,9 +301,23 @@ function mountBackground(panel){
   dialog.append(field);
  }
  const [color,texture]=controls;
- const target=document.createElement('select');
- target.setAttribute('aria-label','Elemento que quieres colorear');
- for(const [key,label] of Object.entries(customColorFields))target.add(new Option(label,key));
+ const targets=document.createElement('div');
+ targets.className='background-color-targets';
+ targets.setAttribute('role','group');
+ targets.setAttribute('aria-label','Color que quieres cambiar');
+ let target='customBackground';
+ for(const [key,label] of Object.entries(customColorFields)){
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='secondary';
+  button.dataset.colorTarget=key;
+  button.textContent=label;
+  button.onclick=()=>{
+   target=key;
+   syncColor();
+  };
+  targets.append(button);
+ }
  const wheel=document.createElement('div');
  wheel.className='background-wheel';
  wheel.setAttribute('aria-hidden','true');
@@ -316,19 +330,20 @@ function mountBackground(panel){
  reset.textContent='Restablecer este color';
  const customControls=document.createElement('div');
  customControls.className='background-color-controls';
- customControls.append(target,wheel,exact,reset);
+ customControls.append(targets,wheel,exact,reset);
  dialog.append(customControls);
  let draft;
  function syncColor(){
-  exact.value=draft[target.value]??customColorDefaults[target.value];
+  exact.value=draft[target]??customColorDefaults[target];
+  for(const button of targets.children)button.setAttribute('aria-pressed',String(button.dataset.colorTarget===target));
  }
- target.onchange=syncColor;
+
  exact.oninput=()=>{
-  draft[target.value]=exact.value;
+  draft[target]=exact.value;
   updatePreview();
  };
  reset.onclick=()=>{
-  draft[target.value]=null;
+  draft[target]=null;
   syncColor();
   updatePreview();
  };
@@ -338,13 +353,13 @@ function mountBackground(panel){
   const y=(event.clientY-rect.top)/rect.height-.5;
   const hue=(Math.atan2(x,-y)*180/Math.PI+360)%360;
   const saturation=Math.min(1,Math.hypot(x,y)*2);
-  const lightness={customBackground:.19,textColor:.79,borderColor:.57}[target.value];
+  const lightness={customBackground:.19,textColor:.79,borderColor:.57}[target];
   const channel=n=>{
    const k=(n+hue/30)%12;
    const intensity=saturation*Math.min(lightness,1-lightness);
    return Math.round(255*(lightness-intensity*Math.max(-1,Math.min(k-3,9-k,1)))).toString(16).padStart(2,'0');
   };
-  draft[target.value]='#'+channel(0)+channel(8)+channel(4);
+  draft[target]='#'+channel(0)+channel(8)+channel(4);
   syncColor();
   updatePreview();
  }
