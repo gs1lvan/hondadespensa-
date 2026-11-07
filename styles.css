@@ -202,3 +202,5 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 [data-bg-color=grafito]{--card-light:#444d59;--card-dark:#2e3641;--card-edge:#929dab;--card-inner:#292f38}
 [data-bg-color=ciruela]{--card-light:#594361;--card-dark:#3b2b46;--card-edge:#a790af;--card-inner:#36263f}
 [data-bg-color=marino]{--card-light:#1a4868ee;--card-dark:#0a2945f5;--card-edge:#6795b9;--card-inner:#09243b91}
+
+.toolbar #search,.toolbar #filter{background-color:var(--card-dark,#0a2945);border-color:var(--card-edge,#6795b9)}
