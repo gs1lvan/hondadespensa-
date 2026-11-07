@@ -852,7 +852,7 @@ function localItems(){
 }
 function showApp(visible){
  if(!visible)adminMode=false;
- $('adminToggle').hidden=!visible;
+ $('pantryFooter').hidden=!visible;
  $('adminToggle').textContent=adminMode?'← Volver a despensa':'⚙️ Administrar';
  $('adminPanel').hidden=!visible||!adminMode;
  for(const id of ['stats','toolbar','items'])$(id).hidden=!visible||adminMode;

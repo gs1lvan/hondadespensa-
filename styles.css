@@ -273,3 +273,6 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
 }
 
 .background-wheel-row input[aria-label='Saturación del color']{background:linear-gradient(var(--saturated-color,#f00),var(--neutral-color,#888))}
+
+.pantry-footer{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:22px;color:var(--textColor,var(--muted));font-size:14px}
+.pantry-footer .admin-link{margin:0;font-size:inherit;min-height:44px}
