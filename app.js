@@ -347,13 +347,12 @@ function makeAdminRow(item,type){
   if(row.querySelector('.admin-edit')){row.querySelector('.admin-edit').remove();return;}
   const form=document.createElement('form');form.className='admin-edit';
   const n=document.createElement('input');n.required=true;n.maxLength=100;n.value=type==='food'?item.name:item.nombre;n.setAttribute('aria-label','Nombre del alimento');
-  const c=document.createElement('input');c.required=true;c.maxLength=120;c.value=type==='food'?item.category:item.categoria;c.setAttribute('list','adminCategories');c.setAttribute('aria-label','Categoría');
-  const save=document.createElement('button');save.type='submit';save.textContent='Guardar cambios';form.append(n,c,save);row.append(form);
+  const save=document.createElement('button');save.type='submit';save.textContent='Guardar cambios';form.append(n,save);row.append(form);
   form.onsubmit=async e=>{
-   e.preventDefault();const nombre=n.value.trim(),categoria=c.value.trim();if(!nombre||!categoria)return;
+   e.preventDefault();const nombre=n.value.trim();if(!nombre)return;
    save.disabled=true;
    const table=type==='food'?'alimentos':'catalogo';
-   const {error}=await db.from(table).update({nombre,categoria}).eq('id',item.id);
+   const {error}=await db.from(table).update({nombre}).eq('id',item.id);
    if(error){adminMessage('Error: '+error.message);save.disabled=false;return;}
    await refresh();if(type==='catalog')await loadCatalog();adminMessage('Cambios guardados.');
   };
