@@ -157,15 +157,24 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 
 [data-textfont=sistema]{--list-font:system-ui,sans-serif}
 [data-textfont=humanista]{--list-font:Verdana,'DejaVu Sans',sans-serif}
-[data-textfont=redonda]{--list-font:'Trebuchet MS','Gill Sans',sans-serif}
+[data-textfont=redonda]{--list-font:'Trebuchet MS','Arial Rounded MT Bold',system-ui}
 [data-textfont=clasica]{--list-font:'Times New Roman',Times,serif}
-[data-textfont=editorial]{--list-font:Palatino,'Palatino Linotype','Book Antiqua',serif}
-[data-textfont=tecnica]{--list-font:'Courier New',Courier,monospace}
+[data-textfont=editorial]{--list-font:'Segoe Print','Comic Sans MS',cursive}
+[data-textfont=tecnica]{--list-font:Impact,'Arial Black',fantasy}
 .font-dialog{width:min(420px,calc(100% - 24px));padding:14px;border:1px solid var(--line);border-radius:16px;background:#103151;color:var(--ink)}
 .font-dialog::backdrop{background:#031120c9}
 .font-dialog h2{margin:0 0 12px}
-.font-dialog>.secondary{width:100%;margin-top:12px}
+
 .font-samples{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .font-samples button{display:grid;place-content:center;gap:4px;aspect-ratio:1;min-width:0;padding:4px;border-radius:6px;background:#0b2b48;border:1px solid #7098b8;font-size:clamp(10px,3vw,13px);overflow-wrap:anywhere}
 .font-samples button[aria-pressed=true]{border:2px solid #8ad7ff;background:#17496b}
 .font-sample{font:400 clamp(22px,8vw,36px)/1 var(--list-font,system-ui)}
+
+.font-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.font-slider{margin-top:12px}
+.font-slider input[type=range]{width:100%;min-height:32px;padding:0;accent-color:#8ad7ff}
+.font-dialog .font-sample{font-size:clamp(14px,5vw,27px);font-weight:var(--sample-weight,600);scale:var(--sample-size,1)}
+.font-dialog[data-samplesize=pequeno]{--sample-size:.92}
+.font-dialog[data-samplesize=grande]{--sample-size:1.08}
+.font-dialog[data-sampleweight=normal]{--sample-weight:400}
+.font-dialog[data-sampleweight=negrita]{--sample-weight:700}

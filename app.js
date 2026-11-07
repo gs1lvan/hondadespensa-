@@ -227,8 +227,8 @@ function applyIconFamily(value,adminValue){
 }
 let savingIconFamily=false;
 const typographyFields=[
- {key:'font',label:'Fuente',options:{sistema:'Del sistema',sans:'Arial',serif:'Georgia',mono:'Monoespaciada',humanista:'Verdana',redonda:'Trebuchet',clasica:'Times',editorial:'Palatino',tecnica:'Courier'},initial:'sistema'},
- {key:'weight',label:'Grosor',options:{original:'Original',normal:'Normal',negrita:'Negrita'},initial:'original'},
+ {key:'font',label:'Fuente',options:{sistema:'Del sistema',sans:'Arial',serif:'Georgia',mono:'Monoespaciada',humanista:'Verdana',redonda:'Redondeada',clasica:'Times',editorial:'Manuscrita',tecnica:'Cartel'},initial:'sistema'},
+ {key:'weight',label:'Grosor',options:{normal:'Normal',original:'Original',negrita:'Negrita'},initial:'original'},
  {key:'size',label:'Tamaño de letra',options:{pequeno:'Pequeño',mediano:'Mediano',grande:'Grande'},initial:'mediano'}
 ];
 function applyTypography(value){
@@ -239,7 +239,7 @@ function applyTypography(value){
   document.documentElement.dataset['text'+key]=choice;
   $('text-'+key).value=choice;
  }
- $('fontPicker').textContent=typographyFields[0].options[result.font]+' · Cambiar fuente';
+ $('fontPicker').textContent=typographyFields[0].options[result.font]+' · Ajustar tipografía';
  for(const button of $('fontSamples').children){
   button.setAttribute('aria-pressed',String(button.dataset.textfont===result.font));
  }
@@ -263,7 +263,7 @@ function mountTypography(panel){
  dialog.setAttribute('aria-labelledby','fontDialogTitle');
  const heading=document.createElement('h2');
  heading.id='fontDialogTitle';
- heading.textContent='Elige una fuente';
+ heading.textContent='Tipografía';
  const samples=document.createElement('div');
  samples.id='fontSamples';
  samples.className='font-samples';
@@ -273,34 +273,71 @@ function mountTypography(panel){
   button.dataset.textfont=value;
   const sample=document.createElement('span');
   sample.className='font-sample';
-  sample.textContent='Aa';
+  sample.textContent='Arroz';
   sample.setAttribute('aria-hidden','true');
   button.append(sample,name);
   button.onclick=()=>{
-   font.value=value;
-   dialog.close();
-   saveTypography();
+   draftFont=value;
+   updatePreview();
   };
   samples.append(button);
+ }
+ let draftFont;
+ const sliders=[];
+ for(const {key,label,options} of typographyFields.slice(1)){
+  const field=document.createElement('label');
+  field.className='font-slider';
+  const caption=document.createElement('span');
+  const range=document.createElement('input');
+  const values=Object.keys(options);
+  range.type='range';
+  range.min=0;
+  range.max=values.length-1;
+  range.step=1;
+  range.oninput=updatePreview;
+  const hidden=document.createElement('input');
+  hidden.type='hidden';
+  hidden.id='text-'+key;
+  group.append(hidden);
+  field.append(caption,range);
+  sliders.push({key,label,options,values,range,caption,field,hidden});
+ }
+ function updatePreview(){
+  for(const button of samples.children){
+   button.setAttribute('aria-pressed',String(button.dataset.textfont===draftFont));
+  }
+  for(const {key,label,options,values,range,caption} of sliders){
+   const value=values[range.value];
+   caption.textContent=label+' · '+options[value];
+   range.setAttribute('aria-valuetext',options[value]);
+   dialog.dataset['sample'+key]=value;
+  }
  }
  const close=document.createElement('button');
  close.type='button';
  close.className='secondary';
- close.textContent='Cerrar';
+ close.textContent='Cancelar';
  close.onclick=()=>dialog.close();
- picker.onclick=()=>dialog.showModal();
- dialog.append(heading,samples,close);
+ const apply=document.createElement('button');
+ apply.type='button';
+ apply.textContent='Aplicar';
+ apply.onclick=()=>{
+  font.value=draftFont;
+  for(const {hidden,values,range} of sliders)hidden.value=values[range.value];
+  dialog.close();
+  saveTypography();
+ };
+ picker.onclick=()=>{
+  draftFont=font.value;
+  for(const {hidden,range,values} of sliders)range.value=values.indexOf(hidden.value);
+  updatePreview();
+  dialog.showModal();
+ };
+ const actions=document.createElement('div');
+ actions.className='font-dialog-actions';
+ actions.append(close,apply);
+ dialog.append(heading,samples,...sliders.map(slider=>slider.field),actions);
  group.append(font,picker,dialog);
- for(const {key,label,options} of typographyFields.slice(1)){
-  const field=document.createElement('label');
-  field.textContent=label;
-  const select=document.createElement('select');
-  select.id='text-'+key;
-  for(const [value,name] of Object.entries(options))select.add(new Option(name,value));
-  select.onchange=saveTypography;
-  field.append(select);
-  group.append(field);
- }
  const message=document.createElement('p');
  message.id='typographyMessage';
  message.className='hint';
