@@ -339,13 +339,13 @@ function mountBackground(panel){
  hex.maxLength=7;
  hex.spellcheck=false;
  hex.setAttribute('aria-label','Código HEX del color');
- hex.onchange=()=>{
+ hex.oninput=()=>{
   if(/^#[0-9a-f]{6}$/i.test(hex.value.trim())){
    exact.value=hex.value.trim();
    exact.oninput();
   }
-  syncColor();
  };
+ hex.onchange=()=>syncColor();
  const copy=document.createElement('button');
  copy.type='button';
  copy.className='secondary';
