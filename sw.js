@@ -1,6 +1,6 @@
 // HondaDespensa · recurso offline y actualización preferente de red.
-const CACHE='hondadespensa-pwa-v21';
-const ASSETS=['./index.html','./styles.css?v=21','./app.js?v=21','./manifest.webmanifest','./icon-192.png','./icon-512.png','./textura-azul.svg','./assets/foto-apartamento.png'];
+const CACHE='hondadespensa-pwa-v22';
+const ASSETS=['./index.html','./styles.css?v=22','./app.js?v=22','./manifest.webmanifest','./icon-192.png','./icon-512.png','./textura-azul.svg','./assets/foto-apartamento.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>(k.startsWith('hondadespensa-pwa-')||k.startsWith('mi-despensa-pwa-'))&&k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim();})());});
 self.addEventListener('fetch',event=>{
