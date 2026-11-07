@@ -17,7 +17,7 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 .stat{min-width:0;text-align:center;background:linear-gradient(135deg,#1b4668f0,#0a2845f5);border:1.5px solid #6a99bd;border-radius:clamp(20px,4vw,29px);padding:clamp(16px,3vw,26px) 5px;box-shadow:inset 0 1px #ffffff2b,0 8px 16px #0005;min-height:112px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .stat b{display:block;color:white;font-size:clamp(29px,6vw,49px);line-height:1.2;text-shadow:0 2px 4px #0006}
 .stat small{font-size:clamp(11px,2.9vw,19px);color:var(--muted);margin-top:7px}
-.toolbar{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(110px,1fr);gap:12px;margin:26px 0 22px}
+.toolbar{display:grid;gap:12px;margin:26px 0 22px}
 .toolbar input,.toolbar select,.add input,.add select,.admin-panel input,.admin-panel select{min-width:0;width:100%;border:1.5px solid #8eb5d3;border-radius:20px;padding:14px 17px;min-height:54px;background:linear-gradient(120deg,#0b2b4b,#071f38);color:white;box-shadow:inset 0 1px #ffffff1e;outline-offset:2px}
 .toolbar input::placeholder,.add input::placeholder,.admin-panel input::placeholder{color:#b8cde1}
 .toolbar select{appearance:auto}
@@ -59,7 +59,7 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 .empty{text-align:center;padding:30px 15px;color:#b6cce0}
 #catalogSearch{margin:8px 0}
 @media (max-width:600px){.wrap{padding:12px 16px 65px}.hero{height:222px}.polaroid{left:-20px;top:-5px;width:59%;max-width:325px}.hero-copy{width:58%;padding-top:54px;align-items:flex-end;text-align:center}.admin-link{margin-right:clamp(6px,8vw,55px)}.stats{margin-top:-36px;gap:10px}.stat{min-height:106px;padding:13px 2px;border-radius:22px}.toolbar{margin-top:26px}.category>summary{min-height:85px}.add button{width:100%}}
-@media (max-width:390px){.hero{height:197px}.polaroid{width:61%;left:-18px}.hero-copy{padding-top:45px;width:57%}.admin-link{font-size:15px;margin-right:14px}.stats{margin-top:-19px;gap:8px}.stat{min-height:92px}.stat small{font-size:11px}.toolbar{gap:9px;grid-template-columns:minmax(0,1.7fr) minmax(95px,1fr)}.toolbar input,.toolbar select{padding:11px 9px;min-height:53px;border-radius:16px}.category>summary{padding:13px 11px;gap:8px}.cat-icon{width:44px;height:44px;font-size:30px}.cat-count{font-size:15px}.chevron{width:12px;height:12px}}
+@media (max-width:390px){.hero{height:197px}.polaroid{width:61%;left:-18px}.hero-copy{padding-top:45px;width:57%}.admin-link{font-size:15px;margin-right:14px}.stats{margin-top:-19px;gap:8px}.stat{min-height:92px}.stat small{font-size:11px}.toolbar{gap:9px;}.toolbar input,.toolbar select{padding:11px 9px;min-height:53px;border-radius:16px}.category>summary{padding:13px 11px;gap:8px}.cat-icon{width:44px;height:44px;font-size:30px}.cat-count{font-size:15px}.chevron{width:12px;height:12px}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
 /* Estilos de visualización guardados por usuario. */
@@ -182,7 +182,6 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 
 .category>summary>.chevron{border-width:1.5px;margin-inline-end:6px}
 
-.toolbar #filter{appearance:none;padding-inline-end:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%23f5f9ff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
 
 [data-bg-color=marino]{--app-bg-color:#071c32}
 [data-bg-color=petroleo]{--app-bg-color:#082c34}
@@ -201,7 +200,7 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 [data-bg-color=ciruela]{--card-light:#594361;--card-dark:#3b2b46;--card-edge:#a790af;--card-inner:#36263f}
 [data-bg-color=marino]{--card-light:#1a4868ee;--card-dark:#0a2945f5;--card-edge:#6795b9;--card-inner:#09243b91}
 
-.toolbar #search,.toolbar #filter{background-color:var(--card-dark,#0a2945);border-color:var(--card-edge,#6795b9)}
+.toolbar #search{background-color:var(--card-dark,#0a2945);border-color:var(--card-edge,#6795b9)}
 
 .toolbar #search{background-image:none}
 

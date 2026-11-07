@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=61">
+  <link rel="stylesheet" href="styles.css?v=62">
 </head>
 <body>
   <div class="wrap">
@@ -80,11 +80,6 @@
 
     <div class="toolbar" id="toolbar" hidden>
       <input id="search" placeholder="🔎 Buscar alimentos…" aria-label="Buscar alimentos">
-      <select id="filter" aria-label="Filtrar alimentos">
-        <option value="all">Todos</option>
-        <option value="have">Ya tengo</option>
-        <option value="missing">Me faltan</option>
-      </select>
     </div>
 
     <form id="addForm" class="add" hidden>
@@ -98,7 +93,7 @@
       <button id="adminToggle" class="admin-link" type="button">⚙️ Administrar</button>
     </footer>
   </div>
-  <script type="module" src="app.js?v=60"></script>
+  <script type="module" src="app.js?v=62"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js', { updateViaCache:'none' })

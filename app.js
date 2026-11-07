@@ -862,11 +862,11 @@ function showApp(visible){
  if(!visible)$('migration').hidden=true;
 }
 function render(){
- const q=folded($('search').value.trim()),filter=$('filter').value;
+ const q=folded($('search').value.trim());
  $('total').textContent=data.length;
  $('have').textContent=data.filter(x=>x.have).length;
  $('missing').textContent=data.filter(x=>!x.have).length;
- const shown=data.filter(x=>folded(x.name).includes(q)&&(filter==='all'||(filter==='have'?x.have:!x.have)));
+ const shown=data.filter(x=>folded(x.name).includes(q));
  const main=$('items');main.replaceChildren();
  if(!shown.length){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';main.append(p);}
  for(const category of orderedCategories(pantryCategories())){
@@ -971,7 +971,7 @@ async function addSharedFood(name,category,recentFirst=false){
  if(recentFirst)recentAdminFoods.set(adminFoodKey({name,category}),++recentAdminFoodSequence);
  await refresh();return true;
 }
-$('search').oninput=render;$('filter').onchange=render;
+$('search').oninput=render;
 
 async function loadCatalog(){
  if(!session)return;
