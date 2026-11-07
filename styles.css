@@ -209,3 +209,19 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 .hero h1{width:100%;max-width:360px;margin:0 0 10px}
 .hero h1{font-family:system-ui,sans-serif;font-size:clamp(24px,7vw,58px);font-weight:900;line-height:.96;letter-spacing:-.045em;color:#fff;text-align:center}
 [data-view-style=compactado] .hero h1{font-size:clamp(20px,5vw,36px)}
+
+.background-color-controls{display:grid;justify-items:center;gap:10px}
+.background-color-controls>select{width:100%}
+.background-wheel{width:min(156px,100%);aspect-ratio:1;border-radius:50%;touch-action:none;cursor:crosshair;background:radial-gradient(circle,#fff,transparent 70%),conic-gradient(red,yellow,lime,cyan,blue,magenta,red)}
+.background-color-controls input[type=color]{width:72px;min-height:44px;padding:4px}
+body,.background-preview{background-color:var(--customBackground,var(--app-bg-color,#071c32))}
+:root[style*="--customBackground"],.background-preview[style*="--customBackground"]{
+ --card-light:color-mix(in srgb,var(--customBackground),white 16%);
+ --card-dark:color-mix(in srgb,var(--customBackground),white 7%);
+ --card-inner:var(--customBackground);
+ --card-edge:color-mix(in srgb,var(--customBackground),white 42%);
+}
+:root[style*="--textColor"] :is(.wrap,.wrap button,.wrap input,.wrap select,.wrap h1,.wrap small,.wrap .hint,.wrap .item.done span,.wrap .cat-count,.wrap .admin-link,.wrap dialog,.wrap label){color:var(--textColor)}
+:root[style*="--textColor"] .wrap input::placeholder{color:var(--textColor);opacity:.8}
+:root[style*="--borderColor"] .wrap :is(.category,.item,.admin-panel,button,input,select,fieldset,dialog){border-color:var(--borderColor)}
+.background-preview span{color:var(--textColor,var(--ink));border-color:var(--borderColor,var(--card-edge,var(--line)))}

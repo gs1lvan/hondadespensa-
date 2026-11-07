@@ -247,14 +247,25 @@ function applyTypography(value){
 }
 const backgroundColors={marino:'Azul marino',petroleo:'Azul petróleo',bosque:'Verde bosque',grafito:'Gris grafito',ciruela:'Ciruela'};
 const backgroundTextures={grano:'Grano fino',liso:'Liso',tejido:'Tejido',puntos:'Puntos finos'};
+const customColorFields={customBackground:'Fondo',textColor:'Texto',borderColor:'Bordes'};
+const customColorDefaults={customBackground:'#071c32',textColor:'#f5f9ff',borderColor:'#6795b9'};
+function applyCustomColors(element,value){
+ for(const key of Object.keys(customColorFields)){
+  if(value[key])element.style.setProperty('--'+key,value[key]);
+  else element.style.removeProperty('--'+key);
+ }
+}
 function backgroundPreference(value){
  return {
   color:Object.hasOwn(backgroundColors,value?.color)?value.color:'marino',
-  texture:Object.hasOwn(backgroundTextures,value?.texture)?value.texture:'grano'
+  texture:Object.hasOwn(backgroundTextures,value?.texture)?value.texture:'grano',
+  ...Object.fromEntries(Object.keys(customColorFields).map(key=>[key,/^#[0-9a-f]{6}$/i.test(value?.[key]??'')?value[key]:null]))
  };
 }
 function applyBackground(value){
- const {color,texture}=backgroundPreference(value);
+ const preference=backgroundPreference(value);
+ const {color,texture}=preference;
+ applyCustomColors(document.documentElement,preference);
  document.documentElement.dataset.bgColor=color;
  document.documentElement.dataset.bgTexture=texture;
 }
@@ -288,11 +299,71 @@ function mountBackground(panel){
   dialog.append(field);
  }
  const [color,texture]=controls;
+ const target=document.createElement('select');
+ target.setAttribute('aria-label','Elemento que quieres colorear');
+ for(const [key,label] of Object.entries(customColorFields))target.add(new Option(label,key));
+ const wheel=document.createElement('div');
+ wheel.className='background-wheel';
+ wheel.setAttribute('aria-hidden','true');
+ const exact=document.createElement('input');
+ exact.type='color';
+ exact.setAttribute('aria-label','Ajustar color exacto y luminosidad');
+ const reset=document.createElement('button');
+ reset.type='button';
+ reset.className='secondary';
+ reset.textContent='Restablecer este color';
+ const customControls=document.createElement('div');
+ customControls.className='background-color-controls';
+ customControls.append(target,wheel,exact,reset);
+ dialog.append(customControls);
+ let draft;
+ function syncColor(){
+  exact.value=draft[target.value]??customColorDefaults[target.value];
+ }
+ target.onchange=syncColor;
+ exact.oninput=()=>{
+  draft[target.value]=exact.value;
+  updatePreview();
+ };
+ reset.onclick=()=>{
+  draft[target.value]=null;
+  syncColor();
+  updatePreview();
+ };
+ function pickHue(event){
+  const rect=wheel.getBoundingClientRect();
+  const x=(event.clientX-rect.left)/rect.width-.5;
+  const y=(event.clientY-rect.top)/rect.height-.5;
+  const hue=(Math.atan2(x,-y)*180/Math.PI+360)%360;
+  const saturation=Math.min(1,Math.hypot(x,y)*2);
+  const lightness={customBackground:.19,textColor:.79,borderColor:.57}[target.value];
+  const channel=n=>{
+   const k=(n+hue/30)%12;
+   const intensity=saturation*Math.min(lightness,1-lightness);
+   return Math.round(255*(lightness-intensity*Math.max(-1,Math.min(k-3,9-k,1)))).toString(16).padStart(2,'0');
+  };
+  draft[target.value]='#'+channel(0)+channel(8)+channel(4);
+  syncColor();
+  updatePreview();
+ }
+ wheel.onpointerdown=event=>{
+  wheel.setPointerCapture(event.pointerId);
+  pickHue(event);
+ };
+ wheel.onpointermove=event=>{
+  if(wheel.hasPointerCapture(event.pointerId))pickHue(event);
+ };
  function updatePreview(){
+  applyCustomColors(preview,draft);
   preview.dataset.bgColor=color.value;
   preview.dataset.bgTexture=texture.value;
  }
- color.onchange=texture.onchange=updatePreview;
+ texture.onchange=updatePreview;
+ color.onchange=()=>{
+  draft.customBackground=null;
+  syncColor();
+  updatePreview();
+ };
  const actions=document.createElement('div');
  actions.className='font-dialog-actions';
  const cancel=document.createElement('button');
@@ -309,7 +380,9 @@ function mountBackground(panel){
  message.setAttribute('role','status');
  picker.onclick=()=>{
   const saved=backgroundPreference(session?.user?.user_metadata?.app_background);
+  draft=saved;
   color.value=saved.color;
+  syncColor();
   texture.value=saved.texture;
   updatePreview();
   dialog.showModal();
@@ -318,7 +391,7 @@ function mountBackground(panel){
   const current=session;
   if(!current||savingIconFamily)return;
   const previous=current.user?.user_metadata?.app_background;
-  const choice={color:color.value,texture:texture.value};
+  const choice={...draft,color:color.value,texture:texture.value};
   dialog.close();
   savingIconFamily=true;
   picker.disabled=true;
