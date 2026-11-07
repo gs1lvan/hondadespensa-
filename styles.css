@@ -214,7 +214,7 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 .background-color-targets button{min-height:44px;padding:6px 3px;font-size:14px}
 .background-color-targets button[aria-pressed=true]{background:#176197;border-color:#8ad7ff;box-shadow:inset 0 0 0 1px #8ad7ff}
 .background-wheel{width:min(156px,100%);aspect-ratio:1;border-radius:50%;touch-action:none;cursor:crosshair;background:radial-gradient(circle,#fff,transparent 70%),conic-gradient(red,yellow,lime,cyan,blue,magenta,red)}
- .background-wheel-row{display:grid;grid-template-columns:44px minmax(0,156px) 44px;align-items:start;justify-content:center;gap:8px;width:100%}
+ .background-wheel-row{display:grid;grid-template-columns:44px minmax(0,156px) 32px 32px;align-items:start;justify-content:center;gap:8px;width:100%}
 .background-wheel-row input[type=color]{width:44px;height:44px;min-height:44px;padding:3px;border-radius:50%;overflow:hidden}
 .background-wheel-row input[type=color]::-webkit-color-swatch-wrapper{padding:0}
 .background-wheel-row input[type=color]::-webkit-color-swatch{border:0;border-radius:50%}
@@ -271,3 +271,5 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
  border-color:var(--theme-edge);
  box-shadow:inset 0 0 0 1px var(--theme-accent);
 }
+
+.background-wheel-row input[aria-label='Saturación del color']{background:linear-gradient(var(--saturated-color,#f00),var(--neutral-color,#888))}

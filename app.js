@@ -371,7 +371,11 @@ function mountBackground(panel){
  brightness.max=100;
  brightness.step=0.1;
  brightness.setAttribute('aria-label','Luminosidad del color');
- wheelRow.append(exact,wheel,brightness);
+ brightness.title='Luminosidad';
+ const saturationControl=brightness.cloneNode();
+ saturationControl.setAttribute('aria-label','Saturación del color');
+ saturationControl.title='Saturación';
+ wheelRow.append(exact,wheel,brightness,saturationControl);
  customControls.append(targets,wheelRow,hexRow,copied,reset);
  dialog.append(customControls);
  let draft,hue=0,saturation=0;
@@ -385,6 +389,9 @@ function mountBackground(panel){
    hue=delta?(60*(max===red?(green-blue)/delta:max===green?2+(blue-red)/delta:4+(red-green)/delta)+360)%360:0;
    brightness.value=lightness*100;
   }
+  saturationControl.value=saturation*100;
+  saturationControl.style.setProperty('--saturated-color',`hsl(${hue} 100% ${brightness.value}%)`);
+  saturationControl.style.setProperty('--neutral-color',`hsl(0 0% ${brightness.value}%)`);
   brightness.style.setProperty('--middle-color',`hsl(${hue} ${saturation*100}% 50%)`);
   hex.value=exact.value.toUpperCase();
   copied.textContent='';
@@ -421,6 +428,10 @@ function mountBackground(panel){
   updatePreview();
  }
  brightness.oninput=updateWheelColor;
+ saturationControl.oninput=()=>{
+  saturation=Number(saturationControl.value)/100;
+  updateWheelColor();
+ };
  wheel.onpointerdown=event=>{
   wheel.setPointerCapture(event.pointerId);
   pickHue(event);
