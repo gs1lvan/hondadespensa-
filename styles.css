@@ -95,7 +95,7 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 [data-view-style=compactado] .admin-section h2{font-size:17px;margin-bottom:10px}
 [data-view-style=compactado] .admin-row{padding:7px 6px;gap:7px;font-size:14px}
 [data-view-style=compactado] .admin-actions button{min-height:44px}
-[data-view-style=compactado] .catalog-category summary{padding:9px;font-size:14px}
+[data-view-style=compactado] .catalog-category summary{padding:9px;font-size:calc(14px * var(--list-scale,1))}
 @media(max-width:350px){.style-options{grid-template-columns:1fr}.style-preview{height:130px}}
 
 .category-sprite{display:block;width:100%;aspect-ratio:1;background-image:var(--category-icons,url('./assets/iconos-ilustrados.webp'));background-size:400% 300%;background-repeat:no-repeat}
@@ -138,3 +138,19 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 .icon-size-control{display:grid;gap:8px;margin:16px 0}
 [data-pantry-icon-size=medianos] .category:not(.admin-category)>summary>.cat-icon:has(.category-sprite){width:clamp(44px,8vw,58px);height:auto}
 [data-pantry-icon-size=medianos][data-view-style=compactado] .category:not(.admin-category)>summary>.cat-icon:has(.category-sprite){width:34px}
+
+.typography-options{display:grid;gap:10px;min-width:0;margin:16px 0;padding:12px;border:1px solid #527b9d;border-radius:12px}
+.typography-options label{display:grid;gap:4px}
+[data-textfont=sans]{--list-font:Arial,sans-serif}
+[data-textfont=serif]{--list-font:Georgia,serif}
+[data-textfont=mono]{--list-font:ui-monospace,monospace}
+[data-textweight=normal]{--list-weight:400}
+[data-textweight=negrita]{--list-weight:700}
+[data-textsize=pequeno]{--list-scale:.92}
+[data-textsize=grande]{--list-scale:1.08}
+:is(.cat-name,.item span,.admin-label strong,.catalog-category summary,.catalog-products button){
+ font-family:var(--list-font,inherit);
+ font-weight:var(--list-weight,inherit);
+}
+.cat-name,.item span,.admin-label strong{font-size:calc(1em * var(--list-scale,1))}
+.catalog-category summary,.catalog-products button{font-size:calc(1em * var(--list-scale,1))}

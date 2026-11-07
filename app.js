@@ -197,6 +197,7 @@ function mountStylePanel(){
  size.onchange=()=>savePantryIconSize(size.value);
  sizeLabel.append(size);
  panel.append(sizeLabel);
+ mountTypography(panel);
  mountIconOptions(panel);
  $('adminPanel').insertBefore(panel,$('adminAddMount').parentElement);
  renderStylePanel();
@@ -225,6 +226,76 @@ function applyIconFamily(value,adminValue){
  }
 }
 let savingIconFamily=false;
+const typographyFields=[
+ {key:'font',label:'Fuente',options:{sistema:'Del sistema',sans:'Arial',serif:'Georgia',mono:'Monoespaciada'},initial:'sistema'},
+ {key:'weight',label:'Grosor',options:{original:'Original',normal:'Normal',negrita:'Negrita'},initial:'original'},
+ {key:'size',label:'Tamaño de letra',options:{pequeno:'Pequeño',mediano:'Mediano',grande:'Grande'},initial:'mediano'}
+];
+function applyTypography(value){
+ const result={};
+ for(const {key,options,initial} of typographyFields){
+  const choice=Object.hasOwn(options,value?.[key])?value[key]:initial;
+  result[key]=choice;
+  document.documentElement.dataset['text'+key]=choice;
+  $('text-'+key).value=choice;
+ }
+ return result;
+}
+function mountTypography(panel){
+ const group=document.createElement('fieldset');
+ group.id='typographyOptions';
+ group.className='typography-options';
+ const title=document.createElement('legend');
+ title.textContent='Tipografía de categorías y alimentos';
+ group.append(title);
+ for(const {key,label,options} of typographyFields){
+  const field=document.createElement('label');
+  field.textContent=label;
+  const select=document.createElement('select');
+  select.id='text-'+key;
+  for(const [value,name] of Object.entries(options))select.add(new Option(name,value));
+  select.onchange=saveTypography;
+  field.append(select);
+  group.append(field);
+ }
+ const message=document.createElement('p');
+ message.id='typographyMessage';
+ message.className='hint';
+ message.setAttribute('role','status');
+ group.append(message);
+ panel.append(group);
+}
+async function saveTypography(){
+ const current=session;
+ const previous=current?.user?.user_metadata?.list_typography;
+ if(!current||savingIconFamily){
+  applyTypography(previous);
+  return;
+ }
+ const choice=Object.fromEntries(typographyFields.map(({key})=>[key,$('text-'+key).value]));
+ const group=$('typographyOptions');
+ const message=$('typographyMessage');
+ savingIconFamily=true;
+ group.disabled=true;
+ message.textContent='Guardando tipografía…';
+ applyTypography(choice);
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{list_typography:choice}});
+  if(error)throw error;
+  if(session===current){
+   current.user=result.user;
+   message.textContent='Tipografía guardada en tu cuenta.';
+  }
+ }catch(error){
+  if(session===current){
+   applyTypography(previous);
+   message.textContent='No se pudo guardar la tipografía: '+error.message;
+  }
+ }finally{
+  savingIconFamily=false;
+  group.disabled=false;
+ }
+}
 function applyPantryIconSize(value){
  const size=value==='medianos'?'medianos':'grandes';
  document.documentElement.dataset.pantryIconSize=size;
@@ -485,6 +556,8 @@ async function signedIn(currentSession){
  recentAdminFoods.clear();
  applyViewStyle(currentSession?.user?.user_metadata?.view_style);
  $('iconMessage').textContent='';
+ $('typographyMessage').textContent='';
+ applyTypography(currentSession?.user?.user_metadata?.list_typography);
  applyPantryIconSize(currentSession?.user?.user_metadata?.pantry_icon_size);
  applyIconFamily(currentSession?.user?.user_metadata?.icon_family,currentSession?.user?.user_metadata?.admin_icon_family);
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
