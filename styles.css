@@ -121,7 +121,7 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 
 .category>summary>.cat-icon + .cat-name{margin-inline-start:6px}
 
-[data-icon-family=estencil-sin-envases],[data-family=estencil-sin-envases] .category-sprite{--category-icons:url('./assets/iconos-estencil-sin-envases.webp')}
+[data-icon-family=estencil-sin-envases],[data-family=estencil-sin-envases] .category-sprite{--category-icons:url('./assets/iconos-estencil-sin-envases-v2.webp')}
 
 .style-panel>h2{margin-top:16px}
 .icon-family-card{display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -133,4 +133,4 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 [data-admin-icon-family=ilustrados] .admin-category .category-sprite{--category-icons:url('./assets/iconos-ilustrados.webp')}
 [data-admin-icon-family=sencillos] .admin-category .category-sprite{--category-icons:url('./assets/iconos-sencillos.webp')}
 [data-admin-icon-family=estencil] .admin-category .category-sprite{--category-icons:url('./assets/iconos-estencil.webp')}
-[data-admin-icon-family=estencil-sin-envases] .admin-category .category-sprite{--category-icons:url('./assets/iconos-estencil-sin-envases.webp')}
+[data-admin-icon-family=estencil-sin-envases] .admin-category .category-sprite{--category-icons:url('./assets/iconos-estencil-sin-envases-v2.webp')}
