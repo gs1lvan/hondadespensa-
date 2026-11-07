@@ -71,6 +71,7 @@ function categoryHeader(category,countText) {
 
 let data=[],session=null,channel=null,catalogChannel=null,busy=false,catalogRows=[],catalogReady=false,adminMode=false;
 const openCategories=new Set(),catalogOpen=new Set();
+const adminOpenCategories={food:new Set(),catalog:new Set()};
 const categoryOptions=()=>[...new Set([...Object.keys(initial),...data.map(x=>x.category),...catalogRows.map(x=>x.categoria)])];
 function adminMessage(message) {$('adminMessage').textContent=message||'';}
 function setStatus(message) {$('status').textContent=message;}
@@ -268,6 +269,11 @@ function makeAdminRow(item,type){
  return row;
 }
 function renderGroupedAdmin(container,rows,type,query){
+ const open=adminOpenCategories[type];
+ // Leer el estado actual antes de reconstruir la lista, sin esperar al evento toggle.
+ for(const section of container.querySelectorAll('details.admin-category')){
+  if(section.open)open.add(section.dataset.category);else open.delete(section.dataset.category);
+ }
  container.replaceChildren();const groups=new Map();
  for(const item of rows){
   const category=type==='food'?item.category:item.categoria;
@@ -280,7 +286,8 @@ function renderGroupedAdmin(container,rows,type,query){
   const section=document.createElement('details');section.className='category admin-category';
   section.append(categoryHeader(category,groups.get(category).length+' alimentos'));
   for(const item of groups.get(category).sort((a,b)=>esCompare(type==='food'?a.name:a.nombre,type==='food'?b.name:b.nombre)))section.append(makeAdminRow(item,type));
-  if(query)section.open=true;container.append(section);
+  section.dataset.category=category;
+  section.open=open.has(category)||!!query;container.append(section);
  }
  if(!groups.size){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';container.append(p);}
 }
