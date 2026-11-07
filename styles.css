@@ -194,7 +194,6 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 [data-bg-texture=tejido]{--app-bg-texture:repeating-linear-gradient(90deg,#ffffff08 0 1px,transparent 1px 4px),repeating-linear-gradient(0deg,#ffffff08 0 1px,transparent 1px 4px);--app-bg-tile:auto}
 [data-bg-texture=puntos]{--app-bg-texture:radial-gradient(circle,#ffffff20 1px,transparent 1.3px);--app-bg-tile:7px 7px}
 .background-preview{display:grid;place-items:center;min-height:112px;padding:12px;border:1px solid var(--line);border-radius:12px;background-color:var(--app-bg-color);background-image:var(--app-bg-texture);background-size:var(--app-bg-tile,230px 230px)}
-.background-preview span{padding:8px 12px;border:1px solid var(--card-edge,var(--line));border-radius:10px;background:linear-gradient(130deg,var(--card-light,#1a4868ee),var(--card-dark,#0a2945f5));color:var(--ink);text-align:center}
 
 [data-bg-color=petroleo]{--card-light:#22545b;--card-dark:#10363e;--card-edge:#659ca3;--card-inner:#0c3339}
 [data-bg-color=bosque]{--card-light:#2d5542;--card-dark:#17382b;--card-edge:#779f89;--card-inner:#163326}
@@ -224,4 +223,8 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
 :root[style*="--textColor"] :is(.wrap,.wrap button,.wrap input,.wrap select,.wrap h1,.wrap small,.wrap .hint,.wrap .item.done span,.wrap .cat-count,.wrap .admin-link,.wrap dialog,.wrap label){color:var(--textColor)}
 :root[style*="--textColor"] .wrap input::placeholder{color:var(--textColor);opacity:.8}
 :root[style*="--borderColor"] .wrap :is(.category,.item,.admin-panel,button,input,select,fieldset,dialog){border-color:var(--borderColor)}
-.background-preview span{color:var(--textColor,var(--ink));border-color:var(--borderColor,var(--card-edge,var(--line)))}
+
+.background-preview-card{display:flex;align-items:center;gap:8px;width:100%;padding:10px;border:1px solid var(--borderColor,var(--card-edge,var(--line)));border-radius:14px;background:linear-gradient(130deg,var(--card-light,#1a4868ee),var(--card-dark,#0a2945f5));color:var(--textColor,var(--ink))}
+.background-preview-card .cat-icon{width:34px;height:34px}
+.background-preview-card .cat-count{color:inherit;font-size:12px}
+.background-preview-card .chevron{border-width:1.5px;margin-inline-end:4px}

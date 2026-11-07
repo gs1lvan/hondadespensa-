@@ -284,8 +284,10 @@ function mountBackground(panel){
  title.textContent='Fondo de la aplicación';
  const preview=document.createElement('div');
  preview.className='background-preview';
- const card=document.createElement('span');
- card.textContent='Vista previa de la despensa';
+ const card=document.createElement('div');
+ card.className='background-preview-card';
+ const header=categoryHeader('Salsas y aderezos','7/12');
+ card.append(...header.children);
  preview.append(card);
  const controls=[];
  for(const [label,options] of [['Color',backgroundColors],['Textura',backgroundTextures]]){
