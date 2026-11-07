@@ -172,7 +172,7 @@ async function saveViewStyle(next){
 }
 function mountStylePanel(){
  const panel=document.createElement('details');panel.className='admin-section admin-catalog style-panel';
- const title=document.createElement('summary');title.textContent='🎨 Panel de estilos';
+ const title=document.createElement('summary');title.textContent='Estilos';
  const hint=document.createElement('p');hint.className='hint';hint.textContent='Elige cómo quieres ver la aplicación. Tu elección se guarda automáticamente en tu cuenta.';
  const options=document.createElement('div');options.id='styleOptions';options.className='style-options';options.setAttribute('role','group');options.setAttribute('aria-label','Estilo de visualización');
  for(const style of viewStyles){
@@ -185,9 +185,12 @@ function mountStylePanel(){
   button.append(preview,name,description,state);button.onclick=()=>saveViewStyle(style.id);options.append(button);
  }
  const message=document.createElement('p');message.id='styleMessage';message.className='hint';message.setAttribute('role','status');
- panel.append(title,hint,options,message);
+ const heading=document.createElement('h2');heading.textContent='Vista de la despensa';
+ panel.append(title,heading,hint,options,message);
+ mountIconOptions(panel);
  $('adminPanel').insertBefore(panel,$('adminAddMount').parentElement);
  renderStylePanel();
+ applyIconFamily();
 }
 
 
@@ -197,9 +200,14 @@ const iconFamilies=[
  {id:'estencil',name:'Iconos esténcil'},
  {id:'estencil-sin-envases',name:'Esténcil sin envases'}
 ];
-function applyIconFamily(value){
+function applyIconFamily(value,adminValue){
  const family=iconFamilies.some(option=>option.id===value)?value:'ilustrados';
  document.documentElement.dataset.iconFamily=family;
+ const adminFamily=iconFamilies.some(option=>option.id===adminValue)?adminValue:'';
+ $('adminPanel').dataset.adminIconFamily=adminFamily;
+ for(const check of $('iconOptions').querySelectorAll('input')){
+  check.checked=check.value===adminFamily;
+ }
  for(const button of $('iconOptions').querySelectorAll('button')){
   const selected=button.dataset.family===family;
   button.setAttribute('aria-pressed',String(selected));
@@ -207,18 +215,24 @@ function applyIconFamily(value){
  }
 }
 let savingIconFamily=false;
-async function saveIconFamily(family){
+async function saveIconFamily(value,forAdmin=false){
  const current=session;
  const previous=document.documentElement.dataset.iconFamily;
- if(!current||savingIconFamily||family===previous)return;
+ const previousAdmin=$('adminPanel').dataset.adminIconFamily;
+ if(!current||savingIconFamily||value===(forAdmin?previousAdmin:previous)){
+  applyIconFamily(previous,previousAdmin);
+  return;
+ }
+ const family=forAdmin?previous:value;
+ const adminFamily=forAdmin?value:previousAdmin;
  savingIconFamily=true;
  const options=$('iconOptions');
  const message=$('iconMessage');
  options.setAttribute('aria-busy','true');
  message.textContent='Guardando preferencia…';
- applyIconFamily(family);
+ applyIconFamily(family,adminFamily);
  try{
-  const {data:result,error}=await db.auth.updateUser({data:{icon_family:family}});
+  const {data:result,error}=await db.auth.updateUser({data:forAdmin?{admin_icon_family:adminFamily}:{icon_family:family}});
   if(error)throw error;
   if(session===current){
    current.user=result.user;
@@ -226,7 +240,7 @@ async function saveIconFamily(family){
   }
  }catch(error){
   if(session===current){
-   applyIconFamily(previous);
+   applyIconFamily(previous,previousAdmin);
    message.textContent='No se pudo guardar la familia: '+error.message;
   }
  }finally{
@@ -234,10 +248,8 @@ async function saveIconFamily(family){
   options.setAttribute('aria-busy','false');
  }
 }
-function mountIconPanel(){
- const panel=document.createElement('details');
- panel.className='admin-section admin-catalog style-panel';
- const title=document.createElement('summary');
+function mountIconOptions(panel){
+ const title=document.createElement('h2');
  title.textContent='Iconos de categorías';
  const options=document.createElement('div');
  options.id='iconOptions';
@@ -258,15 +270,23 @@ function mountIconPanel(){
   state.className='style-state';
   button.append(name,preview,state);
   button.onclick=()=>saveIconFamily(family.id);
-  options.append(button);
+  const card=document.createElement('div');
+  card.className='icon-family-card';
+  const label=document.createElement('label');
+  const check=document.createElement('input');
+  check.type='checkbox';
+  check.value=family.id;
+  check.setAttribute('aria-label','Usar '+family.name.toLowerCase()+' en Administración');
+  check.onchange=()=>saveIconFamily(check.checked?family.id:'',true);
+  label.append(check,' Usar en Administración');
+  card.append(button,label);
+  options.append(card);
  }
  const message=document.createElement('p');
  message.id='iconMessage';
  message.className='hint';
  message.setAttribute('role','status');
  panel.append(title,options,message);
- $('adminPanel').insertBefore(panel,$('adminAddMount').parentElement);
- applyIconFamily();
 }
 
 let customCategories=[],categoryMutation=false;
@@ -420,7 +440,7 @@ async function signedIn(currentSession){
  recentAdminFoods.clear();
  applyViewStyle(currentSession?.user?.user_metadata?.view_style);
  $('iconMessage').textContent='';
- applyIconFamily(currentSession?.user?.user_metadata?.icon_family);
+ applyIconFamily(currentSession?.user?.user_metadata?.icon_family,currentSession?.user?.user_metadata?.admin_icon_family);
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
  customCategories=readCategoryOrder(currentSession?.user?.user_metadata?.pantry_categories);
  showApp(!!currentSession);
@@ -621,7 +641,6 @@ function renderAdmin(){
  for(const category of categoryOptions().sort(esCompare)){const opt=document.createElement('option');opt.value=category;dl.append(opt);}
 }
 mountStylePanel();
-mountIconPanel();
 // El alta se realiza dentro de cada categoría, sin selector global.
 $('adminAddMount').parentElement.remove();
 $('addForm').remove();

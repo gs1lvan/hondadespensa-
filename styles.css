@@ -106,8 +106,8 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 .icon-preview .category-sprite{width:clamp(27px,8vw,44px)}
 
 /* Solo la ilustración sobresale, sin ampliar el área táctil de la tarjeta. */
-.category>summary>.cat-icon:has(.category-sprite){width:clamp(61px,10vw,80px)}
-.category>summary .category-sprite{
+.category:not(.admin-category)>summary>.cat-icon:has(.category-sprite){width:clamp(61px,10vw,80px)}
+.category:not(.admin-category)>summary .category-sprite{
  position:absolute;
  top:-23px;
  left:clamp(8px,2vw,18px);
@@ -116,9 +116,21 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
  pointer-events:none;
  filter:drop-shadow(0 3px 3px #0008)
 }
-[data-view-style=compactado] .category>summary>.cat-icon:has(.category-sprite){width:50px}
-[data-view-style=compactado] .category>summary .category-sprite{top:-13px;left:8px;width:60px}
+[data-view-style=compactado] .category:not(.admin-category)>summary>.cat-icon:has(.category-sprite){width:50px}
+[data-view-style=compactado] .category:not(.admin-category)>summary .category-sprite{top:-13px;left:8px;width:60px}
 
 .category>summary>.cat-icon + .cat-name{margin-inline-start:6px}
 
 [data-icon-family=estencil-sin-envases],[data-family=estencil-sin-envases] .category-sprite{--category-icons:url('./assets/iconos-estencil-sin-envases.webp')}
+
+.style-panel>h2{margin-top:16px}
+.icon-family-card{display:flex;flex-direction:column;gap:4px;min-width:0}
+.icon-family-card>.style-option{flex:1}
+.icon-family-card>label{display:flex;align-items:center;gap:6px;min-height:44px;font-size:13px;cursor:pointer}
+.icon-family-card input[type=checkbox]{width:18px;height:18px;min-height:0;flex:none}
+.admin-category>summary>.cat-icon{width:26px;height:26px;font-size:20px}
+[data-view-style=compactado] .admin-category>summary>.cat-icon{width:22px;height:22px;font-size:18px}
+[data-admin-icon-family=ilustrados] .admin-category .category-sprite{--category-icons:url('./assets/iconos-ilustrados.webp')}
+[data-admin-icon-family=sencillos] .admin-category .category-sprite{--category-icons:url('./assets/iconos-sencillos.webp')}
+[data-admin-icon-family=estencil] .admin-category .category-sprite{--category-icons:url('./assets/iconos-estencil.webp')}
+[data-admin-icon-family=estencil-sin-envases] .admin-category .category-sprite{--category-icons:url('./assets/iconos-estencil-sin-envases.webp')}
