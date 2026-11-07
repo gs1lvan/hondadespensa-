@@ -207,4 +207,5 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 .toolbar #search{background-image:none}
 
 .hero h1{width:100%;max-width:360px;margin:0 0 10px}
-.hero h1 img{display:block;width:100%;height:auto}
+.hero h1{font-family:system-ui,sans-serif;font-size:clamp(24px,7vw,58px);font-weight:900;line-height:.96;letter-spacing:-.045em;color:#fff;text-align:center}
+[data-view-style=compactado] .hero h1{font-size:clamp(20px,5vw,36px)}

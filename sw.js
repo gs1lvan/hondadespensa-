@@ -1,6 +1,6 @@
 // HondaDespensa · recurso offline y actualización preferente de red.
-const CACHE='hondadespensa-pwa-v45';
-const ASSETS=['./index.html','./styles.css?v=45','./app.js?v=41','./manifest.webmanifest','./icon-192.png','./icon-512.png','./textura-azul.svg?v=40','./assets/foto-apartamento.png','./assets/hondadespensa-sello.webp','./assets/iconos-ilustrados.webp','./assets/iconos-sencillos.webp','./assets/iconos-estencil.webp','./assets/iconos-estencil-sin-envases-v2.webp'];
+const CACHE='hondadespensa-pwa-v46';
+const ASSETS=['./index.html','./styles.css?v=46','./app.js?v=41','./manifest.webmanifest','./icon-192.png','./icon-512.png','./textura-azul.svg?v=40','./assets/foto-apartamento.png','./assets/iconos-ilustrados.webp','./assets/iconos-sencillos.webp','./assets/iconos-estencil.webp','./assets/iconos-estencil-sin-envases-v2.webp'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>(k.startsWith('hondadespensa-pwa-')||k.startsWith('mi-despensa-pwa-'))&&k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim();})());});
 self.addEventListener('fetch',event=>{
