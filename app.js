@@ -449,7 +449,9 @@ function makeAdminRow(item,type){
   del.disabled=true;
   const {error}=await db.from(type==='food'?'alimentos':'catalogo').delete().eq('id',item.id);
   if(error){adminMessage('Error: '+error.message);del.disabled=false;return;}
-  await refresh();if(type==='catalog')await loadCatalog();adminMessage('Alimento eliminado.');
+  await refresh();if(type==='catalog')await loadCatalog();
+  const categoryRemoved=type==='food'&&!pantryCategories().includes(item.category);
+  adminMessage(categoryRemoved?'Alimento eliminado. La categoría se ha quitado de la lista al quedarse vacía. Puedes recuperarla añadiendo sus alimentos desde «Añadir desde el catálogo», si están disponibles allí.':'Alimento eliminado.');
  };
  return row;
 }
@@ -545,6 +547,9 @@ $('catalogAddForm').onsubmit=async e=>{
  $('catalogNewName').value='';await loadCatalog();adminMessage('Alimento añadido al catálogo.');
 };
 mountCategoryCreator();
+const emptyCategoryHint=document.createElement('p');emptyCategoryHint.className='hint';
+emptyCategoryHint.textContent='Si una categoría desaparece al quedarse vacía, puedes recuperarla añadiendo sus alimentos desde «Añadir desde el catálogo», si están disponibles allí.';
+$('adminFoods').before(emptyCategoryHint);
 
 const {data:authData,error:authError}=await db.auth.getSession();
 if(authError)setStatus('Error de sesión: '+authError.message);
