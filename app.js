@@ -52,12 +52,23 @@ const categoryEmojis = [
  [/hogar|papel/, '🏠'],
  [/bebe/, '🍼']
 ];
+const iconSlots = ['🥛','🫒','🍅','🌿','🍚','🫘','🐟','🥩','🥕','🥜','🍞','🧃'];
+function iconSprite(slot) {
+ const icon=document.createElement('span');
+ icon.className='category-sprite';
+ icon.setAttribute('aria-hidden','true');
+ icon.style.backgroundPosition=`${slot%4*100/3}% ${Math.floor(slot/4)*50}%`;
+ return icon;
+}
 function categoryIcon(category) {
  const box=document.createElement('span');
  box.className='cat-icon';box.setAttribute('aria-hidden','true');
  const match=String(category).match(/^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/u);
  const suggested=categoryEmojis.find(([re])=>re.test(folded(bareCategory(category))));
- box.textContent=suggested?.[1]||match?.[1]||'🧺';
+ const emoji=suggested?.[1]||match?.[1]||'🧺';
+ const slot=iconSlots.indexOf(emoji);
+ if(slot<0)box.textContent=emoji;
+ else box.append(iconSprite(slot));
  return box;
 }
 function categoryHeader(category,countText) {
@@ -179,6 +190,82 @@ function mountStylePanel(){
  renderStylePanel();
 }
 
+
+const iconFamilies=[
+ {id:'ilustrados',name:'Iconos ilustrados'},
+ {id:'sencillos',name:'Iconos sencillos'}
+];
+function applyIconFamily(value){
+ const family=value==='sencillos'?'sencillos':'ilustrados';
+ document.documentElement.dataset.iconFamily=family;
+ for(const button of $('iconOptions').querySelectorAll('button')){
+  const selected=button.dataset.family===family;
+  button.setAttribute('aria-pressed',String(selected));
+  button.querySelector('.style-state').textContent=selected?'Seleccionado':'Elegir familia';
+ }
+}
+let savingIconFamily=false;
+async function saveIconFamily(family){
+ const current=session;
+ const previous=document.documentElement.dataset.iconFamily;
+ if(!current||savingIconFamily||family===previous)return;
+ savingIconFamily=true;
+ const options=$('iconOptions');
+ const message=$('iconMessage');
+ options.setAttribute('aria-busy','true');
+ message.textContent='Guardando preferencia…';
+ applyIconFamily(family);
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{icon_family:family}});
+  if(error)throw error;
+  if(session===current){
+   current.user=result.user;
+   message.textContent='Familia guardada en tu cuenta.';
+  }
+ }catch(error){
+  if(session===current){
+   applyIconFamily(previous);
+   message.textContent='No se pudo guardar la familia: '+error.message;
+  }
+ }finally{
+  savingIconFamily=false;
+  options.setAttribute('aria-busy','false');
+ }
+}
+function mountIconPanel(){
+ const panel=document.createElement('details');
+ panel.className='admin-section admin-catalog style-panel';
+ const title=document.createElement('summary');
+ title.textContent='Iconos de categorías';
+ const options=document.createElement('div');
+ options.id='iconOptions';
+ options.className='style-options';
+ options.setAttribute('role','group');
+ options.setAttribute('aria-label','Familia de iconos');
+ for(const family of iconFamilies){
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='style-option';
+  button.dataset.family=family.id;
+  const preview=document.createElement('span');
+  preview.className='icon-preview';
+  preview.append(iconSprite(0),iconSprite(6),iconSprite(11));
+  const name=document.createElement('strong');
+  name.textContent=family.name;
+  const state=document.createElement('span');
+  state.className='style-state';
+  button.append(name,preview,state);
+  button.onclick=()=>saveIconFamily(family.id);
+  options.append(button);
+ }
+ const message=document.createElement('p');
+ message.id='iconMessage';
+ message.className='hint';
+ message.setAttribute('role','status');
+ panel.append(title,options,message);
+ $('adminPanel').insertBefore(panel,$('adminAddMount').parentElement);
+ applyIconFamily();
+}
 
 let customCategories=[],categoryMutation=false;
 const pantryCategories=()=>[...new Set([...customCategories,...data.map(x=>x.category)])];
@@ -330,6 +417,8 @@ async function signedIn(currentSession){
  session=currentSession;
  recentAdminFoods.clear();
  applyViewStyle(currentSession?.user?.user_metadata?.view_style);
+ $('iconMessage').textContent='';
+ applyIconFamily(currentSession?.user?.user_metadata?.icon_family);
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
  customCategories=readCategoryOrder(currentSession?.user?.user_metadata?.pantry_categories);
  showApp(!!currentSession);
@@ -530,6 +619,7 @@ function renderAdmin(){
  for(const category of categoryOptions().sort(esCompare)){const opt=document.createElement('option');opt.value=category;dl.append(opt);}
 }
 mountStylePanel();
+mountIconPanel();
 // El alta se realiza dentro de cada categoría, sin selector global.
 $('adminAddMount').parentElement.remove();
 $('addForm').remove();

@@ -97,3 +97,9 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 [data-view-style=compactado] .admin-actions button{min-height:44px}
 [data-view-style=compactado] .catalog-category summary{padding:9px;font-size:14px}
 @media(max-width:350px){.style-options{grid-template-columns:1fr}.style-preview{height:130px}}
+
+.category-sprite{display:block;width:100%;aspect-ratio:1;background-image:var(--category-icons,url('./assets/iconos-ilustrados.webp'));background-size:400% 300%;background-repeat:no-repeat}
+[data-icon-family=sencillos],.icon-preview .category-sprite{--category-icons:url('./assets/iconos-sencillos.webp')}
+[data-family=ilustrados] .category-sprite{--category-icons:url('./assets/iconos-ilustrados.webp')}
+.icon-preview{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.icon-preview .category-sprite{width:clamp(27px,8vw,44px)}
