@@ -72,6 +72,52 @@ function categoryHeader(category,countText) {
 let data=[],session=null,channel=null,catalogChannel=null,busy=false,catalogRows=[],catalogReady=false,adminMode=false;
 const openCategories=new Set(),catalogOpen=new Set();
 const adminOpenCategories={food:new Set(),catalog:new Set()};
+let categoryOrder=[],savingCategoryOrder=false;
+function readCategoryOrder(value){
+ return Array.isArray(value)?[...new Set(value.filter(x=>typeof x==='string'))]:[];
+}
+function orderedCategories(values){
+ const available=new Set(values);
+ return [...categoryOrder.filter(x=>available.delete(x)),...[...available].sort(esCompare)];
+}
+async function saveCategoryOrder(next){
+ if(!session||savingCategoryOrder)return false;
+ savingCategoryOrder=true;renderCategoryOrder();
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{category_order:next}});
+  if(error)throw error;
+  session.user=result.user;categoryOrder=readCategoryOrder(result.user.user_metadata?.category_order);
+  render();adminMessage('Orden guardado en tu cuenta.');return true;
+ }catch(error){adminMessage('No se pudo guardar el orden: '+error.message);return false;}
+ finally{savingCategoryOrder=false;renderCategoryOrder();}
+}
+function renderCategoryOrder(){
+ const holder=$('categoryOrderList');holder.setAttribute('aria-busy',String(savingCategoryOrder));holder.replaceChildren();
+ const ordered=orderedCategories(data.map(x=>x.category));
+ if(!ordered.length){const p=document.createElement('p');p.className='hint';p.textContent='Añade alimentos para ordenar sus categorías.';holder.append(p);}
+ ordered.forEach((category,index)=>{
+  const row=document.createElement('div');row.className='admin-row';
+  const label=document.createElement('span');label.className='admin-label';label.textContent=(index+1)+'. '+bareCategory(category);
+  const actions=document.createElement('div');actions.className='admin-actions';
+  for(const [delta,text] of [[-1,'↑ Subir'],[1,'↓ Bajar']]){
+   const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=text;
+   button.setAttribute('aria-label',text+' '+bareCategory(category));
+   button.disabled=savingCategoryOrder||index+delta<0||index+delta>=ordered.length;
+   button.onclick=async()=>{
+    const next=[...ordered];[next[index],next[index+delta]]=[next[index+delta],next[index]];
+    // Conservar también las preferencias de categorías temporalmente vacías.
+    next.push(...categoryOrder.filter(x=>!next.includes(x)));
+    const saved=await saveCategoryOrder(next);
+    const position=saved?index+delta:index;
+    const buttons=holder.children[position]?.querySelectorAll('button');
+    if(buttons){const preferred=buttons[delta===-1?0:1];(preferred.disabled?[...buttons].find(x=>!x.disabled):preferred)?.focus();}
+   };
+   actions.append(button);
+  }
+  row.append(label,actions);holder.append(row);
+ });
+ $('resetCategoryOrder').disabled=savingCategoryOrder||!categoryOrder.length;
+}
 const categoryOptions=()=>[...new Set([...Object.keys(initial),...data.map(x=>x.category),...catalogRows.map(x=>x.categoria)])];
 function adminMessage(message) {$('adminMessage').textContent=message||'';}
 function setStatus(message) {$('status').textContent=message;}
@@ -106,7 +152,7 @@ function render(){
  const shown=data.filter(x=>folded(x.name).includes(q)&&(filter==='all'||(filter==='have'?x.have:!x.have)));
  const main=$('items');main.replaceChildren();
  if(!shown.length){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';main.append(p);}
- for(const category of [...new Set(data.map(x=>x.category))].sort(esCompare)){
+ for(const category of orderedCategories(data.map(x=>x.category))){
   const rows=shown.filter(x=>x.category===category).sort((a,b)=>esCompare(a.name,b.name));
   if(!rows.length)continue;
   const details=document.createElement('details');details.className='category';details.open=openCategories.has(category)||!!q;
@@ -141,13 +187,15 @@ async function refresh(){
  $('status').hidden=data.length!==0;
 }
 async function signedIn(currentSession){
- session=currentSession;showApp(!!currentSession);
+ session=currentSession;
+ categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
+ showApp(!!currentSession);
  if(channel){await db.removeChannel(channel);channel=null;}
  if(catalogChannel){await db.removeChannel(catalogChannel);catalogChannel=null;}
  if(!currentSession){setStatus('Inicia sesión con tu cuenta de HondaDespensa.');$('auth').hidden=false;$('status').hidden=false;$('loginForm').hidden=false;return;}
  const u=currentSession.user||{};
  $('accountName').textContent=u.user_metadata?.display_name||u.user_metadata?.full_name||u.email?.split('@')[0]||'Usuario';
- setStatus('Cargando lista compartida…');await refresh();await loadCatalog();
+ setStatus('Cargando lista compartida…');await refresh();await loadCatalog();render();
  channel=db.channel('alimentos-honda-v21').on('postgres_changes',{event:'*',schema:'public',table:'alimentos'},()=>refresh()).subscribe();
  catalogChannel=db.channel('catalogo-honda-v21').on('postgres_changes',{event:'*',schema:'public',table:'catalogo'},()=>loadCatalog()).subscribe();
 }
@@ -293,12 +341,21 @@ function renderGroupedAdmin(container,rows,type,query){
 }
 function renderAdmin(){
  if(!adminMode)return;
+ renderCategoryOrder();
  renderGroupedAdmin($('adminFoods'),data,'food',folded($('adminFoodSearch').value.trim()));
  renderGroupedAdmin($('adminCatalogRows'),catalogRows,'catalog',folded($('adminCatalogSearch').value.trim()));
  renderCatalog();
  const dl=$('adminCategories');dl.replaceChildren();
  for(const category of categoryOptions().sort(esCompare)){const opt=document.createElement('option');opt.value=category;dl.append(opt);}
 }
+const categoryOrderPanel=document.createElement('details');categoryOrderPanel.className='admin-section admin-catalog';
+const categoryOrderTitle=document.createElement('summary');categoryOrderTitle.textContent='↕ Orden de las categorías';
+const categoryOrderHint=document.createElement('p');categoryOrderHint.className='hint';categoryOrderHint.textContent='Sube o baja las categorías para elegir cómo aparecen en el inicio. Se guarda automáticamente en tu cuenta.';
+const categoryOrderList=document.createElement('div');categoryOrderList.id='categoryOrderList';categoryOrderList.setAttribute('aria-busy','false');
+const resetCategoryOrder=document.createElement('button');resetCategoryOrder.id='resetCategoryOrder';resetCategoryOrder.type='button';resetCategoryOrder.className='secondary';resetCategoryOrder.textContent='Restablecer orden original';
+resetCategoryOrder.onclick=()=>saveCategoryOrder([]);
+categoryOrderPanel.append(categoryOrderTitle,categoryOrderHint,categoryOrderList,resetCategoryOrder);
+$('adminPanel').insertBefore(categoryOrderPanel,$('adminFoods').parentElement);
 $('adminAddMount').append($('addForm'));
 $('adminFoodSearch').oninput=renderAdmin;
 $('adminCatalogSearch').oninput=renderAdmin;
