@@ -187,6 +187,16 @@ function mountStylePanel(){
  const message=document.createElement('p');message.id='styleMessage';message.className='hint';message.setAttribute('role','status');
  const heading=document.createElement('h2');heading.textContent='Vista de la despensa';
  panel.append(title,heading,hint,options,message);
+ const sizeLabel=document.createElement('label');
+ sizeLabel.className='icon-size-control';
+ sizeLabel.textContent='Tamaño de los iconos de la despensa';
+ const size=document.createElement('select');
+ size.id='pantryIconSize';
+ size.add(new Option('Grandes · sobresalen de la tarjeta','grandes'));
+ size.add(new Option('Medianos · dentro de la tarjeta','medianos'));
+ size.onchange=()=>savePantryIconSize(size.value);
+ sizeLabel.append(size);
+ panel.append(sizeLabel);
  mountIconOptions(panel);
  $('adminPanel').insertBefore(panel,$('adminAddMount').parentElement);
  renderStylePanel();
@@ -215,6 +225,41 @@ function applyIconFamily(value,adminValue){
  }
 }
 let savingIconFamily=false;
+function applyPantryIconSize(value){
+ const size=value==='medianos'?'medianos':'grandes';
+ document.documentElement.dataset.pantryIconSize=size;
+ $('pantryIconSize').value=size;
+}
+async function savePantryIconSize(size){
+ const current=session;
+ const previous=document.documentElement.dataset.pantryIconSize;
+ if(!current||savingIconFamily||size===previous){
+  applyPantryIconSize(previous);
+  return;
+ }
+ savingIconFamily=true;
+ const select=$('pantryIconSize');
+ const message=$('iconMessage');
+ select.disabled=true;
+ applyPantryIconSize(size);
+ message.textContent='Guardando tamaño…';
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{pantry_icon_size:size}});
+  if(error)throw error;
+  if(session===current){
+   current.user=result.user;
+   message.textContent='Tamaño guardado en tu cuenta.';
+  }
+ }catch(error){
+  if(session===current){
+   applyPantryIconSize(previous);
+   message.textContent='No se pudo guardar el tamaño: '+error.message;
+  }
+ }finally{
+  savingIconFamily=false;
+  select.disabled=false;
+ }
+}
 async function saveIconFamily(value,forAdmin=false){
  const current=session;
  const previous=document.documentElement.dataset.iconFamily;
@@ -440,6 +485,7 @@ async function signedIn(currentSession){
  recentAdminFoods.clear();
  applyViewStyle(currentSession?.user?.user_metadata?.view_style);
  $('iconMessage').textContent='';
+ applyPantryIconSize(currentSession?.user?.user_metadata?.pantry_icon_size);
  applyIconFamily(currentSession?.user?.user_metadata?.icon_family,currentSession?.user?.user_metadata?.admin_icon_family);
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
  customCategories=readCategoryOrder(currentSession?.user?.user_metadata?.pantry_categories);
