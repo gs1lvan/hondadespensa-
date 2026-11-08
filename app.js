@@ -269,6 +269,9 @@ function applyBackground(value){
  applyCustomColors(document.documentElement,preference);
  document.documentElement.dataset.bgColor=color;
  document.documentElement.dataset.bgTexture=texture;
+ const themeColor=document.querySelector('meta[name="theme-color"]');
+ themeColor.content=preference.customBackground
+  ?? (getComputedStyle(document.documentElement).getPropertyValue('--app-bg-color').trim() || '#071c32');
 }
 function mountBackground(panel){
  const section=document.createElement('div');
