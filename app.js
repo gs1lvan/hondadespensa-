@@ -901,6 +901,47 @@ function localItems(){
  try{const saved=JSON.parse(localStorage.getItem(LOCAL_KEY));if(Array.isArray(saved))return saved;}catch{}
  return Object.entries(initial).flatMap(([category,names])=>names.map(name=>({id:crypto.randomUUID(),category,name,have:false})));
 }
+const weatherRefreshMs=15*60*1000;
+const playaHondaWeather='https://api.open-meteo.com/v1/forecast?latitude=37.63237&longitude=-0.73530&current=temperature_2m,relative_humidity_2m&timezone=Europe%2FMadrid';
+let weatherPending=false,lastWeatherAttempt=0,lastWeatherTime='';
+const weatherFormat=new Intl.NumberFormat('es-ES',{maximumFractionDigits:1});
+function setWeatherGauge(id,value,unit,min,max){
+ const gauge=$(id);
+ gauge.querySelector('strong').textContent=weatherFormat.format(value)+' '+unit;
+ const fraction=Math.max(0,Math.min(1,(value-min)/(max-min)));
+ gauge.style.setProperty('--needle',(fraction*240-120)+'deg');
+ gauge.dataset.reading='';
+}
+async function refreshWeather(){
+ if($('weatherStation').hidden||document.hidden||weatherPending||
+    Date.now()-lastWeatherAttempt<weatherRefreshMs)return;
+ weatherPending=true;lastWeatherAttempt=Date.now();
+ try{
+  const response=await fetch(playaHondaWeather,{signal:AbortSignal.timeout(10000)});
+  if(!response.ok)throw new Error('Open-Meteo '+response.status);
+  const {current}=await response.json();
+  const temperature=current?.temperature_2m,humidity=current?.relative_humidity_2m;
+  const time=current?.time?.match(/T([0-2][0-9]:[0-5][0-9])$/)?.[1];
+  if(!Number.isFinite(temperature)||!Number.isFinite(humidity)||humidity<0||humidity>100||!time){
+   throw new Error('Lecturas incompletas');
+  }
+  setWeatherGauge('weatherTemperature',temperature,'°C',-10,50);
+  setWeatherGauge('weatherHumidity',humidity,'%',0,100);
+  lastWeatherTime=time;
+  $('weatherStatus').textContent=time+' · estimación';
+ }catch{
+  $('weatherStatus').textContent=lastWeatherTime?'Sin actualizar · '+lastWeatherTime:'Sin datos';
+  lastWeatherAttempt=Date.now()-weatherRefreshMs+60000;
+ }finally{weatherPending=false;}
+}
+function syncWeatherStation(){
+ const items=$('items');
+ $('weatherStation').hidden=items.hidden||items.dataset.home!=='nevera-vintage';
+ if(!$('weatherStation').hidden)refreshWeather();
+}
+setInterval(refreshWeather,60000);
+document.addEventListener('visibilitychange',refreshWeather);
+
 const alternateHomes=['nevera-vintage'];
 function applyAlternateHome(value){
  const home=alternateHomes.includes(value)?value:'';
@@ -910,6 +951,7 @@ function applyAlternateHome(value){
  if(home==='nevera-vintage')$('fridgeControls').append(toolbar);
  else $('items').before(toolbar);
  $('alternateHome').checked=!!home;
+ syncWeatherStation();
 }
 $('alternateHome').onchange=async event=>{
  const checkbox=event.currentTarget;
@@ -942,6 +984,7 @@ function showApp(visible){
  adminToggle.innerHTML=adminMode?'← Volver a despensa':'<span aria-hidden="true">&#9881;&#65038;</span>';
  $('adminPanel').hidden=!visible||!adminMode;
  for(const id of ['stats','toolbar','items'])$(id).hidden=!visible||adminMode;
+ syncWeatherStation();
  $('auth').hidden=visible;
  $('loginForm').hidden=visible;
  $('status').hidden=visible;
