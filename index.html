@@ -150,6 +150,17 @@
       border-image: linear-gradient(#fff9ec, #b2c0b7 45%, #647b70) 1;
       box-shadow: 0 6px 7px -5px #46362a;
     }
+    :root:not([data-pantry-icon-size=medianos]) #items[data-home=nevera-vintage] .category > summary > .cat-icon:has(.category-sprite) {
+      width: clamp(61px, 10vw, 80px);
+      height: auto;
+    }
+    :root[data-view-style=compactado]:not([data-pantry-icon-size=medianos]) #items[data-home=nevera-vintage] .category > summary > .cat-icon:has(.category-sprite) {
+      width: 50px;
+    }
+    :root:not([data-pantry-icon-size=medianos]) #items[data-home=nevera-vintage] .category > summary .category-sprite {
+      position: static;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
