@@ -171,6 +171,9 @@
       box-shadow: inset 0 1px #ffebca, 0 2px 3px #654a3566;
     }
     #items[data-home=nevera-vintage] .fridge-dial {
+      padding: 0;
+      pointer-events: auto;
+      -webkit-tap-highlight-color: transparent;
       bottom: 31px;
       border-color: #82715b;
       box-shadow: 0 2px 3px #634e3b66;
@@ -561,7 +564,7 @@
         <div class="fridge-trim" aria-hidden="true">
           <span class="fridge-handle"></span>
         </div>
-        <span class="fridge-dial" aria-hidden="true"></span>
+        <button class="fridge-dial" id="clearFridgeSearch" type="button" aria-label="Borrar búsqueda"></button>
       </div>
       <div id="categoryList"></div>
     </main>
@@ -573,6 +576,13 @@
   </div>
   <script type="module" src="app.js?v=83"></script>
   <script>
+    document.getElementById('clearFridgeSearch').addEventListener('click', () => {
+      const search = document.getElementById('search');
+      if (!search.value) return;
+      search.value = '';
+      search.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
     const pothosBloom = document.getElementById('pothosBloom');
     pothosBloom.addEventListener('click', () => {
       if (pothosBloom.querySelectorAll('.pothos-flower').length >= 6) return;
