@@ -477,12 +477,13 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
  position:relative;z-index:1;width:clamp(156px,42%,218px);--foot-height:12px;
  margin:-8px 5% calc(var(--foot-height) - 20px) auto;
  padding:9px 9px 5px;text-align:center;color:#263b3c;
- border:2px solid #664731;border-radius:30px 29px 11px 10px;
+ border:2px solid #664731;border-radius:26px 25px 12px 11px;
  background:
   radial-gradient(ellipse at 28% 8%,#fff6d9 0 12%,transparent 45%),
-  repeating-linear-gradient(127deg,#88522e12 0 1px,transparent 1px 5px),
+  radial-gradient(circle,#94562d30 .55px,transparent .9px) 0 0 / 4px 4px,
+  repeating-linear-gradient(127deg,#88522e18 0 1px,transparent 1px 5px),
   linear-gradient(152deg,#f9e4b4 12%,#e5b87a 73%,#ca8c53);
- box-shadow:inset 0 0 0 2px #ffecbf,inset 0 -6px #a86a3b44;
+ box-shadow:inset 0 0 0 2px #ffecbf,inset 0 0 0 4px #9a62314d,inset 0 -6px #a86a3b44;
 }
 .weather-station::before,.weather-station::after{
  content:"";position:absolute;top:calc(100% + 2px);width:16px;height:var(--foot-height);
@@ -496,7 +497,7 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 .weather-gauge{
  position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
  width:clamp(55px,17vw,78px);aspect-ratio:1;padding-bottom:8px;
- border:3px double #704b31;border-radius:50%;overflow:hidden;
+ border:3px double #704b31;outline:1px solid #704b31;border-radius:50%;overflow:hidden;
  background:radial-gradient(circle at 44% 38%,#fff5d6 0 46%,#efd5a0 62%,transparent 63%),
   repeating-conic-gradient(#8b785c 0deg 2deg,#f9e7bf 2deg 12deg);
  box-shadow:inset 0 0 0 1px #704b3155,1px 2px #8f603e;
@@ -510,7 +511,8 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 .weather-gauge[data-reading] .weather-needle{display:block}
 .weather-needle::after{content:"";position:absolute;bottom:-2px;left:-2px;width:6px;height:6px;border-radius:50%;background:#806045}
 .weather-station h2{
- margin:4px 0 2px;padding:2px 3px;border:1px solid #ab8b63;border-radius:4px;
- background:radial-gradient(circle at 4px 50%,#6d4c36 1px,transparent 2px),radial-gradient(circle at calc(100% - 4px) 50%,#6d4c36 1px,transparent 2px),linear-gradient(#f6e7c5,#d4b88e);font:700 clamp(8px,2.15vw,11px)/1.15 system-ui;text-transform:uppercase;
+ margin:0 3px 6px;padding:3px 9px;border:1px solid #755237;border-radius:5px;
+ box-shadow:inset 0 0 0 1px #fff3ce,0 2px #936641;
+ background:radial-gradient(circle at 4px 50%,#6d4c36 1px,transparent 2px),radial-gradient(circle at calc(100% - 4px) 50%,#6d4c36 1px,transparent 2px),linear-gradient(#f6e7c5,#d4b88e);font:700 clamp(8px,2.15vw,11px)/1.15 Georgia,serif;letter-spacing:.025em;text-transform:uppercase;
 }
 .weather-credit,.weather-credit a{color:#3f433b;font:500 9px/1.25 system-ui}
