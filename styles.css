@@ -422,3 +422,32 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .pantry-footer,
 body:has(#items[data-home=nevera-vintage]:not([hidden])) .pantry-footer .admin-link{
  color:#274950;
 }
+
+/* Marco de la ilustración en el inicio de nevera. */
+body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero {
+  --photo-size: min(42%, 220px, calc(100cqh - 24px));
+  container-type: size;
+}
+
+body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 24%;
+  top: 50%;
+  width: var(--photo-size);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: #fffdf6;
+  border: 1px solid #7e9597;
+  box-shadow: 0 3px 8px #223b4333;
+}
+
+body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
+  left: 24%;
+  top: 50%;
+  width: calc((var(--photo-size) - 14px) / .73);
+  max-width: none;
+  transform: translate(-50%, -50%) rotate(4.25deg);
+  clip-path: polygon(10.6% 16.1%, 82.5% 10.7%, 87.8% 82.3%, 15.9% 87.7%);
+}
