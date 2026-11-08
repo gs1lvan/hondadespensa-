@@ -162,7 +162,8 @@
       border-image: none;
       box-shadow: none;
     }
-    #items[data-home=nevera-vintage] .category::after {
+    #items[data-home=nevera-vintage] .category::after,
+    :root:not([data-pantry-icon-size=medianos]) #items[data-home=nevera-vintage] .category[open] > summary::after {
       content: "";
       position: absolute;
       inset: auto 0 -7px;
@@ -212,6 +213,21 @@
     #items[data-home=nevera-vintage] .pantry-quick-add :is(input, button):focus-visible {
       outline: 2px solid #53634e;
       outline-offset: 2px;
+    }
+    :root:not([data-pantry-icon-size=medianos]) #items[data-home=nevera-vintage] .category > summary {
+      padding-bottom: 0;
+    }
+    :root:not([data-pantry-icon-size=medianos]) #items[data-home=nevera-vintage] .category > summary > .cat-icon:has(.category-sprite) {
+      align-self: flex-end;
+    }
+    :root:not([data-pantry-icon-size=medianos]) #items[data-home=nevera-vintage] .category[open] {
+      border-bottom: 0;
+    }
+    :root:not([data-pantry-icon-size=medianos]) #items[data-home=nevera-vintage] .category[open]::after {
+      display: none;
+    }
+    :root:not([data-pantry-icon-size=medianos]) #items[data-home=nevera-vintage] .category[open] > summary {
+      margin-bottom: 7px;
     }
   </style>
 </head>
