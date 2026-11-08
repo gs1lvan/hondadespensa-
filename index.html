@@ -310,23 +310,6 @@
       filter: drop-shadow(-5px 5px 3px #24332994) drop-shadow(-2px 1px 1px #35251766);
       pointer-events: none;
     }
-    .weather-wall:has(.weather-station:not([hidden]))::before {
-      content: "";
-      position: absolute;
-      z-index: 1;
-      inset-inline: 2%;
-      bottom: -11px;
-      height: clamp(16px, 4.6vw, 27px);
-      border-radius: 12% 12% 4% 4% / 82% 82% 18% 18%;
-      background:
-        radial-gradient(ellipse at center, #63452d99, transparent 68%) right 5% center / clamp(174px, 55%, 265px) 75% no-repeat,
-        linear-gradient(90deg, #98714e44, transparent 30%, #fff0c86b),
-        linear-gradient(#bfa07d, #e0c5a0 40%, #f8dfbc 83%, #e5c19a);
-      box-shadow: inset 0 1px #ffebcfb3, 0 1px 2px #fff0d7a6;
-      pointer-events: none;
-    }
-    .weather-wall .weather-station { z-index: 2; }
-    .weather-wall .vintage-pothos { z-index: 3; }
   </style>
 </head>
 <body>
