@@ -404,3 +404,21 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
  outline:2px solid #244c42;
  outline-offset:2px;
 }
+
+/* Azulejos esmaltados en la pared de la portada Nevera. */
+body:has(#items[data-home=nevera-vintage]:not([hidden])){
+ background-color:#d8edf0;
+ background-image:
+  linear-gradient(90deg,#9abcc2 0 1px,#f4fbfc 1px 2px,transparent 2px calc(100% - 1px),#b1d0d5 calc(100% - 1px)),
+  linear-gradient(#9abcc2 0 1px,#f4fbfc 1px 2px,transparent 2px calc(100% - 1px),#b1d0d5 calc(100% - 1px)),
+  linear-gradient(145deg,#e7f6f6,#d6ecef 55%,#c8e3e8);
+ background-size:clamp(48px,15vw,76px) clamp(48px,15vw,76px);
+ background-attachment:scroll;
+}
+body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero h1 img{
+ filter:drop-shadow(0 1px 1px #24434e);
+}
+body:has(#items[data-home=nevera-vintage]:not([hidden])) .pantry-footer,
+body:has(#items[data-home=nevera-vintage]:not([hidden])) .pantry-footer .admin-link{
+ color:#274950;
+}
