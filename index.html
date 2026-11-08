@@ -313,6 +313,41 @@
       filter: drop-shadow(-5px 5px 3px #24332994) drop-shadow(-2px 1px 1px #35251766);
       pointer-events: none;
     }
+    #items[data-home=nevera-vintage] #categoryList {
+      --cavity-wall: clamp(10px, 3vw, 24px);
+      padding-inline: var(--cavity-wall);
+      padding-bottom: 23px;
+      background:
+        radial-gradient(ellipse 65% 250px at 50% 20px, #ffdf9cba, transparent 85%),
+        linear-gradient(180deg, #50301dbd 0, transparent 55px, transparent calc(100% - 32px), #78533488),
+        linear-gradient(90deg, #573923a6, #8e62375c 5%, transparent 13%, transparent 87%, #a77a4d5e 96%, #614126aa),
+        repeating-linear-gradient(90deg, #9b71372b 0 1px, #fff2ce4d 2px 3px, transparent 4px 15px) center / calc(100% - 2 * var(--cavity-wall)) 100% no-repeat,
+        linear-gradient(90deg, #b28c62, #edd0a1 12%, #f4ddb7 52%, #d4aa7e 90%, #9f7652);
+    }
+    #items[data-home=nevera-vintage] #categoryList::before {
+      height: 11px;
+      margin: 1px auto 9px;
+      box-shadow: 0 -3px 3px #69431c99, 0 2px 7px #fff1b9, 0 8px 26px 9px #ffbb5ab3;
+    }
+    #items[data-home=nevera-vintage] .category > summary {
+      isolation: isolate;
+    }
+    #items[data-home=nevera-vintage] .category > summary::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: auto 0 0;
+      height: clamp(13px, 4vw, 26px);
+      clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%);
+      background:
+        linear-gradient(90deg, #62543b6b, transparent 12% 78%, #fff1ba8c 88%, #61593f6b),
+        linear-gradient(#6e7f6d66, #fff7d140 46%, #c0d4ba9c 91%, #fff2c9);
+      border-top: 1px solid #8d806380;
+      pointer-events: none;
+    }
+    #items[data-home=nevera-vintage] .category > summary .category-sprite {
+      filter: var(--sprite-ink, brightness(1)) drop-shadow(1px 3px 2px #3f2e1c88);
+    }
   </style>
 </head>
 <body>
