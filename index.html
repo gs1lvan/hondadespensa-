@@ -318,7 +318,7 @@
       padding-inline: var(--cavity-wall);
       padding-bottom: 23px;
       background:
-        radial-gradient(ellipse 65% 250px at 50% 20px, #ffdf9cba, transparent 85%),
+        radial-gradient(ellipse 65% 250px at 50% 20px, #ffdf9c55, transparent 85%),
         linear-gradient(180deg, #50301dbd 0, transparent 55px, transparent calc(100% - 32px), #78533488),
         linear-gradient(90deg, #573923a6, #8e62375c 5%, transparent 13%, transparent 87%, #a77a4d5e 96%, #614126aa),
         repeating-linear-gradient(90deg, #9b71372b 0 1px, #fff2ce4d 2px 3px, transparent 4px 15px) center / calc(100% - 2 * var(--cavity-wall)) 100% no-repeat,
@@ -348,11 +348,16 @@
     }
     #items[data-home=nevera-vintage] .category > summary {
       isolation: isolate;
-      background: radial-gradient(ellipse 46% 74% at 50% 9px,
-        rgb(255 244 183 / calc(.78 * var(--shelf-light, 1))),
-        rgb(255 184 86 / calc(.47 * var(--shelf-light, 1))) 55%, transparent);
+      --lamp-origin: -7px;
+      background:
+        radial-gradient(ellipse clamp(42px, 18vw, 110px) 30px at 50% var(--lamp-origin),
+          rgb(255 249 210 / calc(.85 * var(--shelf-light, 1))), transparent 100%),
+        radial-gradient(ellipse 48% 115% at 50% var(--lamp-origin),
+          rgb(255 192 99 / calc(.52 * var(--shelf-light, 1))), transparent 84%),
+        linear-gradient(rgb(48 28 19 / calc(.20 * (1 - var(--shelf-light, 1)))), transparent 95%);
     }
     #items[data-home=nevera-vintage] .category ~ .category > summary {
+      --lamp-origin: 8px;
       padding-top: 23px;
     }
     #items[data-home=nevera-vintage] .category > summary::before {
