@@ -887,6 +887,9 @@ const alternateHomes=['nevera-vintage'];
 function applyAlternateHome(value){
  const home=alternateHomes.includes(value)?value:'';
  $('items').dataset.home=home;
+ const toolbar=$('toolbar');
+ if(home==='nevera-vintage')$('fridgeControls').append(toolbar);
+ else $('addForm').before(toolbar);
  $('alternateHome').checked=!!home;
 }
 $('alternateHome').onchange=async event=>{

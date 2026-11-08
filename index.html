@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=76">
+  <link rel="stylesheet" href="styles.css?v=77">
 </head>
 <body>
   <div class="wrap">
@@ -97,7 +97,13 @@
       <button type="submit">Añadir</button>
     </form>
     <main id="items" hidden aria-label="Categorías y alimentos">
-      <div class="fridge-badge" aria-hidden="true">HondaDespensa</div>
+      <div id="fridgeControls" class="fridge-controls">
+        <div class="fridge-trim" aria-hidden="true">
+          <span class="fridge-handle"></span>
+          <span class="fridge-badge">HondaDespensa</span>
+          <span class="fridge-dial"></span>
+        </div>
+      </div>
       <div id="categoryList"></div>
     </main>
     <footer id="pantryFooter" class="pantry-footer" hidden>
@@ -105,7 +111,7 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <script type="module" src="app.js?v=76"></script>
+  <script type="module" src="app.js?v=77"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js', { updateViaCache:'none' })

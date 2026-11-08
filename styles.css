@@ -339,3 +339,37 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
 #items[data-home=nevera-vintage] :is(.cat-name,.cat-count,.item,.item.done span,.empty){color:#243d3c}
 #items[data-home=nevera-vintage] .chevron{border-color:#345d54}
 #items[data-home=nevera-vintage] .item{background:#fff9;border-color:#93ada5}
+
+.fridge-controls{display:none}
+#items[data-home=nevera-vintage] .fridge-controls{display:block}
+.fridge-trim{
+ display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+ gap:8px;margin:0 0 10px
+}
+#items[data-home=nevera-vintage] .fridge-badge{
+ margin:0;padding:4px clamp(7px,2vw,14px);font-size:clamp(.76rem,3.4vw,1rem)
+}
+.fridge-handle{
+ justify-self:center;width:100%;max-width:68px;height:13px;
+ border:1px solid #536e69;border-radius:10px;
+ background:linear-gradient(#fafffd 8%,#c9d9d6 36%,#6e8985 54%,#edf6f4 75%,#839e99);
+ box-shadow:0 3px 4px #29474180
+}
+.fridge-dial{
+ justify-self:center;position:relative;width:28px;height:28px;
+ border:2px solid #536e69;border-radius:50%;
+ background:radial-gradient(circle at 33% 25%,#fffdf0,#d4d9c6 70%);
+ box-shadow:0 2px 3px #29474180
+}
+.fridge-dial::before{
+ content:"";position:absolute;inset:3px;border:1px dashed #536e69;border-radius:50%
+}
+.fridge-dial::after{
+ content:"";position:absolute;top:4px;left:11px;width:2px;height:9px;
+ border-radius:2px;background:#345d54;transform:rotate(35deg);transform-origin:bottom
+}
+.fridge-controls #toolbar{margin:0 0 12px}
+.fridge-controls #search{
+ color:#243d3c;background:#f7faf1;border-color:#537970;border-radius:16px
+}
+.fridge-controls #search::placeholder{color:#46615c}
