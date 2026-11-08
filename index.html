@@ -275,7 +275,24 @@
     :root:not([data-pantry-icon-size=medianos]) #items[data-home=nevera-vintage] .category[open] > summary {
       margin-bottom: 7px;
     }
-    body:has(#items[data-home=nevera-vintage]:not([hidden])) .wrap { padding-bottom: 6px; }
+    body:has(#items[data-home=nevera-vintage]:not([hidden])) {
+      min-height: 100dvh;
+    }
+    body:has(#items[data-home=nevera-vintage]:not([hidden])) .wrap {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      padding-bottom: 6px;
+    }
+    #items[data-home=nevera-vintage]:not([hidden]) {
+      display: flex;
+      flex-direction: column;
+      flex: 1 0 auto;
+      margin-inline: 0;
+    }
+    #items[data-home=nevera-vintage]:not([hidden]) #categoryList {
+      flex-grow: 1;
+    }
     body:has(#items[data-home=nevera-vintage]:not([hidden])) .pantry-footer {
       position: relative;
       margin-top: 18px;
