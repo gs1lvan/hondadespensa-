@@ -32,6 +32,9 @@
       gap: 8px;
       padding: 6px 5% 0 2%;
     }
+    .weather-wall:has(.weather-station:not([hidden])) + #items[data-home=nevera-vintage] {
+      margin-top: 0;
+    }
     .weather-wall .weather-station {
       width: clamp(174px, 55%, 265px);
       margin: 0 0 -2px auto;
