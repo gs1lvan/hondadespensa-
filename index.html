@@ -335,7 +335,7 @@
       box-shadow:
         0 -3px 3px #69431c99,
         0 2px 7px rgb(255 241 185 / var(--shelf-light, 1)),
-        0 8px 16px 4px rgb(255 187 90 / calc(.61 * var(--shelf-light, 1)));
+        0 13px 23px 5px rgb(255 194 100 / calc(.60 * var(--shelf-light, 1)));
       pointer-events: none;
     }
     #items[data-home=nevera-vintage] #categoryList::before {
@@ -350,16 +350,12 @@
     }
     #items[data-home=nevera-vintage] .category > summary {
       isolation: isolate;
-      --lamp-origin: -7px;
-      background:
-        radial-gradient(ellipse clamp(42px, 18vw, 110px) 30px at 50% var(--lamp-origin),
-          rgb(255 249 210 / calc(.85 * var(--shelf-light, 1))), transparent 100%),
-        radial-gradient(ellipse 48% 115% at 50% var(--lamp-origin),
-          rgb(255 192 99 / calc(.52 * var(--shelf-light, 1))), transparent 84%),
-        linear-gradient(rgb(48 28 19 / calc(.20 * (1 - var(--shelf-light, 1)))), transparent 95%);
+      background: radial-gradient(ellipse 47% 43px at 50% 43px,
+        rgb(255 214 135 / calc(.55 * var(--shelf-light, 1))) 0%,
+        rgb(255 194 100 / calc(.20 * var(--shelf-light, 1))) 48%,
+        transparent 100%);
     }
     #items[data-home=nevera-vintage] .category ~ .category > summary {
-      --lamp-origin: 8px;
       padding-top: 23px;
     }
     #items[data-home=nevera-vintage] .category > summary::before {
@@ -378,7 +374,7 @@
     #items[data-home=nevera-vintage] .category > summary .category-sprite {
       filter: var(--sprite-ink, brightness(1)) drop-shadow(1px 3px 2px #3f2e1c88);
     }
-    #items[data-home=nevera-vintage] .category > summary > .cat-count {
+    #items[data-home=nevera-vintage] .category > summary > :is(.cat-count, .chevron) {
       display: none;
     }
   </style>
