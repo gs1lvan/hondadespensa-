@@ -215,7 +215,8 @@ const iconFamilies=[
  {id:'estencil-sin-envases',name:'Esténcil sin envases'}
 ];
 function applyIconFamily(value,adminValue){
- const family=iconFamilies.some(option=>option.id===value)?value:'ilustrados';
+ const locked=usesVintageHome();
+ const family=!locked&&iconFamilies.some(option=>option.id===value)?value:'ilustrados';
  document.documentElement.dataset.iconFamily=family;
  const adminFamily=iconFamilies.some(option=>option.id===adminValue)?adminValue:'';
  $('adminPanel').dataset.adminIconFamily=adminFamily;
@@ -224,8 +225,9 @@ function applyIconFamily(value,adminValue){
  }
  for(const button of $('iconOptions').querySelectorAll('button')){
   const selected=button.dataset.family===family;
+  button.disabled=locked;
   button.setAttribute('aria-pressed',String(selected));
-  button.querySelector('.style-state').textContent=selected?'Seleccionado':'Elegir familia';
+  button.querySelector('.style-state').textContent=locked?(selected?'Fija en inicio alternativo':'No disponible'):selected?'Seleccionado':'Elegir familia';
  }
 }
 let savingIconFamily=false;
@@ -654,7 +656,8 @@ function mountTypography(panel){
 }
 async function saveTypography(){
  const current=session;
- const previous=current?.user?.user_metadata?.list_typography;
+ const key=usesVintageHome()?'vintage_list_typography':'list_typography';
+ const previous=current?.user?.user_metadata?.[key]??(usesVintageHome()?vintageTypography:undefined);
  if(!current||savingIconFamily){
   applyTypography(previous);
   return;
@@ -667,7 +670,7 @@ async function saveTypography(){
  message.textContent='Guardando tipografía…';
  applyTypography(choice);
  try{
-  const {data:result,error}=await db.auth.updateUser({data:{list_typography:choice}});
+  const {data:result,error}=await db.auth.updateUser({data:{[key]:choice}});
   if(error)throw error;
   if(session===current){
    current.user=result.user;
@@ -686,10 +689,13 @@ async function saveTypography(){
 function applyPantryIconSize(value){
  const size=value==='medianos'?'medianos':'grandes';
  document.documentElement.dataset.pantryIconSize=size;
- $('pantryIconSize').value=size;
+ const select=$('pantryIconSize');
+ select.value=size;
+ select.options[0].textContent=usesVintageHome()?'Grandes':'Grandes · sobresalen de la tarjeta';
 }
 async function savePantryIconSize(size){
  const current=session;
+ const key=usesVintageHome()?'vintage_pantry_icon_size':'pantry_icon_size';
  const previous=document.documentElement.dataset.pantryIconSize;
  if(!current||savingIconFamily||size===previous){
   applyPantryIconSize(previous);
@@ -702,7 +708,7 @@ async function savePantryIconSize(size){
  applyPantryIconSize(size);
  message.textContent='Guardando tamaño…';
  try{
-  const {data:result,error}=await db.auth.updateUser({data:{pantry_icon_size:size}});
+  const {data:result,error}=await db.auth.updateUser({data:{[key]:size}});
   if(error)throw error;
   if(session===current){
    current.user=result.user;
@@ -719,6 +725,7 @@ async function savePantryIconSize(size){
  }
 }
 async function saveIconFamily(value,forAdmin=false){
+ if(!forAdmin&&usesVintageHome())return;
  const current=session;
  const previous=document.documentElement.dataset.iconFamily;
  const previousAdmin=$('adminPanel').dataset.adminIconFamily;
@@ -943,6 +950,10 @@ setInterval(refreshWeather,60000);
 document.addEventListener('visibilitychange',refreshWeather);
 
 const alternateHomes=['nevera-vintage'];
+const vintageTypography={font:'serif',size:'mediano'};
+function usesVintageHome(){
+ return $('items').dataset.home==='nevera-vintage';
+}
 function applyAlternateHome(value){
  const home=alternateHomes.includes(value)?value:'';
  $('items').dataset.home=home;
@@ -951,6 +962,11 @@ function applyAlternateHome(value){
  if(home==='nevera-vintage')$('fridgeControls').append(toolbar);
  else $('items').before(toolbar);
  $('alternateHome').checked=!!home;
+ const preferences=session?.user?.user_metadata;
+ const vintage=usesVintageHome();
+ applyTypography(vintage?(preferences?.vintage_list_typography??vintageTypography):preferences?.list_typography);
+ applyPantryIconSize(vintage?preferences?.vintage_pantry_icon_size:preferences?.pantry_icon_size);
+ applyIconFamily(preferences?.icon_family,preferences?.admin_icon_family);
  syncWeatherStation();
 }
 $('alternateHome').onchange=async event=>{
@@ -1051,11 +1067,8 @@ async function signedIn(currentSession){
  applyViewStyle(currentSession?.user?.user_metadata?.view_style);
  $('iconMessage').textContent='';
  $('typographyMessage').textContent='';
- applyTypography(currentSession?.user?.user_metadata?.list_typography);
  applyBackground(currentSession?.user?.user_metadata?.app_background);
  $('backgroundMessage').textContent='';
- applyPantryIconSize(currentSession?.user?.user_metadata?.pantry_icon_size);
- applyIconFamily(currentSession?.user?.user_metadata?.icon_family,currentSession?.user?.user_metadata?.admin_icon_family);
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
  refreshVersion++;
  pantryCategoryByName=new Map();
