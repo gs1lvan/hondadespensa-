@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=74">
+  <link rel="stylesheet" href="styles.css?v=76">
 </head>
 <body>
   <div class="wrap">
@@ -39,6 +39,15 @@
         <div><small>CUENTA ACTIVA</small><strong id="accountName">Usuario</strong></div>
         <button id="signOut" class="text-action" type="button">Cerrar sesión</button>
       </div>
+      <section class="admin-section">
+        <h2>Página de inicio</h2>
+        <label class="alternate-home-setting">
+          <input id="alternateHome" type="checkbox">
+          Activar página de inicio alternativa
+        </label>
+        <p class="hint">Nevera vintage</p>
+        <p id="alternateHomeMessage" class="admin-msg" role="status"></p>
+      </section>
       <details class="admin-section admin-add-collapsible">
         <summary>➕ Añadir alimento</summary>
         <div id="adminAddMount"></div>
@@ -87,13 +96,16 @@
       <select id="newCategory" aria-label="Categoría"></select>
       <button type="submit">Añadir</button>
     </form>
-    <main id="items" hidden aria-label="Categorías y alimentos"></main>
+    <main id="items" hidden aria-label="Categorías y alimentos">
+      <div class="fridge-badge" aria-hidden="true">HondaDespensa</div>
+      <div id="categoryList"></div>
+    </main>
     <footer id="pantryFooter" class="pantry-footer" hidden>
       <span>HondaDespensa</span><span aria-hidden="true">|</span>
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <script type="module" src="app.js?v=75"></script>
+  <script type="module" src="app.js?v=76"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js', { updateViaCache:'none' })

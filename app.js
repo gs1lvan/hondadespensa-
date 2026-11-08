@@ -883,6 +883,35 @@ function localItems(){
  try{const saved=JSON.parse(localStorage.getItem(LOCAL_KEY));if(Array.isArray(saved))return saved;}catch{}
  return Object.entries(initial).flatMap(([category,names])=>names.map(name=>({id:crypto.randomUUID(),category,name,have:false})));
 }
+const alternateHomes=['nevera-vintage'];
+function applyAlternateHome(value){
+ const home=alternateHomes.includes(value)?value:'';
+ $('items').dataset.home=home;
+ $('alternateHome').checked=!!home;
+}
+$('alternateHome').onchange=async event=>{
+ const checkbox=event.currentTarget;
+ const current=session;
+ if(!current)return;
+ const home=checkbox.checked?alternateHomes[0]:null;
+ const message=$('alternateHomeMessage');
+ checkbox.disabled=true;
+ message.textContent='Guardando página de inicio…';
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{alternate_home:home}});
+  if(error)throw error;
+  if(session!==current)return;
+  current.user=result.user;
+  applyAlternateHome(result.user.user_metadata?.alternate_home);
+  message.textContent='Página de inicio guardada en tu cuenta.';
+ }catch(error){
+  if(session!==current)return;
+  applyAlternateHome(current.user.user_metadata?.alternate_home);
+  message.textContent='No se pudo guardar la página de inicio: '+error.message;
+ }finally{
+  checkbox.disabled=false;
+ }
+};
 function showApp(visible){
  if(!visible)adminMode=false;
  $('pantryFooter').hidden=!visible;
@@ -902,7 +931,7 @@ function render(){
  $('have').textContent=data.filter(x=>x.have).length;
  $('missing').textContent=data.filter(x=>!x.have).length;
  const shown=data.filter(x=>folded(x.name).includes(q));
- const main=$('items');main.replaceChildren();
+ const main=$('categoryList');main.replaceChildren();
  if(!shown.length){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';main.append(p);}
  for(const category of orderedCategories(pantryCategories())){
   const rows=shown.filter(x=>x.category===category).sort((a,b)=>esCompare(a.name,b.name));
@@ -941,6 +970,8 @@ async function refresh(){
 async function signedIn(currentSession){
  session=currentSession;
  recentAdminFoods.clear();
+ applyAlternateHome(currentSession?.user?.user_metadata?.alternate_home);
+ $('alternateHomeMessage').textContent='';
  applyViewStyle(currentSession?.user?.user_metadata?.view_style);
  $('iconMessage').textContent='';
  $('typographyMessage').textContent='';
