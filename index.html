@@ -19,10 +19,13 @@
       background-image:
         linear-gradient(90deg, #a09580 1px, #ece2ce 2px, #57798155 3px, transparent 4px),
         linear-gradient(#a09580 1px, #ece2ce 2px, #57798155 3px, transparent 4px),
+        url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23284f70%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M9%2018V9h9m64%200h9v9m0%2064v9h-9m-64%200H9v-9%22%20opacity%3D%22.55%22%2F%3E%3Cpath%20d%3D%22M6%2067q8-4%2017%200t18%200m25%200q10-4%2026%200M11%2075q12-4%2024%200m29%200q13-4%2025%200M22%2082q16-4%2031%200m9%200h14%22%20opacity%3D%22.7%22%2F%3E%3Cpath%20d%3D%22M10%2062q11-7%2025-10l12-10%2012%206%2010-9%2017%2013%207%2010M12%2063h78%22%20opacity%3D%22.66%22%2F%3E%3Cpath%20d%3D%22M17%2062q8-13%207-34m0%200q-10-6-15%202m15-2q-9%200-11%2010m11-10q-1-9-9-10m9%2010q6-9%2014-6m-14%206q11-4%2016%204m-16-4q7%202%209%2010%22%20stroke-width%3D%221.8%22%2F%3E%3Cpath%20d%3D%22M73%2041l2-18h5l2%2022m-9-22h9l-4-5zm3%2010h5M52%2074l5-7h15l-6%207z%22%20fill%3D%22%23cbd7d3%22%2F%3E%3Cpath%20d%3D%22M60%2065V50l-9%2015zm3%200V55l7%2010z%22%20fill%3D%22%23e8e5d3%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"),
         radial-gradient(ellipse at 19% 13%, #f4ebd770, transparent 43%),
         radial-gradient(ellipse at 91% 86%, #597e864a, transparent 62%),
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.52' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.22' filter='url(%23n)'/%3E%3C/svg%3E");
       background-size: var(--tile-size) var(--tile-size);
+      background-position: 0 0, 0 0, var(--tile-size) calc(2 * var(--tile-size)), 0 0, 0 0, 0 0;
+      background-repeat: repeat, repeat, no-repeat, repeat, repeat, repeat;
     }
     .weather-wall { display: none; }
     .weather-wall:has(.weather-station:not([hidden])) {
@@ -34,16 +37,6 @@
       padding: 6px 5% 0 2%;
     }
     .weather-wall .weather-station { margin: 0 0 calc(var(--foot-height) - 20px) auto; }
-    .coastal-tile {
-      position: absolute;
-      inset: 0 auto auto 25%;
-      width: var(--tile-size, 88px);
-      border: 2px solid #c6baa3;
-      border-radius: 3px;
-      background: linear-gradient(135deg, #eee4cd, #c7d4d0 70%, #e8dbc0);
-      box-shadow: inset 0 0 7px #6c8b8a66, 0 1px 2px #49697155;
-      pointer-events: none;
-    }
     .wall-plant {
       position: relative;
       z-index: 1;
@@ -154,16 +147,6 @@
     </form>
 
     <div class="weather-wall">
-      <svg class="coastal-tile" viewBox="0 0 100 100" aria-hidden="true">
-        <g fill="none" stroke="#335e7f" stroke-linecap="round">
-          <path d="M9 18V9h9m64 0h9v9m0 64v9h-9m-64 0H9v-9" opacity=".55"/>
-          <path d="M6 67q8-4 17 0t18 0m25 0q10-4 26 0M11 75q12-4 24 0m29 0q13-4 25 0M22 82q16-4 31 0m9 0h14" opacity=".7"/>
-          <path d="M10 62q11-7 25-10l12-10 12 6 10-9 17 13 7 10M12 63h78" opacity=".66"/>
-          <path d="M17 62q8-13 7-34m0 0q-10-6-15 2m15-2q-9 0-11 10m11-10q-1-9-9-10m9 10q6-9 14-6m-14 6q11-4 16 4m-16-4q7 2 9 10" stroke-width="1.8"/>
-          <path d="M73 41l2-18h5l2 22m-9-22h9l-4-5zm3 10h5M52 74l5-7h15l-6 7z" fill="#cbd7d3"/>
-          <path d="M60 65V50l-9 15zm3 0V55l7 10z" fill="#e8e5d3"/>
-        </g>
-      </svg>
       <button class="wall-plant" id="wallPlant" type="button" aria-label="Hacer crecer la planta y abrir una flor">
         <svg width="54" height="67" viewBox="0 0 54 67" aria-hidden="true">
           <path d="M10 37L26 4l18 33M26 4v31" fill="none" stroke="#7b6b52" stroke-width="1.5"/>
