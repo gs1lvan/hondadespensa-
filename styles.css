@@ -302,3 +302,5 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
 .theme-picker-options>button[data-bg-color$="-claro"]{--theme-option-ink:#22303c}
 
 .background-preview[data-bg-color$="-claro"] .chevron{border-color:var(--textColor,var(--ink))}
+
+:root[data-bg-color$="-claro"] .category:not(.background-preview-card) .chevron{border-color:var(--textColor,var(--ink))}
