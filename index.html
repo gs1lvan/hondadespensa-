@@ -21,7 +21,7 @@
         url("data:image/webp;base64,UklGRqYDAABXRUJQVlA4WAoAAAAgAAAAgQAAWAAASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADZWUDgguAEAABANAJ0BKoIAWQA+kUieS6WkqaehyjEwEglnbaOwJQCO6gKrD/AhmU8QSn+qDCXHZUmLhlJKd3K+4KIEFOGxF6ZtgxNv6onkqTVJP4jqb8T4tpoOV1WejI9/uVOIKoId3CCKcoWNitZXNS6GWiXog68wAP7uPFl5QCjLoy3EAYFtGIXKbhsbBKnCzXwlnog7adiTkwNniQIG9Gz1rK1iWY3TgNVwzF/5fQBTVzenOpWvigf+FdVDN2oN7X9ZieXiaKJY+jeiXNDuAxTnNVYLrfFW8H5X2JX3nwlXVC/0AB7XEWqBumgDs+U+F4iia9Yw2FH/MKdvK7ngtNbsq47OV9bPxaZGNhVZZ//8TEmwJrkPMaFzGktksXuV3j+19k9AHlNxxbNTomUszArMeNJs9blXBleDo/S8tFJRJoDjSxUKMEM9Pj9uGVFMVy+QMkaP6IXbYVvgZJjXq4pzzmyflj4AIod2lbDUuQuBz3NU1MuLI60JBWgnh6zHBLsK1E9tmaefBHF4ZnyspSXB06hrgHZRa5qDwAEegWoRDXFmqMHML4o2ypfUqf9CHunUoBEB6Zw6YnfFFlIA");
       background-size: var(--tile-size) var(--tile-size);
       --illustrated-tile-x: calc(50vw - .26 * min(100vw, 930px) + 8px - var(--tile-size) / 2);
-      --illustrated-tile-y: 64px;
+      --illustrated-tile-y: 27px;
       background-position: var(--illustrated-tile-x) var(--illustrated-tile-y);
 
       background-repeat: no-repeat, repeat;
@@ -29,6 +29,9 @@
     body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid,
     body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero::before {
       display: none;
+    }
+    body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero {
+      height: clamp(132px, 26vw, 180px);
     }
     .weather-wall { display: none; }
     .weather-wall:has(.weather-station:not([hidden])) {
