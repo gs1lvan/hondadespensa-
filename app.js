@@ -292,19 +292,47 @@ function mountBackground(panel){
  header.onclick=event=>event.preventDefault();
  card.append(header);
  preview.append(card);
- const controls=[];
- for(const [label,options] of [['Tema',{...backgroundColors,personal:'Personal'}],['Textura',backgroundTextures]]){
-  const field=document.createElement('label');
-  field.className='icon-size-control';
-  field.textContent=label;
-  const select=document.createElement('select');
-  for(const [value,name] of Object.entries(options))select.add(new Option(name,value));
-  field.append(select);
-  controls.push(select);
-  dialog.append(field);
+ const themeButton=document.createElement('button');
+ themeButton.type='button';
+ themeButton.className='secondary theme-picker-trigger';
+ themeButton.setAttribute('aria-haspopup','dialog');
+ const themes=document.createElement('dialog');
+ themes.className='font-dialog';
+ themes.setAttribute('aria-labelledby','themePickerTitle');
+ const themeTitle=document.createElement('h2');
+ themeTitle.id='themePickerTitle';
+ themeTitle.textContent='Temas predefinidos';
+ const themeOptions=document.createElement('div');
+ themeOptions.className='theme-picker-options';
+ for(const [value,name] of Object.entries(backgroundColors)){
+  const option=document.createElement('button');
+  option.type='button';
+  option.className='secondary';
+  option.dataset.bgColor=value;
+  const sample=document.createElement('span');
+  sample.className='theme-picker-swatch';
+  sample.setAttribute('aria-hidden','true');
+  option.append(sample,name);
+  option.onclick=()=>{
+   selectTheme(value);
+   themes.close();
+  };
+  themeOptions.append(option);
  }
- const [color,texture]=controls;
- color.querySelector('[value=personal]').disabled=true;
+ const closeThemes=document.createElement('button');
+ closeThemes.type='button';
+ closeThemes.className='secondary theme-picker-trigger';
+ closeThemes.textContent='Cancelar';
+ closeThemes.onclick=()=>themes.close();
+ themes.append(themeTitle,themeOptions,closeThemes);
+ themeButton.onclick=()=>themes.showModal();
+ const field=document.createElement('label');
+ field.className='icon-size-control';
+ field.textContent='Textura';
+ const texture=document.createElement('select');
+ for(const [value,name] of Object.entries(backgroundTextures))texture.add(new Option(name,value));
+ field.append(texture);
+ dialog.append(themeButton,themes,field);
  const targets=document.createElement('div');
  targets.className='background-color-targets';
  targets.setAttribute('role','group');
@@ -449,16 +477,18 @@ function mountBackground(panel){
   preview.dataset.bgTexture=texture.value;
   const personal=texture.value!==backgroundPresetTextures[draft.color]
    ||Object.keys(customColorFields).some(key=>draft[key]!==null);
-  color.value=personal?'personal':draft.color;
+  themeButton.textContent='Tema · '+(personal?'Personal':backgroundColors[draft.color]);
+  for(const option of themeOptions.children){
+   option.setAttribute('aria-pressed',String(!personal&&option.dataset.bgColor===draft.color));
+  }
  }
  texture.onchange=updatePreview;
- color.onchange=()=>{
-  const preset=color.value;
+ function selectTheme(preset){
   draft=backgroundPreference({color:preset,texture:backgroundPresetTextures[preset]});
   texture.value=draft.texture;
   updatePreview();
   syncColor();
- };
+ }
  const actions=document.createElement('div');
  actions.className='font-dialog-actions';
  const cancel=document.createElement('button');
@@ -477,7 +507,6 @@ function mountBackground(panel){
   const saved=backgroundPreference(session?.user?.user_metadata?.app_background);
   draft=saved;
   target='customBackground';
-  color.value=saved.color;
   texture.value=saved.texture;
   updatePreview();
   syncColor();

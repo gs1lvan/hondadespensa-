@@ -291,3 +291,9 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
 
 [data-bg-color]{--stencil-ink:brightness(1)}
 [data-bg-color$="-claro"]{--stencil-ink:brightness(.27) saturate(.72)}
+
+.theme-picker-trigger{width:100%;margin-top:12px;text-align:start}
+.theme-picker-options{display:grid;gap:8px}
+.theme-picker-options>button{display:flex;align-items:center;gap:10px;min-height:44px;text-align:start}
+.theme-picker-options>button[aria-pressed=true]{outline:2px solid currentColor;outline-offset:-3px}
+.theme-picker-swatch{width:24px;height:24px;flex:none;border-radius:50%;background:var(--app-bg-color);border:1px solid currentColor}
