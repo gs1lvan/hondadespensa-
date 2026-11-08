@@ -77,6 +77,79 @@
     .weather-wall .weather-credit a {
       font-size: clamp(8px, 2.1vw, 10px);
     }
+
+    #items[data-home=nevera-vintage] {
+      border-color: #a88963;
+      background:
+        url("data:image/webp;base64,UklGRj4EAABXRUJQVlA4WAoAAAAgAAAAigEAKgAASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADZWUDggUAIAALAPAJ0BKosBKwA+kUaeTKWjoqKhVViQsBIJaW4mVyvNj9iN9BbMsJkAYf+Hsks3Rf3IPtkbiei0b6Ne2HgmUF1a4YUT94WSZelExAjS6kI0SEqRurCWt6q+/VOyJDXTI2gflKPam7BQagYqz4m6QDcWMJB2fjRmR4n1GdX4+htwoNZaZ1zQAP6yGdZtOqwS1j6PtIaj0s5atEOR1gIXQnHgwN4FqH0jd/OPCGSis5/XqlrkAvVlp9lqPEfNJOJiE4Z8synrLVkLW7T88OKXClk+0pbOy/z3SBgr4cx+vHaZbwami7s6W89elnTEvBwEjtSKeALdR4a/xtwX1kif6UfvthrbX5Ly5NKpyEGnbLIiVkNj8dxvo5Pg4kN27maF0nQMSI40yrJb1Ee+jSa46HwQd3k64Vj3KdwXatm/OQsKO1PK0t/FJc0gUNJXFiFqDPPulakme1erZ3YhGr8tuAQJkz9d5xKx7iuLfB4frEiiN0ImKDysVS7/0cuFaXjrOBKvYGYtRAKQN0fmVZpR7dVD6h7Yirix50/FzjlnAEABAkKZjx57ZAjBVVXYDOwGBlP/qp21tVHfgnfPAoiPNk7efEDWgYo+o7J3nJ8VtJVAGRQM2gmTehZtbhGXU5pRO98gzdNX5DmpGrn/nwrQuMJj9uWWdC1cRBwqz2uvRoPpNzXq57W/Egd98kteFLlaq+XWVPC8kY9+qc6L73O7TX46Tba+fAk6nDnmNiloUDRxSgNRb5L/RTYSGWsNupOLfd0kT672AJKAAngH7AcT/AA=") center top / 100% 42px no-repeat,
+        linear-gradient(90deg, #aa8964, #e6cba2 3%, #f3dfbb 8%, #edd4ae 85%, #b28b61 100%);
+      box-shadow: inset 0 2px 3px #fff5dc, inset 0 -3px 6px #6f503d66, 0 8px 22px #342a2466;
+    }
+    #items[data-home=nevera-vintage] .fridge-controls {
+      padding-top: 9px;
+      padding-bottom: 17px;
+    }
+    #items[data-home=nevera-vintage] .fridge-controls::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 4px;
+      height: 9px;
+      border-radius: 2px;
+      background: url("data:image/webp;base64,UklGRmIFAABXRUJQVlA4WAoAAAAgAAAAtQEADQAASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADZWUDggdAMAADAVAJ0BKrYBDgA+kTydSqWjIqGl0zsgsBIJZz1vHtev7Rz/1Lrr1s14v77vM9vDMYYs32u+h/ru2lAaCxpFHHIZIZaMUk1x7HAIH5N5RxDjEfletNrvJbuTUZEDzM70gbjkvZn8iwlgcpomAc0dsP6WPgqz3CTR/1yV5+q/8tBrN+W6CbLpR7f/Nk38LUVyDQhC5krGNwe/xtXGYysuCWIooprXuQrn9a6vvmZ+/k2flbgA/ryVYR5mZZMuyV/zAuajnjvBRJ/yEOTTRHJEz5E0H1+Bm78O33gNEm1PcUa/QHr/5BK+PBl/5NyJspiLETrN05ZkMZ05NVbbHb6SoJfWciqtVpqaJ5YmSnoqiJfNF2kb9VY0n8ns16hOT02aCZOM6C2/DGWNstjydcpLo+RfA7etpaoRss3ABosLiJpzEHI84UBN6Fm8SajoQHYvHZOfRIdJv0cKaF8VSUiO1+0Hd3b8ZUUnaxk69R5YMYBfpvpifI9qI4VeaeW5mhg+SMkzJbX0gGLED2y6QvVp3JJxY/HxHFXJRW6aoXDMmH+XAtMV+FTIpZ5v9lzT/hzw88+P3s8i88lOegdCms/bB4ntl0Jt6nx6FSHG22JBlDxuiQZVCb8bnPLQclJdFw9OmXhURXXueb19HHbbm4BlugeRnnU5DWab2rRAEkB+mBafxq9ZSrfinXkEmFjcprA/ZM3iY+j0+yWjhj1C7V2MwZXXa8mv0dcaDZooeKGh1Cbb84G/8IG1HQr0x4jnU20DwKCXWuOQpPRC+szx8d0IbEBaqFJ6LU4zJdzFD/2R+ozUztx24bMEQFTgWEd2V8QUc1EqL1qRGi1Co0xkqu9e0x6mET2FijM7jwpaOVpv+hW37Ir4R9EJ/s5+tW02sC6hZDnNuDFkEqaWZum0liODleqNl4yxAGgHl8kxyTuIBPqeUs7bdBVX7Ii00VtASl+LDSoszc7EJBfJ8nnYvDCI7bcWl0jh7Cil6YBay7O1MuncvU+x3vlSzHTKXTFMNwIa/h2Uu0+nDW9jbogWHtNZJyCjjU0bxeS6yaeAC3Wr9SJnqUcQng7kuVm1AeEWSfHA5vYNR/MWuYdbYJD1SFbHWvVeRKEqSQAfVE012kiCZEYlzpOakLCQFNChBHn+TusJHo69c8JQf0AC0w+iYQYHbQcUFQAA") center / 100% 100% no-repeat;
+      box-shadow: 0 2px 3px #5a3f3266;
+      pointer-events: none;
+    }
+    #items[data-home=nevera-vintage] .fridge-trim { display: none; }
+    #items[data-home=nevera-vintage] #toolbar {
+      margin-bottom: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    #items[data-home=nevera-vintage] #toolbar::before {
+      content: "HONDA DESPENSA";
+      margin-bottom: 10px;
+      color: #17252e;
+      border-color: #927857;
+      font: 700 clamp(13px, 3.6vw, 19px)/1.25 Georgia, serif;
+      letter-spacing: .07em;
+      background:
+        radial-gradient(circle at 40% 32%, #f6e5c6, #9d8265 52%, #584633 71%, transparent 75%) left 6px center / 8px 8px no-repeat,
+        radial-gradient(circle at 40% 32%, #f6e5c6, #9d8265 52%, #584633 71%, transparent 75%) right 6px center / 8px 8px no-repeat,
+        linear-gradient(#ddc8a6, #a68b6c 60%, #ceb696);
+      box-shadow: inset 0 1px #ffebca, 0 2px 3px #654a3566;
+    }
+    #items[data-home=nevera-vintage] .fridge-dial {
+      bottom: 31px;
+      border-color: #82715b;
+      box-shadow: 0 2px 3px #634e3b66;
+    }
+    #items[data-home=nevera-vintage] #search {
+      border-color: #9b8163;
+      background-color: #fff2d9;
+      box-shadow: inset 0 2px 4px #73543944, 0 1px #fff1da;
+    }
+    #items[data-home=nevera-vintage] #categoryList {
+      border-color: #ab8d6b;
+      background:
+        radial-gradient(ellipse 75% 150px at 50% 0, #ffe1a2, transparent),
+        linear-gradient(90deg, #c6a37a, #f2dcb6 7%, #f7e6c9 50%, #e8cca4 94%, #c5a17a);
+      box-shadow: inset 0 5px 15px #61432e66, 0 1px 2px #fff3dd;
+    }
+    #items[data-home=nevera-vintage] #categoryList::before {
+      content: "";
+      display: block;
+      width: clamp(45px, 18%, 105px);
+      height: 8px;
+      margin: 0 auto 7px;
+      border-radius: 3px 3px 60% 60%;
+      background: repeating-linear-gradient(90deg, #ffc66e66 0 1px, transparent 1px 3px), #fff1b9;
+      box-shadow: 0 2px 10px 3px #ffc267a6;
+    }
+    #items[data-home=nevera-vintage] .category {
+      border-image: linear-gradient(#fff9ec, #b2c0b7 45%, #647b70) 1;
+      box-shadow: 0 6px 7px -5px #46362a;
+    }
   </style>
 </head>
 <body>
