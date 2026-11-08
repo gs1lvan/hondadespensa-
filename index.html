@@ -333,6 +333,7 @@
       border-radius: 3px 3px 60% 60%;
       background: repeating-linear-gradient(90deg, #ffc66e66 0 1px, transparent 1px 3px), #fff1b9;
       box-shadow: 0 -3px 3px #69431c99, 0 2px 7px #fff1b9, 0 8px 16px 4px #ffbb5a9c;
+      opacity: var(--shelf-light, 1);
       pointer-events: none;
     }
     #items[data-home=nevera-vintage] #categoryList::before {
@@ -347,10 +348,12 @@
     }
     #items[data-home=nevera-vintage] .category > summary {
       isolation: isolate;
+      background: radial-gradient(ellipse 46% 74% at 50% 9px,
+        rgb(255 241 178 / calc(.46 * var(--shelf-light, 1))),
+        rgb(255 197 117 / calc(.23 * var(--shelf-light, 1))) 44%, transparent);
     }
     #items[data-home=nevera-vintage] .category ~ .category > summary {
       padding-top: 23px;
-      background: radial-gradient(ellipse 46% 74% at 50% 9px, #fff1b275, #ffc5753b 44%, transparent 100%);
     }
     #items[data-home=nevera-vintage] .category > summary::before {
       content: "";
@@ -490,6 +493,41 @@
   </div>
   <script type="module" src="app.js?v=83"></script>
   <script>
+    const pantryItems = document.getElementById('items');
+    const shelves = document.getElementById('categoryList');
+    let lightingFrame = 0;
+
+    function scheduleShelfLighting() {
+      if (lightingFrame) return;
+      lightingFrame = requestAnimationFrame(() => {
+        lightingFrame = 0;
+        if (pantryItems.hidden || pantryItems.dataset.home !== 'nevera-vintage') return;
+        const center = window.innerHeight / 2;
+        const rows = [...shelves.querySelectorAll(':scope > .category > summary')];
+        const distances = rows.map(row => {
+          const bounds = row.getBoundingClientRect();
+          return Math.abs(bounds.top + bounds.height / 2 - center);
+        });
+        const nearest = Math.min(...distances);
+        rows.forEach((row, index) => {
+          const falloff = Math.max(160, center);
+          const intensity = Math.max(.32, 1 - .68 * (distances[index] - nearest) / falloff);
+          row.parentElement.style.setProperty('--shelf-light', intensity.toFixed(2));
+          if (index === 0) shelves.style.setProperty('--shelf-light', intensity.toFixed(2));
+        });
+      });
+    }
+
+    window.addEventListener('scroll', scheduleShelfLighting, { passive: true });
+    window.addEventListener('resize', scheduleShelfLighting);
+    shelves.addEventListener('toggle', scheduleShelfLighting, true);
+    new ResizeObserver(scheduleShelfLighting).observe(shelves);
+    new MutationObserver(scheduleShelfLighting).observe(pantryItems, {
+      attributes: true, attributeFilter: ['hidden', 'data-home']
+    });
+    new MutationObserver(scheduleShelfLighting).observe(shelves, { childList: true });
+    scheduleShelfLighting();
+
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js', { updateViaCache:'none' })
         .then(r => r.update()).catch(() => {}));
