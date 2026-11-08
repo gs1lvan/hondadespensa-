@@ -890,7 +890,7 @@ function applyAlternateHome(value){
  const toolbar=$('toolbar');
  $('search').placeholder=home==='nevera-vintage'?'Buscar alimentos…':'🔎 Buscar alimentos…';
  if(home==='nevera-vintage')$('fridgeControls').append(toolbar);
- else $('addForm').before(toolbar);
+ else $('items').before(toolbar);
  $('alternateHome').checked=!!home;
 }
 $('alternateHome').onchange=async event=>{
