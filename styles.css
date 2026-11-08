@@ -465,3 +465,8 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
   transform: translate(-50%, -50%) rotate(4.25deg);
   clip-path: polygon(10.6% 16.1%, 82.5% 10.7%, 87.8% 82.3%, 15.9% 87.7%);
 }
+
+/* Alta rápida dentro de la categoría desplegada. */
+.category .pantry-quick-add{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.category .pantry-quick-add input{width:100%;min-width:0}
+.category .pantry-quick-add button{width:auto;min-height:44px}
