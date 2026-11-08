@@ -349,8 +349,8 @@
     #items[data-home=nevera-vintage] .category > summary {
       isolation: isolate;
       background: radial-gradient(ellipse 46% 74% at 50% 9px,
-        rgb(255 241 178 / calc(.46 * var(--shelf-light, 1))),
-        rgb(255 197 117 / calc(.23 * var(--shelf-light, 1))) 44%, transparent);
+        rgb(255 244 183 / calc(.78 * var(--shelf-light, 1))),
+        rgb(255 184 86 / calc(.47 * var(--shelf-light, 1))) 55%, transparent);
     }
     #items[data-home=nevera-vintage] .category ~ .category > summary {
       padding-top: 23px;
@@ -512,9 +512,9 @@
           return Math.abs(bounds.top + bounds.height / 2 - center);
         });
         const nearest = Math.min(...distances);
+        const falloff = Math.max(65, window.innerHeight * .14);
         rows.forEach((row, index) => {
-          const falloff = Math.max(160, center);
-          const intensity = Math.max(.32, 1 - .68 * (distances[index] - nearest) / falloff);
+          const intensity = .10 + .90 * Math.exp(-(distances[index] - nearest) / falloff);
           row.parentElement.style.setProperty('--shelf-light', intensity.toFixed(2));
           if (index === 0) shelves.style.setProperty('--shelf-light', intensity.toFixed(2));
         });
