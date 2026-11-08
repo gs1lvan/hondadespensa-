@@ -332,8 +332,10 @@
       height: 11px;
       border-radius: 3px 3px 60% 60%;
       background: repeating-linear-gradient(90deg, #ffc66e66 0 1px, transparent 1px 3px), #fff1b9;
-      box-shadow: 0 -3px 3px #69431c99, 0 2px 7px #fff1b9, 0 8px 16px 4px #ffbb5a9c;
-      opacity: var(--shelf-light, 1);
+      box-shadow:
+        0 -3px 3px #69431c99,
+        0 2px 7px rgb(255 241 185 / var(--shelf-light, 1)),
+        0 8px 16px 4px rgb(255 187 90 / calc(.61 * var(--shelf-light, 1)));
       pointer-events: none;
     }
     #items[data-home=nevera-vintage] #categoryList::before {
