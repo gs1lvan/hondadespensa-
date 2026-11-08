@@ -60,23 +60,25 @@ function iconSprite(slot) {
  icon.style.backgroundPosition=`${slot%4*100/3}% ${Math.floor(slot/4)*50}%`;
  return icon;
 }
-function categoryIcon(category) {
- const box=document.createElement('span');
- box.className='cat-icon';box.setAttribute('aria-hidden','true');
+function suggestedCategoryIcon(category) {
  const match=String(category).match(/^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/u);
  const suggested=categoryEmojis.find(([re])=>re.test(folded(bareCategory(category))));
- const emoji=suggested?.[1]||match?.[1]||'🧺';
+ return suggested?.[1]||match?.[1]||'🧺';
+}
+function categoryIcon(category,emoji=suggestedCategoryIcon(category)) {
+ const box=document.createElement('span');
+ box.className='cat-icon';box.setAttribute('aria-hidden','true');
  const slot=iconSlots.indexOf(emoji);
  if(slot<0)box.textContent=emoji;
  else box.append(iconSprite(slot));
  return box;
 }
-function categoryHeader(category,countText) {
+function categoryHeader(category,countText,emoji) {
  const summary=document.createElement('summary');summary.className='category-header';
  const label=document.createElement('span');label.className='cat-name';label.textContent=bareCategory(category);
  const count=document.createElement('small');count.className='cat-count';count.textContent=countText;
  const arrow=document.createElement('span');arrow.className='chevron';arrow.setAttribute('aria-hidden','true');
- summary.append(categoryIcon(category),label,count,arrow);
+ summary.append(categoryIcon(category,emoji),label,count,arrow);
  return summary;
 }
 
@@ -96,7 +98,8 @@ function readCategoryOrder(value){
 }
 function orderedCategories(values){
  const available=new Set(values);
- return [...categoryOrder.filter(x=>available.delete(x)),...[...available].sort(esCompare)];
+ const ordered=categoryOrder.map(key=>findPantryCategory(key)?.nombre??key);
+ return [...ordered.filter(name=>available.delete(name)),...[...available].sort(esCompare)];
 }
 async function saveCategoryOrder(next){
  if(!session||savingCategoryOrder)return false;
@@ -124,8 +127,7 @@ function categoryOrderControls(category){
    event.preventDefault();event.stopPropagation();
    if(savingCategoryOrder)return;
    const next=[...ordered];[next[index],next[index+delta]]=[next[index+delta],next[index]];
-   next.push(...categoryOrder.filter(x=>!next.includes(x)));
-   await saveCategoryOrder(next);
+   await saveCategoryOrder(next.map(name=>pantryCategoryByName.get(name)?.id??name));
     const section=[...$('adminFoods').querySelectorAll('details.admin-category')].find(x=>x.dataset.category===category);
    const buttons=section?.querySelectorAll('.category-order-actions button');
    if(buttons){const preferred=[...buttons].find(x=>x.dataset.direction===String(delta));(preferred?.disabled?[...buttons].find(x=>!x.disabled):preferred)?.focus();}
@@ -790,59 +792,67 @@ function mountIconOptions(panel){
  panel.append(title,options,message);
 }
 
-let customCategories=[],categoryMutation=false;
-const pantryCategories=()=>[...new Set([...customCategories,...data.map(x=>x.category)])];
+let pantryCategoryByName=new Map(),categoryMutation=false,refreshVersion=0;
+const pantryCategories=()=>[...new Set([...pantryCategoryByName.keys(),...data.map(x=>x.category)])];
 const categoryIdentity=name=>folded(bareCategory(name)).trim();
-async function storeCategories(categories,order=categoryOrder){
- const {data:result,error}=await db.auth.updateUser({data:{pantry_categories:categories,category_order:order}});
- if(error)throw error;
- session.user=result.user;customCategories=readCategoryOrder(result.user.user_metadata?.pantry_categories);
- categoryOrder=readCategoryOrder(result.user.user_metadata?.category_order);
+function findPantryCategory(key){
+ return pantryCategoryByName.get(key)??[...pantryCategoryByName.values()].find(
+  category=>category.id===key||category.nombres_anteriores.includes(key)
+ );
 }
 function categoryExists(name,except){
  return pantryCategories().some(c=>c!==except&&categoryIdentity(c)===categoryIdentity(name));
+}
+async function ensurePantryCategory(name){
+ if(findPantryCategory(name))return;
+ const {error}=await db.from('categorias_despensa').upsert(
+  {nombre:name,icono:suggestedCategoryIcon(name)},{onConflict:'nombre',ignoreDuplicates:true}
+ );
+ if(error)throw error;
 }
 async function createPantryCategory(name){
  name=name.trim();if(!name||!categoryIdentity(name)||!session||categoryMutation)return false;
  if(categoryExists(name)){adminMessage('Ya existe una categoría con ese nombre.');return false;}
  categoryMutation=true;
  try{
-  await storeCategories([...customCategories,name]);
-  adminOpenCategories.food.add(name);render();adminMessage('Categoría creada.');return true;
+  const {error}=await db.from('categorias_despensa').insert({nombre:name,icono:suggestedCategoryIcon(name)});
+  if(error)throw error;
+  adminOpenCategories.food.add(name);await refresh();adminMessage('Categoría creada.');return true;
  }catch(error){adminMessage('No se pudo crear la categoría: '+error.message);return false;}
  finally{categoryMutation=false;}
 }
-async function renamePantryCategory(category,name){
- name=name.trim();if(!name||!categoryIdentity(name)||!session||categoryMutation)return;
- if(name===category)return;
+async function renamePantryCategory(category,name,icon){
+ name=name.trim();
+ const current=pantryCategoryByName.get(category);
+ if(!name||!categoryIdentity(name)||!current||!session||categoryMutation)return;
+ if(categoryIdentity(name)===categoryIdentity(category)&&name===bareCategory(category))name=category;
+ if(name===category&&icon===current.icono)return;
  if(categoryExists(name,category)){adminMessage('Ya existe una categoría con ese nombre.');return;}
  categoryMutation=true;
- const previous=[...customCategories],previousOrder=[...categoryOrder];
  try{
-  const categories=[...new Set([...customCategories.filter(c=>c!==category),name])];
-  const order=orderedCategories(pantryCategories()).map(c=>c===category?name:c);
-  await storeCategories(categories,order);
-  const {error}=await db.from('alimentos').update({categoria:name}).eq('categoria',category);
-  if(error){
-   await storeCategories(previous,previousOrder);throw error;
-  }
-  data=data.map(x=>x.category===category?{...x,category:name}:x);
+  const changes={};
+  if(name!==category)changes.nombre=name;
+  if(icon!==current.icono)changes.icono=icon;
+  const {error}=await db.from('categorias_despensa').update(changes).eq('id',current.id);
+  if(error)throw error;
   if(adminOpenCategories.food.delete(category))adminOpenCategories.food.add(name);
   if(openCategories.delete(category))openCategories.add(name);
   if(categoryFoodDrafts.has(category)){categoryFoodDrafts.set(name,categoryFoodDrafts.get(category));categoryFoodDrafts.delete(category);}
-  render();await refresh();adminMessage('Nombre de categoría guardado.');
- }catch(error){adminMessage('No se pudo completar el cambio de categoría: '+error.message);await refresh();render();}
+  await refresh();adminMessage('Categoría guardada.');
+ }catch(error){adminMessage('No se pudo guardar la categoría: '+error.message);}
  finally{categoryMutation=false;}
 }
 async function deletePantryCategory(category){
- if(!session||categoryMutation)return;
+ const current=pantryCategoryByName.get(category);
+ if(!current||!session||categoryMutation)return;
  if(data.some(x=>x.category===category)){const message='La categoría aún contiene alimentos. Para borrarla, primero debes eliminar todos sus alimentos.';adminMessage(message);alert(message);return;}
  if(!confirm('¿Eliminar la categoría «'+bareCategory(category)+'»?'))return;
  categoryMutation=true;
  try{
-  await storeCategories(customCategories.filter(c=>c!==category),categoryOrder.filter(c=>c!==category));
+  const {error}=await db.from('categorias_despensa').delete().eq('id',current.id);
+  if(error)throw error;
   adminOpenCategories.food.delete(category);openCategories.delete(category);categoryFoodDrafts.delete(category);
-  render();adminMessage('Categoría eliminada.');
+  await refresh();adminMessage('Categoría eliminada.');
  }catch(error){adminMessage('No se pudo eliminar la categoría: '+error.message);}
  finally{categoryMutation=false;}
 }
@@ -856,9 +866,17 @@ function categoryManagement(category){
   if(holder.querySelector('form')){holder.querySelector('form').remove();return;}
   const form=document.createElement('form');form.className='admin-edit';
   const input=document.createElement('input');input.required=true;input.maxLength=120;input.value=bareCategory(category);input.setAttribute('aria-label','Nombre de la categoría');
-  const save=document.createElement('button');save.type='submit';save.textContent='Guardar nombre';
-  form.append(input,save);holder.append(form);input.focus();
-  form.onsubmit=async event=>{event.preventDefault();save.disabled=true;await renamePantryCategory(category,input.value);save.disabled=false;};
+  const currentIcon=pantryCategoryByName.get(category)?.icono??suggestedCategoryIcon(category);
+  const icon=document.createElement('select');icon.setAttribute('aria-label','Icono de la categoría');
+  const choices=new Set([currentIcon,...iconSlots,...categoryEmojis.map(([,emoji])=>emoji),'🧺']);
+  for(const emoji of choices){
+   const label=emoji==='🐟'?'Pescados y mariscos':emoji==='🧺'?'Genérico':emoji;
+   icon.add(new Option(label===emoji?emoji:emoji+' '+label,emoji));
+  }
+  icon.value=currentIcon;
+  const save=document.createElement('button');save.type='submit';save.textContent='Guardar categoría';
+  form.append(input,icon,save);holder.append(form);input.focus();
+  form.onsubmit=async event=>{event.preventDefault();save.disabled=true;await renamePantryCategory(category,input.value,icon.value);save.disabled=false;};
  };
  del.onclick=()=>deletePantryCategory(category);
  return holder;
@@ -942,7 +960,7 @@ function render(){
   if(!rows.length&&(q||filter!=='all'))continue;
   const details=document.createElement('details');details.className='category';details.open=openCategories.has(category)||!!q;
   details.addEventListener('toggle',()=>{if(details.open)openCategories.add(category);else openCategories.delete(category)});
-  details.append(categoryHeader(category,`${rows.filter(x=>x.have).length}/${rows.length}`));
+  details.append(categoryHeader(category,`${rows.filter(x=>x.have).length}/${rows.length}`,pantryCategoryByName.get(category)?.icono));
   details.append(categoryAddFoodForm(category,false));
   for(const x of rows){
    const row=document.createElement('div');row.className='item'+(x.have?' done':'');
@@ -962,10 +980,20 @@ function render(){
 }
 async function refresh(){
  if(!session)return;
- const {data:rows,error}=await db.from('alimentos').select('id,nombre,categoria,disponible').order('creado_en',{ascending:true});
+ const version=++refreshVersion;
+ const [food,categories]=await Promise.all([
+  db.from('alimentos').select('id,nombre,categoria,categoria_id,disponible').order('creado_en',{ascending:true}),
+  db.from('categorias_despensa').select('id,nombre,icono,nombres_anteriores').order('id')
+ ]);
+ if(version!==refreshVersion||!session)return;
+ const {data:rows}=food,error=food.error??categories.error;
  if(error){setStatus('Sin conexión o sin permisos: '+error.message);$('auth').hidden=false;$('status').hidden=false;return;}
- const next=(rows||[]).map(x=>({id:x.id,name:x.nombre,category:x.categoria,have:!!x.disponible}));
- const changed=JSON.stringify(next)!==JSON.stringify(data);
+ const nextCategories=new Map(categories.data.map(row=>[row.nombre,row]));
+ const namesById=new Map(categories.data.map(row=>[row.id,row.nombre]));
+ const next=rows.map(x=>({id:x.id,name:x.nombre,category:namesById.get(x.categoria_id)??x.categoria,have:!!x.disponible}));
+ const changed=JSON.stringify(next)!==JSON.stringify(data)||
+  JSON.stringify([...nextCategories.values()])!==JSON.stringify([...pantryCategoryByName.values()]);
+ pantryCategoryByName=nextCategories;
  data=next;if(changed)render();
  setStatus('☁️ Lista compartida · '+data.length+' alimentos · Sincronizada');
  $('migration').hidden=data.length!==0;
@@ -986,7 +1014,9 @@ async function signedIn(currentSession){
  applyPantryIconSize(currentSession?.user?.user_metadata?.pantry_icon_size);
  applyIconFamily(currentSession?.user?.user_metadata?.icon_family,currentSession?.user?.user_metadata?.admin_icon_family);
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
- customCategories=readCategoryOrder(currentSession?.user?.user_metadata?.pantry_categories);
+ refreshVersion++;
+ pantryCategoryByName=new Map();
+ data=[];
  showApp(!!currentSession);
  if(channel){await db.removeChannel(channel);channel=null;}
  if(catalogChannel){await db.removeChannel(catalogChannel);catalogChannel=null;}
@@ -1027,6 +1057,9 @@ $('upload').onclick=async()=>{
  if(!confirm(`Vas a subir ${local.length} alimentos desde ESTE móvil. Hazlo solo desde el móvil con la lista correcta. ¿Continuar?`))return;
  busy=true;$('upload').disabled=true;
  const rows=local.map(x=>({id:x.id,nombre:x.name,categoria:x.category,disponible:!!x.have}));
+ try{
+  for(const category of new Set(local.map(item=>item.category)))await ensurePantryCategory(category);
+ }catch(error){alert('No se pudo preparar la importación: '+error.message);busy=false;$('upload').disabled=false;return;}
  for(let i=0;i<rows.length;i+=100){
   const {error}=await db.from('alimentos').insert(rows.slice(i,i+100));
   if(error){alert('Error al importar: '+error.message+'; algunos productos podrían haberse subido. No repitas la importación sin revisar la nube.');break;}
@@ -1036,8 +1069,11 @@ $('upload').onclick=async()=>{
 
 async function addSharedFood(name,category,recentFirst=false){
  if(!session)return false;
+ const existingCategory=findPantryCategory(category);
+ category=existingCategory?.nombre??category;
  if(data.some(x=>folded(x.name)===folded(name)&&x.category===category)){alert('Ese alimento ya está en la lista.');return false;}
- const {error}=await db.from('alimentos').insert({nombre:name,categoria:category,disponible:false});
+ try{await ensurePantryCategory(category);}catch(error){alert('No se pudo preparar la categoría: '+error.message);return false;}
+ const {error}=await db.from('alimentos').insert({nombre:name,categoria:category,categoria_id:existingCategory?.id,disponible:false});
  if(error){alert('No se pudo añadir: '+error.message);return false;}
  if(recentFirst)recentAdminFoods.set(adminFoodKey({name,category}),++recentAdminFoodSequence);
  await refresh();return true;
@@ -1061,7 +1097,7 @@ function renderCatalog(){
  let remaining=0;
  const groups=catalogReady?Object.entries(catalogRows.reduce((acc,x)=>{(acc[x.categoria]??=[]).push(x.nombre);return acc;},{})):Object.entries(initial);
  for(const [category,names] of groups.sort((a,b)=>esCompare(a[0],b[0]))){
-  const available=names.filter(name=>!data.some(x=>x.category===category&&folded(x.name)===folded(name))&&folded(name).includes(q));
+  const available=names.filter(name=>!data.some(x=>x.category===(findPantryCategory(category)?.nombre??category)&&folded(x.name)===folded(name))&&folded(name).includes(q));
   if(!available.length)continue;remaining+=available.length;
   const details=document.createElement('details');details.className='catalog-category';details.open=catalogOpen.has(category)||!!q;
   details.addEventListener('toggle',()=>{if(details.open)catalogOpen.add(category);else catalogOpen.delete(category)});
@@ -1105,8 +1141,7 @@ function makeAdminRow(item,type){
   const {error}=await db.from(type==='food'?'alimentos':'catalogo').delete().eq('id',item.id);
   if(error){adminMessage('Error: '+error.message);del.disabled=false;return;}
   await refresh();if(type==='catalog')await loadCatalog();
-  const categoryRemoved=type==='food'&&!pantryCategories().includes(item.category);
-  adminMessage(categoryRemoved?'Alimento eliminado. La categoría se ha quitado de la lista al quedarse vacía. Puedes recuperarla añadiendo sus alimentos desde «Añadir desde el catálogo», si están disponibles allí.':'Alimento eliminado.');
+  adminMessage('Alimento eliminado.');
  };
  return row;
 }
@@ -1165,7 +1200,7 @@ function renderGroupedAdmin(container,rows,type,query){
  }
  for(const category of (type==='food'?orderedCategories(groups.keys()):[...groups.keys()].sort(esCompare))){
   const section=document.createElement('details');section.className='category admin-category';
-  const header=categoryHeader(category,groups.get(category).length+' alimentos');
+  const header=categoryHeader(category,groups.get(category).length+' alimentos',type==='food'?pantryCategoryByName.get(category)?.icono:undefined);
   if(type==='food'){
    header.style.cssText='display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px 10px';
    header.querySelector('.cat-icon').style.cssText='grid-column:1;grid-row:1';
@@ -1209,7 +1244,7 @@ $('catalogAddForm').onsubmit=async e=>{
 };
 mountCategoryCreator();
 const emptyCategoryHint=document.createElement('p');emptyCategoryHint.className='hint';
-emptyCategoryHint.textContent='Si una categoría desaparece al quedarse vacía, puedes recuperarla añadiendo sus alimentos desde «Añadir desde el catálogo», si están disponibles allí.';
+emptyCategoryHint.textContent='Las categorías vacías se conservan hasta que las elimines desde aquí.';
 $('adminFoods').before(emptyCategoryHint);
 
 const {data:authData,error:authError}=await db.auth.getSession();
