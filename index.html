@@ -324,19 +324,33 @@
         repeating-linear-gradient(90deg, #9b71372b 0 1px, #fff2ce4d 2px 3px, transparent 4px 15px) center / calc(100% - 2 * var(--cavity-wall)) 100% no-repeat,
         linear-gradient(90deg, #b28c62, #edd0a1 12%, #f4ddb7 52%, #d4aa7e 90%, #9f7652);
     }
-    #items[data-home=nevera-vintage] #categoryList::before {
+    #items[data-home=nevera-vintage] #categoryList::before,
+    #items[data-home=nevera-vintage] .category ~ .category::before {
+      content: "";
+      display: block;
+      width: clamp(45px, 16vw, 105px);
       height: 11px;
+      border-radius: 3px 3px 60% 60%;
+      background: repeating-linear-gradient(90deg, #ffc66e66 0 1px, transparent 1px 3px), #fff1b9;
+      box-shadow: 0 -3px 3px #69431c99, 0 2px 7px #fff1b9, 0 8px 16px 4px #ffbb5a9c;
+      pointer-events: none;
+    }
+    #items[data-home=nevera-vintage] #categoryList::before {
       margin: 1px auto 9px;
-      box-shadow: 0 -3px 3px #69431c99, 0 2px 7px #fff1b9, 0 8px 26px 9px #ffbb5ab3;
+    }
+    #items[data-home=nevera-vintage] .category ~ .category::before {
+      position: absolute;
+      z-index: 1;
+      top: 2px;
+      left: 50%;
+      transform: translateX(-50%);
     }
     #items[data-home=nevera-vintage] .category > summary {
       isolation: isolate;
-      padding-top: 19px;
-      background:
-        radial-gradient(ellipse 50% 90% at 50% 15%, #fff3bd30, transparent 72%),
-        radial-gradient(ellipse 30px 12px at 50% 9px, #ffbf629c, transparent),
-        repeating-linear-gradient(90deg, #efb75f 0 1px, #fff2be 1px 3px) center 4px / 38px 5px no-repeat;
-      background-blend-mode: normal, screen, normal;
+    }
+    #items[data-home=nevera-vintage] .category ~ .category > summary {
+      padding-top: 23px;
+      background: radial-gradient(ellipse 46% 74% at 50% 9px, #fff1b275, #ffc5753b 44%, transparent 100%);
     }
     #items[data-home=nevera-vintage] .category > summary::before {
       content: "";
