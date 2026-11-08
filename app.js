@@ -888,6 +888,7 @@ function applyAlternateHome(value){
  const home=alternateHomes.includes(value)?value:'';
  $('items').dataset.home=home;
  const toolbar=$('toolbar');
+ $('search').placeholder=home==='nevera-vintage'?'Buscar alimentos…':'🔎 Buscar alimentos…';
  if(home==='nevera-vintage')$('fridgeControls').append(toolbar);
  else $('addForm').before(toolbar);
  $('alternateHome').checked=!!home;
