@@ -886,7 +886,9 @@ function localItems(){
 function showApp(visible){
  if(!visible)adminMode=false;
  $('pantryFooter').hidden=!visible;
- $('adminToggle').textContent=adminMode?'← Volver a despensa':'⚙️ Administrar';
+ const adminToggle=$('adminToggle');
+ adminToggle.setAttribute('aria-label',adminMode?'Volver a despensa':'Administrar');
+ adminToggle.innerHTML=adminMode?'← Volver a despensa':'<span aria-hidden="true">&#9881;&#65038;</span>';
  $('adminPanel').hidden=!visible||!adminMode;
  for(const id of ['stats','toolbar','items'])$(id).hidden=!visible||adminMode;
  $('auth').hidden=visible;

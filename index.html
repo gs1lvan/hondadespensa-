@@ -90,10 +90,10 @@
     <main id="items" hidden aria-label="Categorías y alimentos"></main>
     <footer id="pantryFooter" class="pantry-footer" hidden>
       <span>HondaDespensa</span><span aria-hidden="true">|</span>
-      <button id="adminToggle" class="admin-link" type="button">⚙️ Administrar</button>
+      <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <script type="module" src="app.js?v=72"></script>
+  <script type="module" src="app.js?v=75"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js', { updateViaCache:'none' })
