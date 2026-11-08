@@ -245,9 +245,9 @@ function applyTypography(value){
   button.setAttribute('aria-pressed',String(button.dataset.textfont===result.font));
  }
 }
-const backgroundColors={marino:'Azul marino',petroleo:'Azul petróleo',bosque:'Verde bosque',grafito:'Gris grafito',ciruela:'Ciruela'};
+const backgroundColors={marino:'Azul marino | oscuro',petroleo:'Azul petróleo | oscuro',bosque:'Verde bosque | oscuro',grafito:'Gris grafito | oscuro',ciruela:'Ciruela | oscuro','petroleo-claro':'Azul petróleo | claro','bosque-claro':'Verde bosque | claro','ciruela-claro':'Ciruela | claro'};
 const backgroundTextures={grano:'Grano fino',liso:'Liso',tejido:'Tejido',puntos:'Puntos finos'};
-const backgroundPresetTextures={marino:'grano',petroleo:'liso',bosque:'tejido',grafito:'grano',ciruela:'liso'};
+const backgroundPresetTextures={marino:'grano',petroleo:'liso',bosque:'tejido',grafito:'grano',ciruela:'liso','petroleo-claro':'liso','bosque-claro':'tejido','ciruela-claro':'liso'};
 const customColorFields={customBackground:'Fondo',textColor:'Texto',borderColor:'Bordes'};
 const customColorDefaults={customBackground:'#071c32',textColor:'#f5f9ff',borderColor:'#6795b9'};
 function applyCustomColors(element,value){

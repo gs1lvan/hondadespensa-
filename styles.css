@@ -279,3 +279,12 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
 @media(forced-colors:active){.item input[type=checkbox]{appearance:auto}.item input[type=checkbox]:checked::after{content:none}}
 
 .hero h1 img{display:block;width:100%;height:auto}
+
+[data-bg-color=petroleo-claro]{--app-bg-color:#dceff0;--card-light:#f5fcfc;--card-dark:#d1e8eb;--card-inner:#eaf6f7;--card-edge:#568086}
+[data-bg-color=bosque-claro]{--app-bg-color:#e4ede0;--card-light:#f8fbf3;--card-dark:#d9e8d4;--card-inner:#eff6eb;--card-edge:#688562}
+[data-bg-color=ciruela-claro]{--app-bg-color:#f0e6f1;--card-light:#fff8ff;--card-dark:#e9d9ed;--card-inner:#f7eff8;--card-edge:#896b91}
+[data-bg-color$="-claro"]{--ink:#22303c;--muted:#425565;color-scheme:light}
+:root[data-bg-color$="-claro"] :is(.admin-link,.cat-count,.item.done span,.hint,.style-state,.style-description,.admin-account small,.text-action,input:not([type=color]),select,button:not(.danger)){color:var(--textColor,var(--ink))}
+:root[data-bg-color$="-claro"] input::placeholder{color:var(--textColor,var(--muted));opacity:1}
+:root[data-bg-color$="-claro"] .hero h1 img{filter:brightness(.42) saturate(.8)}
+:root[data-bg-color$="-claro"] :is(.toolbar #search,.admin-panel input,.admin-panel select){box-shadow:none}
