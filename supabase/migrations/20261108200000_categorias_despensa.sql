@@ -74,6 +74,15 @@ create index alimentos_categoria_despensa_idx on public.alimentos (categoria_id)
 create function public.enlazar_categoria_despensa() returns trigger
 language plpgsql set search_path = '' as $$
 begin
+  if tg_op = 'INSERT' and new.categoria_id is not null then
+    select nombre into new.categoria from public.categorias_despensa
+    where id = new.categoria_id;
+    if not found then
+      raise exception 'La categoría indicada no existe';
+    end if;
+    return new;
+  end if;
+
   if new.categoria_id is not null and exists (
     select 1 from public.categorias_despensa where id = new.categoria_id and nombre = new.categoria
   ) then
