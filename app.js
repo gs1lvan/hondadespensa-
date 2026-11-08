@@ -950,7 +950,7 @@ setInterval(refreshWeather,60000);
 document.addEventListener('visibilitychange',refreshWeather);
 
 const alternateHomes=['nevera-vintage'];
-const vintageTypography={font:'serif',size:'mediano'};
+const vintageTypography={font:'serif',size:'mediano',weight:'normal'};
 function usesVintageHome(){
  return $('items').dataset.home==='nevera-vintage';
 }
