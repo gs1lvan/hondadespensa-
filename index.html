@@ -36,6 +36,10 @@
     }
     body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero {
       height: clamp(132px, 26vw, 180px);
+      padding-inline: 2% 5%;
+    }
+    body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero-copy {
+      width: clamp(174px, 55%, 265px);
     }
     .weather-wall { display: none; }
     .weather-wall:has(.weather-station:not([hidden])) {
