@@ -64,7 +64,16 @@
     .weather-wall #weatherHumidity { left: 70.5%; }
     .weather-wall .weather-needle { bottom: 50%; height: 36%; }
     .weather-wall .weather-gauge strong { white-space: nowrap; }
-    .weather-wall .weather-credit { margin-top: 2px; }
+    .weather-wall .weather-credit {
+      position: absolute;
+      top: 79%;
+      inset-inline: 8%;
+      margin: 0;
+    }
+    .weather-wall .weather-credit,
+    .weather-wall .weather-credit a {
+      font-size: clamp(8px, 2.1vw, 10px);
+    }
   </style>
 </head>
 <body>
