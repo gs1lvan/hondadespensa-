@@ -470,3 +470,35 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 .category .pantry-quick-add{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
 .category .pantry-quick-add input{width:100%;min-width:0}
 .category .pantry-quick-add button{width:auto;min-height:44px}
+
+/* Termohigrómetro de sobremesa del inicio vintage. */
+.weather-station[hidden]{display:none}
+.weather-station{
+ position:relative;z-index:1;width:clamp(156px,42%,218px);margin:-8px 5% -20px auto;
+ padding:9px 9px 5px;text-align:center;color:#263b3c;
+ border:1px solid #a47d49;border-radius:30px 30px 10px 10px;
+ background:linear-gradient(145deg,#fff3d8,#edce99 72%,#d7ae77);
+ box-shadow:inset 0 2px 3px #fff9,inset 0 -3px 5px #986f473d,0 3px 5px #29453e66;
+}
+.weather-gauges{display:flex;justify-content:center;gap:5px}
+.weather-gauge{
+ position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+ width:clamp(55px,17vw,78px);aspect-ratio:1;padding-bottom:8px;
+ border:3px double #9c754b;border-radius:50%;overflow:hidden;
+ background:radial-gradient(circle,#fff6dc 62%,transparent 63%),
+  repeating-conic-gradient(#8b785c 0deg 2deg,#f9e7bf 2deg 12deg);
+ box-shadow:inset 0 1px 4px #89633866,0 1px 2px #7f583a88;
+}
+.weather-label{font:600 clamp(8px,2vw,10px)/1.1 system-ui}
+.weather-gauge strong{font:750 clamp(12px,3vw,17px)/1.15 system-ui}
+.weather-needle{
+ display:none;position:absolute;left:calc(50% - 1px);bottom:57%;height:23%;width:2px;
+ transform-origin:center bottom;transform:rotate(var(--needle));border-radius:2px;background:#9f4033;
+}
+.weather-gauge[data-reading] .weather-needle{display:block}
+.weather-needle::after{content:"";position:absolute;bottom:-2px;left:-2px;width:6px;height:6px;border-radius:50%;background:#806045}
+.weather-station h2{
+ margin:4px 0 2px;padding:2px 3px;border:1px solid #ab8b63;border-radius:4px;
+ background:linear-gradient(#f6e7c5,#d4b88e);font:700 clamp(8px,2.15vw,11px)/1.15 system-ui;text-transform:uppercase;
+}
+.weather-credit,.weather-credit a{color:#3f433b;font:500 9px/1.25 system-ui}
