@@ -474,18 +474,21 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 /* Termohigrómetro de sobremesa del inicio vintage. */
 .weather-station[hidden]{display:none}
 .weather-station{
- position:relative;z-index:1;width:clamp(156px,42%,218px);margin:-8px 5% -20px auto;
+ position:relative;z-index:1;width:clamp(156px,42%,218px);--foot-height:12px;
+ margin:-8px 5% calc(var(--foot-height) - 20px) auto;
  padding:9px 9px 5px;text-align:center;color:#263b3c;
  border:2px solid #664731;border-radius:30px 29px 11px 10px;
  background:
   radial-gradient(ellipse at 28% 8%,#fff6d9 0 12%,transparent 45%),
   repeating-linear-gradient(127deg,#88522e12 0 1px,transparent 1px 5px),
   linear-gradient(152deg,#f9e4b4 12%,#e5b87a 73%,#ca8c53);
- box-shadow:inset 0 0 0 2px #ffecbf,inset 0 -6px #a86a3b44,1px 3px #614332,2px 5px 4px #29453e66;
+ box-shadow:inset 0 0 0 2px #ffecbf,inset 0 -6px #a86a3b44;
 }
 .weather-station::before,.weather-station::after{
- content:"";position:absolute;bottom:-5px;width:13px;height:5px;
- border:1px solid #664731;border-radius:0 0 4px 4px;background:#bd834e;
+ content:"";position:absolute;top:calc(100% + 2px);width:16px;height:var(--foot-height);
+ border:1px solid #664731;border-top:0;border-radius:0 0 6px 6px;
+ background:linear-gradient(105deg,#bc8450,#f7dda4 42%,#ce9a60 85%);
+ box-shadow:0 2px 3px #29453e66;
 }
 .weather-station::before{left:16px}
 .weather-station::after{right:16px}
