@@ -353,7 +353,10 @@
       background: radial-gradient(ellipse 47% 43px at 50% 43px,
         rgb(255 214 135 / calc(.55 * var(--shelf-light, 1))) 0%,
         rgb(255 194 100 / calc(.20 * var(--shelf-light, 1))) 48%,
-        transparent 100%);
+        transparent 100%),
+        radial-gradient(ellipse 64% 50% at 50% 50%,
+          rgb(49 31 23 / calc(.34 * (1 - var(--shelf-light, 1)))) 0%,
+          transparent 100%);
     }
     #items[data-home=nevera-vintage] .category ~ .category > summary {
       padding-top: 23px;
@@ -515,9 +518,9 @@
           return Math.abs(bounds.top + bounds.height / 2 - center);
         });
         const nearest = Math.min(...distances);
-        const falloff = Math.max(65, window.innerHeight * .14);
+        const falloff = Math.max(50, window.innerHeight * .10);
         rows.forEach((row, index) => {
-          const intensity = .10 + .90 * Math.exp(-(distances[index] - nearest) / falloff);
+          const intensity = .05 + .95 * Math.exp(-(distances[index] - nearest) / falloff);
           row.parentElement.style.setProperty('--shelf-light', intensity.toFixed(2));
           if (index === 0) shelves.style.setProperty('--shelf-light', intensity.toFixed(2));
         });
