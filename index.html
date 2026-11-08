@@ -318,6 +318,13 @@
       padding-inline: var(--cavity-wall);
       padding-bottom: 23px;
       background:
+        linear-gradient(180deg,
+          #39251d4d calc(var(--shelf-focus, 180px) - 38vh),
+          #39251d22 calc(var(--shelf-focus, 180px) - 20vh),
+          transparent calc(var(--shelf-focus, 180px) - 6vh),
+          transparent calc(var(--shelf-focus, 180px) + 6vh),
+          #39251d22 calc(var(--shelf-focus, 180px) + 20vh),
+          #39251d4d calc(var(--shelf-focus, 180px) + 38vh)),
         radial-gradient(ellipse 65% 250px at 50% 20px, #ffdf9c55, transparent 85%),
         linear-gradient(180deg, #50301dbd 0, transparent 55px, transparent calc(100% - 32px), #78533488),
         linear-gradient(90deg, #573923a6, #8e62375c 5%, transparent 13%, transparent 87%, #a77a4d5e 96%, #614126aa),
@@ -353,10 +360,7 @@
       background: radial-gradient(ellipse 47% 43px at 50% 43px,
         rgb(255 214 135 / calc(.55 * var(--shelf-light, 1))) 0%,
         rgb(255 194 100 / calc(.20 * var(--shelf-light, 1))) 48%,
-        transparent 100%),
-        radial-gradient(ellipse 64% 50% at 50% 50%,
-          rgb(49 31 23 / calc(.34 * (1 - var(--shelf-light, 1)))) 0%,
-          transparent 100%);
+        transparent 100%);
     }
     #items[data-home=nevera-vintage] .category ~ .category > summary {
       padding-top: 23px;
@@ -517,6 +521,8 @@
           const bounds = row.getBoundingClientRect();
           return Math.abs(bounds.top + bounds.height / 2 - center);
         });
+        const focus = center - shelves.getBoundingClientRect().top;
+        shelves.style.setProperty('--shelf-focus', `${focus}px`);
         const nearest = Math.min(...distances);
         const falloff = Math.max(50, window.innerHeight * .10);
         rows.forEach((row, index) => {
