@@ -1018,7 +1018,10 @@ function render(){
   const rows=shown.filter(x=>x.category===category).sort((a,b)=>esCompare(a.name,b.name));
   if(!rows.length&&(q||filter!=='all'))continue;
   const details=document.createElement('details');details.className='category';details.open=openCategories.has(category)||!!q;
-  details.addEventListener('toggle',()=>{if(details.open)openCategories.add(category);else openCategories.delete(category)});
+  if(!q)details.addEventListener('toggle',()=>{
+   if(details.open)openCategories.add(category);
+   else openCategories.delete(category);
+  });
   details.append(categoryHeader(category,`${rows.filter(x=>x.have).length}/${rows.length}`,pantryCategoryByName.get(category)?.icono));
   details.append(categoryAddFoodForm(category,false));
   for(const x of rows){
