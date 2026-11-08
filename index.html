@@ -273,7 +273,19 @@
       margin-bottom: 7px;
     }
     body:has(#items[data-home=nevera-vintage]:not([hidden])) .wrap { padding-bottom: 6px; }
-    body:has(#items[data-home=nevera-vintage]:not([hidden])) .pantry-footer { margin-top: 18px; }
+    body:has(#items[data-home=nevera-vintage]:not([hidden])) .pantry-footer {
+      position: relative;
+      margin-top: 18px;
+      transform: translateY(calc(-66px - clamp(22px, 5vw, 36.5px)));
+      color: #624830;
+      font: 600 14px/1.2 Georgia, serif;
+      letter-spacing: .035em;
+      text-shadow: 0 1px #fff0cd, 0 -1px #62432755;
+    }
+    body:has(#items[data-home=nevera-vintage]:not([hidden])) .pantry-footer .admin-link {
+      color: inherit;
+      text-shadow: inherit;
+    }
     .fridge-feet { display: none; }
     #items[data-home=nevera-vintage]:not([hidden]) + .fridge-feet {
       position: relative;
