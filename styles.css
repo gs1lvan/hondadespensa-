@@ -297,3 +297,6 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
 .theme-picker-options>button{display:flex;align-items:center;gap:10px;min-height:44px;text-align:start}
 .theme-picker-options>button[aria-pressed=true]{outline:2px solid currentColor;outline-offset:-3px}
 .theme-picker-swatch{width:24px;height:24px;flex:none;border-radius:50%;background:var(--app-bg-color);border:1px solid currentColor}
+
+:root .wrap .theme-picker-options>button[data-bg-color]{color:var(--theme-option-ink,#f5f9ff)}
+.theme-picker-options>button[data-bg-color$="-claro"]{--theme-option-ink:#22303c}
