@@ -403,6 +403,17 @@
       pointer-events: none;
     }
     .vintage-pothos[aria-pressed="true"] .pothos-flower { display: block; }
+    @media (prefers-reduced-motion: no-preference) {
+      .vintage-pothos[aria-pressed="true"] .pothos-flower {
+        transform-origin: 50% 75%;
+        animation: pothos-bloom 540ms ease-out both;
+      }
+      @keyframes pothos-bloom {
+        0% { opacity: 0; transform: translateY(5px) rotate(-12deg) scale(.16); }
+        70% { opacity: 1; transform: translateY(-1px) rotate(2deg) scale(1.06); }
+        100% { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+      }
+    }
     body:has(#items[data-home=nevera-vintage]:not([hidden])) :is(a, .vintage-pothos, .category > summary) {
       -webkit-tap-highlight-color: transparent;
     }
