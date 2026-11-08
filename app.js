@@ -474,6 +474,7 @@ function mountBackground(panel){
  function updatePreview(){
   applyCustomColors(preview,draft);
   preview.dataset.bgColor=draft.color;
+  preview.dataset.iconFamily=document.documentElement.dataset.iconFamily;
   preview.dataset.bgTexture=texture.value;
   const personal=texture.value!==backgroundPresetTextures[draft.color]
    ||Object.keys(customColorFields).some(key=>draft[key]!==null);
