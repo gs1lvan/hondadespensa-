@@ -1088,7 +1088,15 @@ body:has(.pantry-chooser:not([hidden])) { background:#071c32 url('textura-azul.s
 .pantry-chooser h2 { text-align:center; font-size:clamp(24px,6vw,36px); outline:none }
 .pantry-chooser .pantry-create { display:block; width:auto; margin:18px auto 0 }
 .pantry-chooser .pantry-create-form { max-width:360px; margin:14px auto }
-.pantry-create-form input[name=pantryName] { display:block; width:100%; margin:6px 0 12px }
+.pantry-create-form input[name=pantryName] {
+ display:block; width:100%; min-height:46px; margin:8px 0 16px; padding:10px 14px;
+ border:1px solid #76a4c1; border-radius:13px; background:#0b2940; color:#fff1ce;
+ font:400 16px/1.35 Georgia,serif; box-shadow:inset 0 2px 5px #05172788;
+}
+.pantry-create-form input[name=pantryName]::placeholder { color:#adc6d8 }
+.pantry-create-form input[name=pantryName]:focus {
+ outline:none; border-color:#e2c794; box-shadow:0 0 0 2px #e2c79466,inset 0 2px 5px #05172788;
+}
 .pantry-icon-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; border:1px solid #76a4c1; border-radius:12px; padding:8px }
 .pantry-icon-options label { display:grid; justify-items:center; align-content:center; gap:4px; min-height:96px; text-align:center; border:1px solid transparent; border-radius:8px; padding:4px; cursor:pointer }
 .pantry-icon-options label:has(:checked) { border-color:#ffdda2; background:#133950 }
@@ -1142,7 +1150,7 @@ function choosePantry(){
  const form=document.createElement('form');
  form.className='pantry-create-form';
  form.hidden=true;
- form.innerHTML='<label>Nombre de la despensa<input name="pantryName" maxlength="60" required></label><fieldset class="pantry-icon-options"><legend>Icono de la despensa</legend></fieldset><button class="pantry-create" type="submit">Crear</button><p class="hint" role="status"></p>';
+ form.innerHTML='<label>Nombre de la despensa<input name="pantryName" placeholder="Ej. Casa de campo" maxlength="60" required></label><fieldset class="pantry-icon-options"><legend>Icono de la despensa</legend></fieldset><button class="pantry-create" type="submit">Crear</button><p class="hint" role="status"></p>';
  const iconOptions=form.querySelector('fieldset');
  for(const [key,title,src] of pantryIcons){
   const label=document.createElement('label');
