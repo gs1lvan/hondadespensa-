@@ -1404,6 +1404,43 @@ async function loadCatalog(){
  }
  if(adminMode)renderAdmin();
 }
+let addingCatalogCategory=false;
+async function addCatalogCategory(category,names){
+ if(!activePantry||addingCatalogCategory)return;
+ const pantryId=activePantry.id;
+ const existing=findPantryCategory(category);
+ const categoryName=existing?.nombre??category;
+ addingCatalogCategory=true;
+ try{
+  await ensurePantryCategory(categoryName,pantryId);
+  const {data:target,error:categoryError}=await db.from('categorias_despensa')
+   .select('id,nombre').eq('despensa_id',pantryId).eq('nombre',categoryName).single();
+  if(categoryError)throw categoryError;
+  const {data:foods,error:foodError}=await db.from('alimentos')
+   .select('nombre').eq('despensa_id',pantryId).eq('categoria_id',target.id);
+  if(foodError)throw foodError;
+  if(activePantry?.id!==pantryId)return;
+  const seen=new Set(foods.map(food=>folded(food.nombre)));
+  const rows=[];
+  for(const name of names){
+   const key=folded(name);
+   if(seen.has(key))continue;
+   seen.add(key);
+   rows.push({nombre:name,categoria:target.nombre,categoria_id:target.id,disponible:false,despensa_id:pantryId});
+  }
+  if(rows.length){
+   const {error}=await db.from('alimentos').insert(rows);
+   if(error)throw error;
+  }
+  if(activePantry?.id!==pantryId)return;
+  await refresh();
+ }catch(error){
+  if(activePantry?.id===pantryId)alert('No se pudo añadir la categoría: '+error.message);
+ }finally{
+  addingCatalogCategory=false;
+  if(activePantry?.id===pantryId)renderCatalog();
+ }
+}
 function renderCatalog(){
  const holder=$('catalogItems'),q=folded($('catalogSearch').value.trim());holder.replaceChildren();
  let remaining=0;
@@ -1415,8 +1452,19 @@ function renderCatalog(){
   details.addEventListener('toggle',()=>{if(details.open)catalogOpen.add(category);else catalogOpen.delete(category)});
   const summary=document.createElement('summary');summary.textContent=bareCategory(category)+' · '+available.length;details.append(summary);
   const products=document.createElement('div');products.className='catalog-products';
+  const addAll=document.createElement('button');
+  addAll.type='button';
+  addAll.textContent=q?'＋ Añadir todos de la categoría':'＋ Añadir todos';
+  addAll.disabled=addingCatalogCategory;
+  addAll.onclick=()=>{
+   if(addingCatalogCategory)return;
+   for(const button of holder.querySelectorAll('button'))button.disabled=true;
+   addCatalogCategory(category,names);
+  };
+  products.append(addAll);
   for(const name of available){
    const button=document.createElement('button');button.type='button';button.textContent='＋ '+name;
+   button.disabled=addingCatalogCategory;
    button.onclick=async()=>{button.disabled=true;if(!await addSharedFood(name,category))button.disabled=false;else renderCatalog();};
    products.append(button);
   }
