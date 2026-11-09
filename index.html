@@ -671,15 +671,13 @@
       --note-header-bottom:#acd4f3;
       max-height:80dvh;
     }
-    #automaticPantryNoteDialog .note-header {
-      position:sticky; top:-20px; z-index:1;
-    }
     #automaticPantryNoteTitle { padding-inline-start:6px; }
     #automaticPantryNoteList h3 { margin:12px 0 4px; color:inherit; }
     #automaticPantryNoteList ul { list-style:none; margin:0; padding:0; }
     #automaticPantryNoteList .note-row { display:block; overflow-wrap:anywhere; }
     .fridge-note-dialog {
-      box-sizing:border-box; width:min(360px,calc(100% - 32px)); padding:20px;
+      box-sizing:border-box; width:min(360px,calc(100% - 32px)); padding:0;
+      max-height:80dvh; overflow:hidden;
       border:0; border-radius:1px 2px 14px 2px;
       background:linear-gradient(135deg,transparent 96%,var(--note-fold,#dcb659) 96%),
         linear-gradient(var(--note-paper-top,#fff0ad),var(--note-paper-bottom,#ffe694));
@@ -691,9 +689,16 @@
       bottom:auto; margin:0 auto;
       max-height:calc(var(--note-viewport-height,100dvh) - max(12px,env(safe-area-inset-top)) - 12px);
     }
+    .fridge-note-dialog > form {
+      display:grid; grid-template-rows:auto minmax(0,1fr);
+      max-height:inherit; margin:0;
+    }
+    .fridge-note-dialog .note-body {
+      min-height:0; overflow-y:auto; padding:0 20px 20px;
+    }
     .fridge-note-dialog .note-header {
       display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center;
-      gap:4px; margin:-20px -20px 12px; padding:12px 12px 12px 20px;
+      gap:4px; margin:0 0 12px; padding:12px 12px 12px 20px;
       background:linear-gradient(var(--note-header-top,#efd280),var(--note-header-bottom,#f7df92));
     }
     .fridge-note-dialog h2 { position:relative; margin:0; color:inherit; overflow-wrap:anywhere; }
@@ -1010,7 +1015,7 @@
         <button type="button" class="note-copy" id="copyAutomaticPantryNote" aria-label="Copiar nota" title="Copiar nota"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 5V4H4v12h1"/></svg></button>
         <button type="submit" class="note-close" aria-label="Cerrar" value="cancel" autofocus>×</button>
       </header>
-      <div id="automaticPantryNoteList"></div>
+      <div class="note-body" id="automaticPantryNoteList"></div>
     </form>
   </dialog>
   <dialog id="fridgeNoteDialog" class="fridge-note-dialog" aria-labelledby="fridgeNoteTitle">
@@ -1024,12 +1029,14 @@
         <button type="button" class="note-copy" id="copyPersonalFridgeNote" aria-label="Copiar nota" title="Copiar nota"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 5V4H4v12h1"/></svg></button>
         <button class="note-close" aria-label="Cerrar" value="cancel" autofocus>×</button>
       </header>
-      <div id="fridgeNotePreview"></div>
-      <div id="fridgeNoteRows" hidden></div>
-      <button type="button" id="fridgeNoteAdd" hidden>+ Añadir alimento</button>
-      <div class="note-actions">
-        <button type="button" id="fridgeNoteDelete">Eliminar nota</button>
-        <button type="button" id="fridgeNoteSave" hidden>Guardar</button>
+      <div class="note-body">
+        <div id="fridgeNotePreview"></div>
+        <div id="fridgeNoteRows" hidden></div>
+        <button type="button" id="fridgeNoteAdd" hidden>+ Añadir alimento</button>
+        <div class="note-actions">
+          <button type="button" id="fridgeNoteDelete">Eliminar nota</button>
+          <button type="button" id="fridgeNoteSave" hidden>Guardar</button>
+        </div>
       </div>
     </form>
   </dialog>
