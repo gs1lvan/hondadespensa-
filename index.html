@@ -638,6 +638,36 @@
     body:has(.pantry-chooser:not([hidden])) .hero h1 {
       max-width: none;
     }
+
+    #categoryList.fridge-with-doors { position:relative; }
+    .fridge-notes { position:absolute; inset:2px; z-index:2; pointer-events:none; }
+    .fridge-notes button { position:absolute; pointer-events:auto; cursor:pointer; margin:0; }
+    .fridge-add-note {
+      inset:5px 8px auto auto; min-width:44px; min-height:44px; padding:2px 5px;
+      background:none; border:0; box-shadow:none; color:#61422e;
+      font:700 14px/.95 "Dancing Script",cursive;
+      text-shadow:0 1px #fff1d1,0 -1px #79543977;
+      transform:rotate(-5deg);
+    }
+    .fridge-note {
+      display:grid; place-items:center; width:36px; height:36px; padding:0;
+      border:0; border-radius:0 0 4px 0; touch-action:none; user-select:none;
+      background:linear-gradient(145deg,#ffeeb0,#ffdf77 78%,#e9bc5e);
+      box-shadow:1px 3px 5px #57391877,inset 0 1px #fff7d0;
+      color:#214486; font:700 20px/1 "Dancing Script","Segoe Script",cursive;
+      text-shadow:.25px .25px #21448666; transform:rotate(-5deg);
+    }
+    .fridge-note:nth-of-type(odd) { transform:rotate(5deg); }
+    .fridge-note:is(:focus-visible,:active) { z-index:1; }
+    #fridgeNoteDialog {
+      width:min(360px,calc(100% - 32px)); padding:18px; border:1px solid #947653;
+      border-radius:13px; background:#fff0d0; color:#342719; box-shadow:0 8px 25px #24180c66;
+    }
+    #fridgeNoteDialog::backdrop { background:#211a1266; }
+    #fridgeNoteDialog h2 { margin:0 36px 12px 0; }
+    #fridgeNoteDialog .note-close { position:absolute; top:10px; right:10px; }
+    #fridgeNoteMessage { display:block; width:100%; box-sizing:border-box; margin:5px 0 12px; }
+    #fridgeNoteDialog .note-actions { display:flex; justify-content:space-between; gap:8px; }
   </style>
   <style>
     :root[data-bg-color$="-claro"] body:has(.pantry-chooser:not([hidden])) {
@@ -799,6 +829,10 @@
           <input id="startFridgeClosed" type="checkbox" disabled>
           Empezar puerta cerrada
         </label>
+        <label class="alternate-home-setting">
+          <input id="enableFridgeNotes" type="checkbox" disabled>
+          Añadir notas
+        </label>
         <p class="hint">Nevera vintage</p>
         <p id="alternateHomeMessage" class="admin-msg" role="status"></p>
       </section>
@@ -893,7 +927,19 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <script type="module" src="app.js?v=96"></script>
+  <dialog id="fridgeNoteDialog" aria-labelledby="fridgeNoteTitle">
+    <form method="dialog">
+      <h2 id="fridgeNoteTitle">Nota</h2>
+      <button class="note-close" aria-label="Cerrar" value="cancel">×</button>
+      <label for="fridgeNoteMessage">Mensaje</label>
+      <textarea id="fridgeNoteMessage" rows="4"></textarea>
+      <div class="note-actions">
+        <button type="button" id="fridgeNoteDelete">Eliminar</button>
+        <button type="button" id="fridgeNoteSave">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+  <script type="module" src="app.js?v=97"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
