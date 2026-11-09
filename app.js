@@ -1020,7 +1020,7 @@ $('alternateHome').onchange=async event=>{
  const message=$('alternateHomeMessage');
  checkbox.disabled=true;
  $('startFridgeClosed').disabled=true;
- $('enableFridgeNotes').disabled=true;
+ $('enableFridgeNotes').disabled=$('enableAutomaticPantryNote').disabled=true;
  message.textContent='Guardando página de inicio…';
  try{
   const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('alternate_home')]:home??''}});
@@ -1045,7 +1045,7 @@ $('startFridgeClosed').onchange=async event=>{
  const message=$('alternateHomeMessage');
  checkbox.disabled=true;
  $('alternateHome').disabled=true;
- $('enableFridgeNotes').disabled=true;
+ $('enableFridgeNotes').disabled=$('enableAutomaticPantryNote').disabled=true;
  message.textContent='Guardando apertura de la nevera…';
  try{
   const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('start_fridge_closed')]:checkbox.checked}});
@@ -1066,21 +1066,28 @@ $('startFridgeClosed').onchange=async event=>{
  }
 };
 
+const fridgeNoteSettings={
+ enableFridgeNotes:'fridge_notes_enabled',
+ enableAutomaticPantryNote:'automatic_pantry_note_enabled'
+};
 function syncFridgeNotesSetting(){
- const setting=$('enableFridgeNotes');
- setting.disabled=!usesVintageHome()||!$('startFridgeClosed').checked;
- setting.checked=pantryStylePreference('fridge_notes_enabled')===true;
+ for(const [id,key] of Object.entries(fridgeNoteSettings)){
+  const setting=$(id);
+  setting.disabled=!usesVintageHome()||!$('startFridgeClosed').checked;
+  setting.checked=pantryStylePreference(key)===true;
+ }
 }
-$('enableFridgeNotes').onchange=async event=>{
+for(const [id,key] of Object.entries(fridgeNoteSettings))$(id).onchange=async event=>{
  const setting=event.currentTarget;
  const current=session;
  if(!current||setting.disabled)return;
  const home=$('alternateHome');
  const doors=$('startFridgeClosed');
  const status=$('alternateHomeMessage');
- setting.disabled=home.disabled=doors.disabled=true;
+ home.disabled=doors.disabled=true;
+ for(const id of Object.keys(fridgeNoteSettings))$(id).disabled=true;
  try{
-  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('fridge_notes_enabled')]:setting.checked}});
+  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey(key)]:setting.checked}});
   if(error)throw error;
   if(session!==current)return;
   current.user=result.user;
@@ -1156,15 +1163,35 @@ function renderFridgeNotes(main,topDoor){
   layer.style.aspectRatio=getComputedStyle(topDoor).aspectRatio;
   layer.style.bottom='auto';
  }
+ main.append(layer);
+ if(pantryStylePreference('automatic_pantry_note_enabled')===true){
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='fridge-note fridge-pantry-note';
+  button.textContent='✓';
+  button.setAttribute('aria-label','Abrir lista de la compra');
+  button.onclick=()=>{
+   const missing=data.filter(food=>!food.have).sort((a,b)=>esCompare(a.name,b.name));
+   const list=$('automaticPantryNoteList');
+   list.replaceChildren();
+   for(const name of missing.length?missing.map(food=>food.name):['No faltan alimentos.']){
+    const row=document.createElement('li');
+    row.textContent=name;
+    list.append(row);
+   }
+   $('automaticPantryNoteDialog').showModal();
+  };
+  layer.append(button);
+ }
+ if(pantryStylePreference('fridge_notes_enabled')!==true)return;
  const add=document.createElement('button');
  add.type='button';
  add.className='fridge-add-note';
  add.append('Añadir',document.createElement('br'),'nota');
  layer.append(add);
- main.append(layer);
 
  function draw(){
-  layer.querySelectorAll('.fridge-note').forEach(button=>button.remove());
+  layer.querySelectorAll('.fridge-note:not(.fridge-pantry-note)').forEach(button=>button.remove());
   for(const note of notes){
    const button=document.createElement('button');
    button.type='button';
@@ -1446,7 +1473,7 @@ function render(){
   }
  }
  const topDoor=main.firstElementChild?.matches('.empty')?main.children[1]:main.firstElementChild;
- if(useDoors&&topDoor?.matches('.fridge-door')&&pantryStylePreference('fridge_notes_enabled')===true){
+ if(useDoors&&topDoor?.matches('.fridge-door')&&(pantryStylePreference('fridge_notes_enabled')===true||pantryStylePreference('automatic_pantry_note_enabled')===true)){
   renderFridgeNotes(main,topDoor);
  }
  if(adminMode)renderAdmin();

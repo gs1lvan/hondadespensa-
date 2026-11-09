@@ -659,6 +659,17 @@
     }
     .fridge-note:nth-of-type(odd) { transform:rotate(5deg); }
     .fridge-note:is(:focus-visible,:active) { z-index:1; }
+    .fridge-notes .fridge-pantry-note {
+      inset:9px auto auto 12px; z-index:2;
+      background:linear-gradient(145deg,#c3e5ff,#82bdf1);
+    }
+    #automaticPantryNoteDialog {
+      box-sizing:border-box; width:min(360px,calc(100% - 32px)); max-height:80dvh;
+      overflow:auto; padding:20px; background:#b7ddff; color:#153555;
+    }
+    #automaticPantryNoteDialog h2 { color:inherit; }
+    #automaticPantryNoteList { list-style:none; padding:0; }
+    #automaticPantryNoteList li { padding:7px 0; border-bottom:1px solid #15355540; }
     #fridgeNoteDialog {
       box-sizing:border-box; width:min(360px,calc(100% - 32px)); padding:20px;
       border:0; border-radius:1px 2px 14px 2px;
@@ -882,6 +893,10 @@
           <input id="enableFridgeNotes" type="checkbox" disabled>
           Añadir notas
         </label>
+        <label class="alternate-home-setting">
+          <input id="enableAutomaticPantryNote" type="checkbox" disabled>
+          Añadir notas de la despensa
+        </label>
         <p class="hint">Nevera vintage</p>
         <p id="alternateHomeMessage" class="admin-msg" role="status"></p>
       </section>
@@ -976,6 +991,11 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
+  <dialog id="automaticPantryNoteDialog" aria-labelledby="automaticPantryNoteTitle">
+    <h2 id="automaticPantryNoteTitle">Lista de la compra</h2>
+    <ul id="automaticPantryNoteList"></ul>
+    <form method="dialog"><button>Cerrar</button></form>
+  </dialog>
   <dialog id="fridgeNoteDialog" aria-labelledby="fridgeNoteTitle">
     <form method="dialog">
       <header class="note-header">
@@ -995,7 +1015,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=101"></script>
+  <script type="module" src="app.js?v=102"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
