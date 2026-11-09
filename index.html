@@ -552,6 +552,10 @@
       max-width: none;
     }
   </style>
+  <style>
+    .food-group-order:not([hidden]) { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-block:.75rem; }
+    .food-group-title { grid-column:1 / -1; font-size:1.15rem; margin:.65rem 0 .25rem; }
+  </style>
 </head>
 <body>
   <div class="wrap">
@@ -672,6 +676,12 @@
         </div>
         <button class="fridge-dial" id="clearFridgeSearch" type="button" aria-label="Borrar búsqueda"></button>
       </div>
+      <label class="food-group-order" hidden>Orden de alimentos
+        <select id="foodGroupOrder">
+          <option value="dry">Secos primero</option>
+          <option value="fresh">Frescos primero</option>
+        </select>
+      </label>
       <div id="categoryList"></div>
     </main>
     <div class="fridge-feet" aria-hidden="true"></div>
@@ -680,7 +690,7 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <script type="module" src="app.js?v=85"></script>
+  <script type="module" src="app.js?v=86"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
