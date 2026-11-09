@@ -1554,15 +1554,35 @@ async function addCatalogCategory(category,names){
   if(activePantry?.id===pantryId)renderCatalog();
  }
 }
+const freshCatalogGroups={
+ "Carnes y aves": ["Carne picada","Chuletas de cerdo","Filetes de ternera","Lomo de cerdo","Muslos de pollo","Pechuga de pavo","Pechuga de pollo","Salchichas frescas"],
+ "Charcutería refrigerada": ["Fiambre de pavo","Jamón cocido","Lacón cocido","Mortadela","Pechuga de pollo cocida"],
+ "Frutas": ["Aguacate","Albaricoque","Arándanos","Cerezas","Ciruelas","Fresas","Kiwi","Limón","Mandarina","Manzana","Melocotón","Melón","Naranja","Nectarina","Pera","Piña","Plátano","Sandía","Uvas"],
+ "Hierbas frescas": ["Albahaca","Cebollino","Cilantro","Hierbabuena","Perejil","Romero"],
+ "Huevos": ["Huevos de codorniz","Huevos de gallina"],
+ "Lácteos y quesos": ["Kéfir","Leche fresca","Mantequilla","Mozzarella fresca","Nata fresca","Queso crema","Queso fresco","Requesón","Yogur griego","Yogur natural"],
+ "Pescados y mariscos": ["Atún fresco","Boquerones","Caballa","Calamares","Dorada","Gambas","Lubina","Mejillones","Merluza","Salmón","Sardinas","Trucha"],
+ "Refrigerados y masas": ["Gnocchi frescos","Hummus","Masa de hojaldre","Masa de pizza","Pasta fresca","Tofu"],
+ "Setas y champiñones": ["Champiñones","Portobello","Setas de ostra","Shiitake"],
+ "Verduras y hortalizas": ["Acelgas","Ajo","Apio","Berenjena","Brócoli","Calabacín","Calabaza","Cebolla","Cebolleta","Coliflor","Espárragos verdes","Espinacas","Judías verdes","Lechuga","Patata","Pepino","Pimiento rojo","Pimiento verde","Puerro","Repollo","Rúcula","Tomate","Tomate cherry","Zanahoria"]
+};
+const freshCatalogOpen=new Set();
 function renderCatalog(){
- const holder=$('catalogItems'),q=folded($('catalogSearch').value.trim());holder.replaceChildren();
- let remaining=0;
  const groups=catalogReady?Object.entries(catalogRows.reduce((acc,x)=>{(acc[x.categoria]??=[]).push(x.nombre);return acc;},{})):Object.entries(initial);
+ renderCatalogList($('catalogItems'),$('catalogSearch'),groups,catalogOpen);
+ if($('freshCatalogItems')){
+  renderCatalogList($('freshCatalogItems'),$('freshCatalogSearch'),Object.entries(freshCatalogGroups),freshCatalogOpen);
+ }
+}
+function renderCatalogList(holder,search,groups,openCategories){
+ const q=folded(search.value.trim());
+ holder.replaceChildren();
+ let remaining=0;
  for(const [category,names] of groups.sort((a,b)=>esCompare(a[0],b[0]))){
   const available=names.filter(name=>!data.some(x=>x.category===(findPantryCategory(category)?.nombre??category)&&folded(x.name)===folded(name))&&folded(name).includes(q));
   if(!available.length)continue;remaining+=available.length;
-  const details=document.createElement('details');details.className='catalog-category';details.open=catalogOpen.has(category)||!!q;
-  details.addEventListener('toggle',()=>{if(details.open)catalogOpen.add(category);else catalogOpen.delete(category)});
+  const details=document.createElement('details');details.className='catalog-category';details.open=openCategories.has(category)||!!q;
+  if(!q)details.addEventListener('toggle',()=>{if(details.open)openCategories.add(category);else openCategories.delete(category)});
   const summary=document.createElement('summary');summary.textContent=bareCategory(category)+' · '+available.length;details.append(summary);
   const products=document.createElement('div');products.className='catalog-products';
   const addAll=document.createElement('button');
@@ -1571,7 +1591,7 @@ function renderCatalog(){
   addAll.disabled=addingCatalogCategory;
   addAll.onclick=()=>{
    if(addingCatalogCategory)return;
-   for(const button of holder.querySelectorAll('button'))button.disabled=true;
+   for(const button of document.querySelectorAll('#catalogItems button,#freshCatalogItems button'))button.disabled=true;
    addCatalogCategory(category,names);
   };
   products.append(addAll);
@@ -1705,6 +1725,10 @@ $('addForm').remove();
 $('adminFoodSearch').oninput=renderAdmin;
 $('adminCatalogSearch').oninput=renderAdmin;
 $('catalogSearch').oninput=renderCatalog;
+if($('freshCatalog')){
+ $('freshCatalog').hidden=false;
+ $('freshCatalogSearch').oninput=renderCatalog;
+}
 $('catalogAddForm').onsubmit=async e=>{
  e.preventDefault();
  const nombre=$('catalogNewName').value.trim(),categoria=$('catalogNewCategory').value.trim();
