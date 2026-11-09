@@ -516,6 +516,27 @@
       border-color: transparent;
       box-shadow: none;
     }
+    #toolbar { position: relative; }
+    #toolbar #clearBlueSearch {
+      position: absolute;
+      inset-inline-end: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 0;
+      border-radius: 9px;
+      color: #c6ddeb;
+      background: transparent;
+      box-shadow: none;
+      font: 400 26px/1 system-ui, sans-serif;
+    }
+    #toolbar #search:placeholder-shown + #clearBlueSearch,
+    .fridge-controls #toolbar #clearBlueSearch { display: none; }
+    #toolbar:not(.fridge-controls #toolbar) #search { padding-inline-end: 49px; }
   </style>
 </head>
 <body>
@@ -595,6 +616,7 @@
 
     <div class="toolbar" id="toolbar" hidden>
       <input id="search" placeholder="🔎 Buscar alimentos…" aria-label="Buscar alimentos">
+      <button id="clearBlueSearch" type="button" aria-label="Borrar búsqueda">×</button>
     </div>
 
     <form id="addForm" class="add" hidden>
@@ -640,12 +662,14 @@
   </div>
   <script type="module" src="app.js?v=83"></script>
   <script>
-    document.getElementById('clearFridgeSearch').addEventListener('click', () => {
+    function clearPantrySearch() {
       const search = document.getElementById('search');
       if (!search.value) return;
       search.value = '';
       search.dispatchEvent(new Event('input', { bubbles: true }));
-    });
+    }
+    document.getElementById('clearFridgeSearch').addEventListener('click', clearPantrySearch);
+    document.getElementById('clearBlueSearch').addEventListener('click', clearPantrySearch);
 
     const pothosBloom = document.getElementById('pothosBloom');
     pothosBloom.addEventListener('click', () => {
