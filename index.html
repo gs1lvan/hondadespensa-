@@ -659,11 +659,11 @@
       text-shadow:0 1px #fff1d1,0 -1px #79543977;
     }
     .fridge-note {
-      --paper-light:#ffeba5; --paper-mid:#efd17d; --paper-edge:#bf8d3c;
+      --paper-light:#fff0b6; --paper-mid:#ebcb77; --paper-edge:#a97735;
       --fold-light:#fff0ae; --fold-dark:#a46b24;
       display:grid; place-items:center; width:52px; height:52px; padding:3px 0 5px; align-content:center;
       isolation:isolate; border:0; background:none; box-shadow:none; touch-action:none; user-select:none;
-      filter:drop-shadow(1px 2px 1px #51341966) drop-shadow(3px 5px 3px #51341980);
+      filter:drop-shadow(0 1px 1px #51341980) drop-shadow(4px 7px 4px #51341985);
       color:#214486; font:700 20px/1 "Dancing Script","Segoe Script",cursive;
       text-shadow:.25px .25px #21448666; transform:rotate(-5deg);
     }
@@ -673,18 +673,22 @@
     }
     .fridge-note::before {
       inset:0; border-radius:2px 3px 0 2px;
-      clip-path:polygon(0 1%, 98% 0, 100% 79%, 96% 87%, 89% 93%, 77% 98%, 0 100%);
+      clip-path:polygon(0 1%,98% 0,100% 77%,96% 87%,85% 94%,69% 98%,0 100%);
+      clip-path:shape(from 1% 1%, curve to 98% 0 with 35% 0 / 80% 2%, curve to 100% 77% with 100% 23% / 99% 62%, curve to 69% 98% with 97% 88% / 82% 96%, curve to 1% 100% with 55% 100% / 15% 99%, close);
       background:
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23845c2d' opacity='.35' filter='url(%23g)' d='M0 0h80v80H0z'/%3E%3C/svg%3E"),
-        radial-gradient(ellipse at 40% 44%,var(--paper-light) 25%,var(--paper-mid) 78%,var(--paper-edge));
+        linear-gradient(180deg,#70431025,transparent 17%),
+        radial-gradient(ellipse at 36% 45%,var(--paper-light) 15%,var(--paper-mid) 75%,var(--paper-edge));
+      background-blend-mode:multiply,normal,normal;
       box-shadow:inset 0 1px 2px var(--paper-edge);
     }
     .fridge-note::after {
-      right:0; bottom:1%; width:24%; height:21%;
+      right:0; bottom:2%; width:31%; height:23%;
       clip-path:polygon(0 100%,27% 75%,46% 43%,58% 11%,100% 0,83% 40%,54% 69%);
-      background:linear-gradient(143deg,var(--paper-edge),var(--fold-light) 45%,var(--fold-dark) 90%);
+      background:linear-gradient(145deg,var(--fold-dark) 14%,var(--fold-light) 49%,var(--paper-mid) 70%,var(--fold-dark));
     }
     .fridge-note:nth-of-type(odd) { transform:rotate(5deg); }
+    .fridge-note.fridge-note-on-top { z-index:2; }
     .fridge-note:is(:focus-visible,:active) { z-index:3; }
     .fridge-notes .fridge-pantry-note {
       --paper-light:#c8e4f2; --paper-mid:#97bed8; --paper-edge:#6288a3;
@@ -1075,7 +1079,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=107"></script>
+  <script type="module" src="app.js?v=108"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
