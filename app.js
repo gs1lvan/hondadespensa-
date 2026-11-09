@@ -1045,6 +1045,19 @@ function showApp(visible){
  $('status').hidden=visible;
  if(!visible)$('migration').hidden=true;
 }
+const foodGroupOrder=$('foodGroupOrder');
+function foodGroupOrderKey(){
+ return 'hondadespensa:food-group-order:'+session?.user?.id+':'+activePantry?.id;
+}
+foodGroupOrder.onchange=()=>{
+ try{localStorage.setItem(foodGroupOrderKey(),foodGroupOrder.value);}catch{}
+ render();
+};
+function isFreshCategory(category){
+ const row=pantryCategoryByName.get(category);
+ return Object.hasOwn(freshCategoryArt,row?.icono)
+  || [category,...(row?.nombres_anteriores??[])].some(name=>freshCategoryIcon(name));
+}
 function render(){
  const q=folded($('search').value.trim());
  $('total').textContent=data.length;
@@ -1053,7 +1066,11 @@ function render(){
  const shown=data.filter(x=>folded(x.name).includes(q));
  const main=$('categoryList');main.replaceChildren();
  if(!shown.length){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';main.append(p);}
- for(const category of orderedCategories(pantryCategories())){
+ const categories=orderedCategories(pantryCategories());
+ const groups={dry:document.createDocumentFragment(),fresh:document.createDocumentFragment()};
+ const hasFresh=categories.some(isFreshCategory);
+ foodGroupOrder.parentElement.hidden=!hasFresh||categories.every(isFreshCategory);
+ for(const category of categories){
   const rows=shown.filter(x=>x.category===category).sort((a,b)=>esCompare(a.name,b.name));
   if(!rows.length&&(q||filter!=='all'))continue;
   const details=document.createElement('details');details.className='category';details.open=openCategories.has(category)||!!q;
@@ -1075,7 +1092,15 @@ function render(){
    };
    const name=document.createElement('span');name.textContent=x.name;row.append(check,name);details.append(row);
   }
-  main.append(details);
+  groups[isFreshCategory(category)?'fresh':'dry'].append(details);
+ }
+ const groupOrder=foodGroupOrder.value==='fresh'?['fresh','dry']:['dry','fresh'];
+ for(const group of groupOrder){
+  if(!groups[group].childElementCount)continue;
+  const title=document.createElement('h2');
+  title.className='food-group-title';
+  title.textContent=group==='fresh'?'Alimentos frescos':'Alimentos secos';
+  main.append(title,groups[group]);
  }
  if(adminMode)renderAdmin();
 }
@@ -1314,6 +1339,8 @@ function choosePantry(){
 }
 async function openPantry(pantry){
  activePantry=pantry;
+ foodGroupOrder.value='dry';
+ try{if(localStorage.getItem(foodGroupOrderKey())==='fresh')foodGroupOrder.value='fresh';}catch{}
  applyPantryPostcard(pantry);
  applyAlternateHome(pantryStylePreference('alternate_home'));
  applyViewStyle(pantryStylePreference('view_style'));
