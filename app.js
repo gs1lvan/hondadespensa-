@@ -1244,7 +1244,7 @@ function choosePantry(){
  const dialog=document.createElement('dialog');
  dialog.className='pantry-create-dialog';
  dialog.setAttribute('aria-labelledby','pantry-create-title');
- form.innerHTML='<h2 id="pantry-create-title">Crear despensa</h2><fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset><label class="alternate-home-setting pantry-load-defaults"><input type="checkbox" name="loadDefaults" checked> Cargar alimentos por defecto</label><div class="pantry-create-actions"><button type="button" data-cancel>Cancelar</button><button type="submit">Crear</button></div><p class="hint" role="status"></p>';
+ form.innerHTML='<h2 id="pantry-create-title">Crear despensa</h2><fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset><label class="alternate-home-setting pantry-load-defaults"><input type="checkbox" name="loadDefaults" checked> Cargar alimentos secos</label><label class="alternate-home-setting pantry-load-defaults"><input type="checkbox" name="loadFresh"> Cargar alimentos frescos</label><div class="pantry-create-actions"><button type="button" data-cancel>Cancelar</button><button type="submit">Crear</button></div><p class="hint" role="status"></p>';
  const iconOptions=form.querySelector('fieldset');
  for(const [key,title,src] of pantryIcons){
   const label=document.createElement('label');
@@ -1269,6 +1269,7 @@ function choosePantry(){
  dialog.append(form);
  create.onclick=()=>{
   form.elements.loadDefaults.checked=true;
+  form.elements.loadFresh.checked=false;
   dialog.showModal();
  };
  cancel.onclick=()=>{if(!submit.disabled)dialog.close();};
@@ -1283,9 +1284,14 @@ function choosePantry(){
   submit.disabled=true;
   status.textContent='Creando despensa…';
   const loadDefaults=form.elements.loadDefaults.checked;
-  const {data:id,error}=await db.rpc('crear_despensa_personal',loadDefaults
-   ?{p_nombre:nombre,p_icono:icono,p_cargar_catalogo:true}
-   :{p_nombre:nombre,p_icono:icono});
+  const params={p_nombre:nombre,p_icono:icono};
+  if(loadDefaults||form.elements.loadFresh.checked)params.p_cargar_catalogo=loadDefaults;
+  if(form.elements.loadFresh.checked){
+   params.p_frescos=Object.entries(freshCatalogGroups).flatMap(([categoria,names])=>
+    names.map(nombre=>({categoria,nombre,icono:freshCategoryIcon(categoria)}))
+   );
+  }
+  const {data:id,error}=await db.rpc('crear_despensa_personal',params);
   if(session!==current)return;
   submit.disabled=false;
   if(error){status.textContent='No se pudo crear la despensa: '+error.message;return;}
