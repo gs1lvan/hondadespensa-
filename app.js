@@ -565,7 +565,7 @@ function mountBackground(panel){
   applyBackground(choice);
   message.textContent='Guardando fondo…';
   try{
-   const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('app_background')]:choice}});
+   const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('app_background')]:choice,chooser_background:choice}});
    if(error)throw error;
    if(session===current){
     current.user=result.user;
@@ -1246,6 +1246,12 @@ function pantryReloadSelection(pantryId){
 }
 function choosePantry(){
  if(activePantry&&(savingViewStyle||savingIconFamily||$('alternateHome').disabled))return;
+ if(!activePantry){
+  const preferences=session?.user?.user_metadata;
+  const savedBackground=preferences?.chooser_background??preferences?.app_background
+   ?? availablePantries.map(pantry=>preferences?.['app_background_'+pantry.id]).find(Boolean);
+  applyBackground(savedBackground);
+ }
  pantryReloadSelection(null);
  activePantry=null;
  applyPantryPostcard(null);
@@ -1472,7 +1478,8 @@ async function signedIn(currentSession,restorePantry=false){
  applyViewStyle(currentSession?.user?.user_metadata?.view_style);
  $('iconMessage').textContent='';
  $('typographyMessage').textContent='';
- applyBackground(currentSession?.user?.user_metadata?.app_background);
+ const preferences=currentSession?.user?.user_metadata;
+ applyBackground(preferences?.chooser_background??preferences?.app_background);
  $('backgroundMessage').textContent='';
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
  refreshVersion++;
