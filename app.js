@@ -1220,7 +1220,7 @@ function choosePantry(){
  const dialog=document.createElement('dialog');
  dialog.className='pantry-create-dialog';
  dialog.setAttribute('aria-labelledby','pantry-create-title');
- form.innerHTML='<h2 id="pantry-create-title">Crear despensa</h2><fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset><label class="alternate-home-setting pantry-load-defaults"><input type="checkbox" name="loadDefaults"> Cargar alimentos por defecto</label><div class="pantry-create-actions"><button type="button" data-cancel>Cancelar</button><button type="submit">Crear</button></div><p class="hint" role="status"></p>';
+ form.innerHTML='<h2 id="pantry-create-title">Crear despensa</h2><fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset><label class="alternate-home-setting pantry-load-defaults"><input type="checkbox" name="loadDefaults" checked> Cargar alimentos por defecto</label><div class="pantry-create-actions"><button type="button" data-cancel>Cancelar</button><button type="submit">Crear</button></div><p class="hint" role="status"></p>';
  const iconOptions=form.querySelector('fieldset');
  for(const [key,title,src] of pantryIcons){
   const label=document.createElement('label');
@@ -1243,7 +1243,10 @@ function choosePantry(){
  const cancel=form.querySelector('[data-cancel]');
  const status=form.querySelector('[role="status"]');
  dialog.append(form);
- create.onclick=()=>dialog.showModal();
+ create.onclick=()=>{
+  form.elements.loadDefaults.checked=true;
+  dialog.showModal();
+ };
  cancel.onclick=()=>{if(!submit.disabled)dialog.close();};
  dialog.addEventListener('cancel',event=>{if(submit.disabled)event.preventDefault();});
  form.onsubmit=async event=>{
