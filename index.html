@@ -564,8 +564,8 @@
     #items[data-home=nevera-vintage] .category + .food-group-title {
       margin-top:-2px; padding-top:.43rem;
     }
-    #items[data-home=nevera-vintage] #categoryList:has(.category + .food-group-title) {
-      row-gap:0;
+    #items[data-home=nevera-vintage] .category:has(+ .food-group-title) {
+      margin-bottom:0;
     }
     #items[data-home=nevera-vintage] .food-group-title::before {
       content:""; position:absolute; z-index:-1;
