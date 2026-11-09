@@ -671,28 +671,32 @@
       --note-header-bottom:#acd4f3;
       max-height:80dvh;
     }
+    #automaticPantryNoteDialog .note-header {
+      position:sticky; top:-20px; z-index:1;
+    }
+    #automaticPantryNoteTitle { padding-inline-start:6px; }
     #automaticPantryNoteList h3 { margin:12px 0 4px; color:inherit; }
     #automaticPantryNoteList ul { list-style:none; margin:0; padding:0; }
     #automaticPantryNoteList .note-row { display:block; overflow-wrap:anywhere; }
-    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) {
+    .fridge-note-dialog {
       box-sizing:border-box; width:min(360px,calc(100% - 32px)); padding:20px;
       border:0; border-radius:1px 2px 14px 2px;
       background:linear-gradient(135deg,transparent 96%,var(--note-fold,#dcb659) 96%),
         linear-gradient(var(--note-paper-top,#fff0ad),var(--note-paper-bottom,#ffe694));
       color:#263e70; box-shadow:2px 9px 20px #24180c66;
     }
-    :is(#fridgeNoteDialog,#automaticPantryNoteDialog)::backdrop { background:#211a1266; }
+    .fridge-note-dialog::backdrop { background:#211a1266; }
     #fridgeNoteDialog.note-editing {
       top:calc(var(--note-viewport-top,0px) + max(12px,env(safe-area-inset-top)));
       bottom:auto; margin:0 auto;
       max-height:calc(var(--note-viewport-height,100dvh) - max(12px,env(safe-area-inset-top)) - 12px);
     }
-    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) .note-header {
+    .fridge-note-dialog .note-header {
       display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center;
       gap:8px; margin:-20px -20px 12px; padding:12px 12px 12px 20px;
       background:linear-gradient(var(--note-header-top,#efd280),var(--note-header-bottom,#f7df92));
     }
-    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) h2 { position:relative; margin:0; color:inherit; overflow-wrap:anywhere; }
+    .fridge-note-dialog h2 { position:relative; margin:0; color:inherit; overflow-wrap:anywhere; }
     #fridgeNoteDialog .note-title-pencil {
       position:absolute; inset-inline-end:8px; top:50%; transform:translateY(-50%);
       font-size:18px; pointer-events:none;
@@ -708,11 +712,15 @@
     #fridgeNoteDialog :is(#fridgeNoteEditTitle,#fridgeNoteTitleInput):focus {
       outline:2px solid #263e70; outline-offset:2px;
     }
-    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) .note-close { margin:0; }
-    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) button {
+    .fridge-note-dialog .note-close {
+      align-self:start; display:grid; place-items:center;
+      width:44px; height:44px; min-width:44px; padding:0; margin:0;
+      font-size:24px; line-height:1;
+    }
+    .fridge-note-dialog button {
       border:0; background:transparent; color:inherit; box-shadow:none; cursor:pointer;
     }
-    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) .note-row {
+    .fridge-note-dialog .note-row {
       display:grid; grid-template-columns:minmax(0,1fr) 4rem 2rem;
       align-items:center; gap:6px; width:100%; margin:0;
       padding:0; border:0; border-bottom:1px solid #263e7030; border-radius:0;
@@ -995,16 +1003,16 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <dialog id="automaticPantryNoteDialog" aria-labelledby="automaticPantryNoteTitle">
+  <dialog id="automaticPantryNoteDialog" class="fridge-note-dialog" aria-labelledby="automaticPantryNoteTitle">
     <form method="dialog">
       <header class="note-header">
         <h2 id="automaticPantryNoteTitle">Lista de la compra</h2>
-        <button class="note-close" aria-label="Cerrar" autofocus>×</button>
+        <button type="submit" class="note-close" aria-label="Cerrar" value="cancel" autofocus>×</button>
       </header>
       <div id="automaticPantryNoteList"></div>
     </form>
   </dialog>
-  <dialog id="fridgeNoteDialog" aria-labelledby="fridgeNoteTitle">
+  <dialog id="fridgeNoteDialog" class="fridge-note-dialog" aria-labelledby="fridgeNoteTitle">
     <form method="dialog">
       <header class="note-header">
         <h2 id="fridgeNoteTitle">
