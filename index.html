@@ -537,6 +537,20 @@
     #toolbar #search:placeholder-shown + #clearBlueSearch,
     .fridge-controls #toolbar #clearBlueSearch { display: none; }
     #toolbar:not(.fridge-controls #toolbar) #search { padding-inline-end: 49px; }
+    body:has(.pantry-chooser:not([hidden])) .hero {
+      justify-content: center;
+      height: clamp(138px, 42vw, 205px);
+    }
+    body:has(.pantry-chooser:not([hidden])) .hero .polaroid {
+      display: none;
+    }
+    body:has(.pantry-chooser:not([hidden])) .hero-copy {
+      width: min(86%, 460px);
+      align-items: center;
+    }
+    body:has(.pantry-chooser:not([hidden])) .hero h1 {
+      max-width: none;
+    }
   </style>
 </head>
 <body>
