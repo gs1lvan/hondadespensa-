@@ -677,11 +677,22 @@
       gap:8px; margin:-20px -20px 12px; padding:12px 12px 12px 20px;
       background:linear-gradient(#efd280,#f7df92);
     }
-    #fridgeNoteDialog h2 { margin:0; color:inherit; overflow-wrap:anywhere; }
-    #fridgeNoteDialog #fridgeNoteEditTitle {
-      margin:0; padding:0; text-align:left; font:inherit;
+    #fridgeNoteDialog h2 { position:relative; margin:0; color:inherit; overflow-wrap:anywhere; }
+    #fridgeNoteDialog .note-title-pencil {
+      position:absolute; inset-inline-end:8px; top:50%; transform:translateY(-50%);
+      font-size:18px; pointer-events:none;
     }
-    #fridgeNoteTitleInput { box-sizing:border-box; width:100%; font:inherit; color:inherit; }
+    #fridgeNoteDialog :is(#fridgeNoteEditTitle,#fridgeNoteTitleInput) {
+      box-sizing:border-box; width:100%; min-height:38px; margin:0;
+      padding:4px 30px 4px 6px; text-align:left; font:inherit;
+      font-size:max(1em,16px); color:inherit; background:transparent;
+      border:0; border-bottom:1px solid #263e7066; border-radius:0;
+      box-shadow:none; color-scheme:light; caret-color:currentColor;
+    }
+    #fridgeNoteDialog #fridgeNoteTitleInput::placeholder { color:inherit; opacity:.72; }
+    #fridgeNoteDialog :is(#fridgeNoteEditTitle,#fridgeNoteTitleInput):focus {
+      outline:2px solid #263e70; outline-offset:2px;
+    }
     #fridgeNoteDialog .note-close { margin:0; }
     #fridgeNoteDialog button {
       border:0; background:transparent; color:inherit; box-shadow:none; cursor:pointer;
@@ -971,6 +982,7 @@
         <h2 id="fridgeNoteTitle">
           <button type="button" id="fridgeNoteEditTitle" title="Editar título">Nota</button>
           <input id="fridgeNoteTitleInput" aria-label="Título de la nota" maxlength="100" hidden>
+          <span class="note-title-pencil" aria-hidden="true">✎</span>
         </h2>
         <button class="note-close" aria-label="Cerrar" value="cancel" autofocus>×</button>
       </header>
@@ -983,7 +995,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=100"></script>
+  <script type="module" src="app.js?v=101"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
