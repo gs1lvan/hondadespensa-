@@ -1019,6 +1019,7 @@ $('alternateHome').onchange=async event=>{
   if(session!==current)return;
   current.user=result.user;
   applyAlternateHome(pantryStylePreference('alternate_home'));
+  render();
   message.textContent='Página de inicio guardada en tu cuenta.';
  }catch(error){
   if(session!==current)return;
@@ -1049,7 +1050,9 @@ const foodGroupOrder=$('foodGroupOrder');
 function foodGroupOrderKey(){
  return 'hondadespensa:food-group-order:'+session?.user?.id+':'+activePantry?.id;
 }
+let visibleFoodGroup;
 foodGroupOrder.onchange=()=>{
+ visibleFoodGroup=undefined;
  try{localStorage.setItem(foodGroupOrderKey(),foodGroupOrder.value);}catch{}
  render();
 };
@@ -1096,14 +1099,16 @@ function render(){
  }
  const groupOrder=(foodGroupOrder.value==='fresh'?['fresh','dry']:['dry','fresh'])
   .filter(group=>groups[group].childElementCount);
- for(const [index,group] of groupOrder.entries()){
+ const vintage=usesVintageHome();
+ const displayedGroups=vintage?groupOrder:[groupOrder.find(group=>group===visibleFoodGroup)??groupOrder[0]].filter(Boolean);
+ for(const [index,group] of displayedGroups.entries()){
   const title=document.createElement('h2');
   title.className='food-group-title';
   title.textContent=group==='fresh'?'Alimentos frescos':'Alimentos secos';
   title.id='food-group-'+group;
   title.tabIndex=-1;
   if(groupOrder.length===2){
-   const target=groupOrder[1-index];
+   const target=group==='fresh'?'dry':'fresh';
    const jump=document.createElement('button');
    jump.type='button';
    jump.className='food-group-jump';
@@ -1116,6 +1121,18 @@ function render(){
     foodGroupOrder.onchange();
     $('food-group-'+group).querySelector('.food-group-jump').focus({preventScroll:true});
    };
+   if(!vintage){
+    const targetName=target==='fresh'?'frescos':'secos';
+    jump.className='food-group-switch';
+    jump.textContent=targetName;
+    jump.title='Mostrar alimentos '+targetName;
+    jump.setAttribute('aria-label',jump.title);
+    jump.onclick=()=>{
+     visibleFoodGroup=target;
+     render();
+     $('food-group-'+target).querySelector('.food-group-switch').focus({preventScroll:true});
+    };
+   }
    title.append(jump);
   }
   main.append(title,groups[group]);
@@ -1363,6 +1380,7 @@ function choosePantry(){
 }
 async function openPantry(pantry){
  activePantry=pantry;
+ visibleFoodGroup=undefined;
  foodGroupOrder.value='dry';
  try{if(localStorage.getItem(foodGroupOrderKey())==='fresh')foodGroupOrder.value='fresh';}catch{}
  applyPantryPostcard(pantry);
