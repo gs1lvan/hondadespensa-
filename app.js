@@ -1010,7 +1010,7 @@ $('alternateHome').onchange=async event=>{
 function showApp(visible){
  if(!visible)adminMode=false;
  $('pantryFooter').hidden=!visible;
- switchPantry.hidden=!visible||(!adminMode&&availablePantries.length<2);
+ switchPantry.hidden=!visible||adminMode||availablePantries.length<2;
  const adminToggle=$('adminToggle');
  adminToggle.setAttribute('aria-label',adminMode?'Volver a despensa':'Administrar');
  adminToggle.innerHTML=adminMode?'← Volver a despensa':'<span aria-hidden="true">&#9881;&#65038;</span>';
@@ -1118,11 +1118,13 @@ body:has(.pantry-chooser:not([hidden])) { background:#071c32 url('textura-azul.s
 .polaroid-scene img { position:absolute; top:14.5%; left:10%; width:75%; height:73%; object-fit:cover; transform:rotate(-3.6deg); transform-origin:top left }
 .polaroid-scene[hidden] { display:none }
 .hero .pantry-photo-switch { display:none }
-body:has(#items:not([hidden]):not([data-home=nevera-vintage])) .hero .pantry-photo-switch {
+body:has(#items:not([hidden]):not([data-home=nevera-vintage])) .hero .pantry-photo-switch,
+body:has(#adminPanel:not([hidden])) .hero .pantry-photo-switch {
  display:block; z-index:1; pointer-events:auto; padding:0; border:0; border-radius:12px;
  background:transparent; box-shadow:none; clip-path:polygon(6% 11%,25% 9%,25% 2%,70% 0,70% 6%,87% 5%,94% 94%,11% 100%);
 }
-body:has(#items:not([hidden]):not([data-home=nevera-vintage])) .hero .pantry-photo-switch:focus-visible {
+body:has(#items:not([hidden]):not([data-home=nevera-vintage])) .hero .pantry-photo-switch:focus-visible,
+body:has(#adminPanel:not([hidden])) .hero .pantry-photo-switch:focus-visible {
  clip-path:none; outline:2px solid #e2c794; outline-offset:-4px;
 }
 body:has(#items:not([hidden]):not([data-home=nevera-vintage])) .pantry-switch { display:none }
