@@ -904,12 +904,49 @@ async function deletePantryCategory(category){
  }catch(error){adminMessage('No se pudo eliminar la categoría: '+error.message);}
  finally{categoryMutation=false;}
 }
+let categoryAvailabilitySaving=false;
+function categoryAvailabilityMenu(category){
+ const menu=document.createElement('details');
+ const toggle=document.createElement('summary');toggle.textContent='⋯';
+ toggle.setAttribute('aria-label','Cambiar disponibilidad de '+bareCategory(category));
+ const actions=document.createElement('div');actions.className='admin-actions';
+ for(const available of [false,true]){
+  const button=document.createElement('button');button.type='button';button.className='secondary';
+  button.textContent=available?'Marcar todos':'Desmarcar todos';
+  button.disabled=categoryAvailabilitySaving||!data.some(item=>item.category===category&&item.have!==available);
+  button.onclick=async()=>{
+   if(categoryAvailabilitySaving||!activePantry)return;
+   const pantry=activePantry;
+   const ids=data.filter(item=>item.category===category&&item.have!==available).map(item=>item.id);
+   const verb=available?'Marcar':'Desmarcar';
+   if(!ids.length||!confirm('¿'+verb.toLowerCase()+' '+ids.length+' alimento(s) de «'+bareCategory(category)+'» en «'+pantry.nombre+'»?'))return;
+   categoryAvailabilitySaving=true;
+   for(const action of actions.children)action.disabled=true;
+   try{
+    const {error}=await db.from('alimentos').update({disponible:available}).eq('despensa_id',pantry.id).in('id',ids);
+    if(error)throw error;
+    if(activePantry?.id===pantry.id){
+     await refresh();
+     adminMessage('Disponibilidad actualizada en '+bareCategory(category)+'.');
+    }
+   }catch(error){
+    adminMessage('No se pudo actualizar la disponibilidad: '+error.message);
+   }finally{
+    categoryAvailabilitySaving=false;
+    renderAdmin();
+   }
+  };
+  actions.append(button);
+ }
+ menu.append(toggle,actions);
+ return menu;
+}
 function categoryManagement(category){
  const holder=document.createElement('div');holder.className='admin-row';
  const actions=document.createElement('div');actions.className='admin-actions';
  const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Editar categoría';
  const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Eliminar categoría';
- actions.append(edit,del);holder.append(actions);
+ actions.append(edit,del,categoryAvailabilityMenu(category));holder.append(actions);
  edit.onclick=()=>{
   if(holder.querySelector('form')){holder.querySelector('form').remove();return;}
   const form=document.createElement('form');form.className='admin-edit';
