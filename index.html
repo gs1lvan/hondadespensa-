@@ -555,6 +555,24 @@
   <style>
     .food-group-order:not([hidden]) { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-block:.75rem; }
     .food-group-title { grid-column:1 / -1; font-size:1.15rem; margin:.65rem 0 .9rem; }
+    #items[data-home=nevera-vintage] .food-group-title {
+      position:relative; isolation:isolate; text-align:center;
+      margin:.65rem 0 1rem; padding:1.05rem .5rem .55rem;
+      color:#28444a; font-family:Georgia,serif;
+      text-shadow:0 -1px 0 #142d32, 0 1px 0 #fff5d9;
+    }
+    #items[data-home=nevera-vintage] .food-group-title::before {
+      content:""; position:absolute; z-index:-1;
+      inset:0 0 auto; height:.72rem; border-radius:.3rem;
+      background:linear-gradient(#fff6dc,#eee0bd 42%,#b5a17a);
+      box-shadow:0 .13rem .23rem #30250e55, inset 0 1px #fff9ea;
+    }
+    #items[data-home=nevera-vintage] .food-group-title::after {
+      content:""; position:absolute; z-index:-2;
+      inset:.53rem max(0px, calc((100% - 21rem)/2)) 0;
+      clip-path:polygon(0 0,100% 0,96% 15%,91% 92%,89% 100%,11% 100%,9% 92%,4% 15%);
+      background:linear-gradient(#ad9972,#ead8ae 19%,#f6e7c3 75%,#ddc9a0 96%,#b39d73);
+    }
   </style>
 </head>
 <body>
