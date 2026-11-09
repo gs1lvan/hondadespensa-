@@ -1211,6 +1211,7 @@ function renderFridgeNotes(main,topDoor){
     titleButton.textContent=savedNote.title||'Nota '+note.number;
     titleButton.hidden=false;
     titleInput.value=savedNote.title||'';
+    titleInput.placeholder='Nota '+note.number;
     titleInput.hidden=true;
     titleButton.onclick=()=>{
      titleButton.hidden=true;
