@@ -576,12 +576,12 @@
     }
     .food-group-order:not([hidden]) { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-block:.75rem; }
     .food-group-title { position:relative; scroll-margin-top:1rem; }
-    .food-group-title:has(.food-group-jump) { padding-inline:2.4rem; }
+    .food-group-title:has(.food-group-jump) { padding-inline:2.8rem; }
     .food-group-title .food-group-jump {
       position:absolute; inset-inline-end:0; top:50%; transform:translateY(-50%);
-      display:grid; place-items:center; width:2rem; height:2rem; padding:0; min-height:0;
+      display:grid; place-items:center; width:2.5rem; height:2.5rem; padding:0; min-height:0;
       border:1px solid currentColor; border-radius:50%; color:inherit; background:transparent;
-      font:600 1rem/1 system-ui; cursor:pointer;
+      font:800 1.45rem/1 system-ui; cursor:pointer;
     }
     #items[data-home=nevera-vintage] .food-group-title .food-group-jump {
       inset-inline-end:.2rem; color:#304548; background:#f3e3bf; box-shadow:0 1px 2px #58432155;
@@ -590,13 +590,13 @@
       color:var(--textColor,var(--ink));
     }
     :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .food-group-jump {
-      color:var(--ink); background:var(--card-light); border-color:var(--ink);
+      color:#fff; background:#254b57; border-color:#17323c;
     }
     :root[data-bg-color$="-claro"] #adminPanel #foodGroupOrder {
       color:var(--ink); background:var(--card-light); border-color:var(--card-edge);
     }
     :root[data-bg-color$="-claro"] :is(.food-group-jump,#foodGroupOrder):focus-visible {
-      outline:2px solid currentColor; outline-offset:3px;
+      outline:2px solid #254b57; outline-offset:3px;
     }
     .food-group-title { grid-column:1 / -1; font-size:1.15rem; margin:.65rem 0 .9rem; }
     #items[data-home=nevera-vintage] .food-group-title {
@@ -766,7 +766,7 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <script type="module" src="app.js?v=88"></script>
+  <script type="module" src="app.js?v=89"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
