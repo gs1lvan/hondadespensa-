@@ -1009,9 +1009,11 @@ $('alternateHome').onchange=async event=>{
 };
 function showApp(visible){
  if(!visible)adminMode=false;
- $('pantryFooter').hidden=!visible;
+ $('pantryFooter').hidden=!visible||adminMode;
  switchPantry.hidden=!visible||adminMode||availablePantries.length<2;
  const adminToggle=$('adminToggle');
+ if(adminMode)$('adminPanel').prepend(adminToggle);
+ else $('pantryFooter').append(adminToggle);
  adminToggle.setAttribute('aria-label',adminMode?'Volver a despensa':'Administrar');
  adminToggle.innerHTML=adminMode?'← Volver a despensa':'<span aria-hidden="true">&#9881;&#65038;</span>';
  $('adminPanel').hidden=!visible||!adminMode;
@@ -1092,6 +1094,7 @@ const pantryStyle=document.createElement('style');
 pantryChooser.className='pantry-chooser';
 switchPantry.className='pantry-switch';
 pantryStyle.textContent=`
+#adminPanel > #adminToggle { display:flex; margin:0 0 10px; min-height:44px; padding:5px 0; font-size:15px; color:inherit }
 body:has(.pantry-chooser:not([hidden])) { background:#071c32 url('textura-azul.svg'); }
 .pantry-chooser { color:#fff1ce; font-family:Georgia,serif; padding-bottom:18px }
 .pantry-chooser h2 { text-align:center; font-size:clamp(24px,6vw,36px); outline:none }
