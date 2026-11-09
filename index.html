@@ -659,25 +659,37 @@
       text-shadow:0 1px #fff1d1,0 -1px #79543977;
     }
     .fridge-note {
-      display:grid; place-items:center; width:52px; height:52px; padding:3px 0; align-content:center;
-      border:0; border-radius:0 0 4px 0; touch-action:none; user-select:none;
-      background:radial-gradient(ellipse at 100% 100%,#fff5c5 4%,transparent 34%),linear-gradient(145deg,#f7dfa3,#ffe596 70%,#d6a655);
-      box-shadow:3px 7px 7px -2px #57391899,inset 0 1px #fff7d0;
+      --paper-light:#ffeba5; --paper-mid:#efd17d; --paper-edge:#bf8d3c;
+      --fold-light:#fff0ae; --fold-dark:#a46b24;
+      display:grid; place-items:center; width:52px; height:52px; padding:3px 0 5px; align-content:center;
+      isolation:isolate; border:0; background:none; box-shadow:none; touch-action:none; user-select:none;
+      filter:drop-shadow(1px 2px 1px #51341966) drop-shadow(3px 5px 3px #51341980);
       color:#214486; font:700 20px/1 "Dancing Script","Segoe Script",cursive;
       text-shadow:.25px .25px #21448666; transform:rotate(-5deg);
     }
     .fridge-note time { font-size:12px; line-height:1; }
+    .fridge-note::before,.fridge-note::after {
+      content:""; position:absolute; pointer-events:none; z-index:-1;
+    }
+    .fridge-note::before {
+      inset:0; border-radius:2px 3px 0 2px;
+      clip-path:polygon(0 1%, 98% 0, 100% 79%, 96% 87%, 89% 93%, 77% 98%, 0 100%);
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23845c2d' opacity='.35' filter='url(%23g)' d='M0 0h80v80H0z'/%3E%3C/svg%3E"),
+        radial-gradient(ellipse at 40% 44%,var(--paper-light) 25%,var(--paper-mid) 78%,var(--paper-edge));
+      box-shadow:inset 0 1px 2px var(--paper-edge);
+    }
     .fridge-note::after {
-      content:""; position:absolute; right:0; bottom:0; width:15px; height:12px;
-      border-radius:80% 0 50% 0;
-      background:linear-gradient(145deg,transparent 35%,#fff9 55%,#56341244);
-      pointer-events:none;
+      right:0; bottom:1%; width:24%; height:21%;
+      clip-path:polygon(0 100%,27% 75%,46% 43%,58% 11%,100% 0,83% 40%,54% 69%);
+      background:linear-gradient(143deg,var(--paper-edge),var(--fold-light) 45%,var(--fold-dark) 90%);
     }
     .fridge-note:nth-of-type(odd) { transform:rotate(5deg); }
-    .fridge-note:is(:focus-visible,:active) { z-index:1; }
+    .fridge-note:is(:focus-visible,:active) { z-index:3; }
     .fridge-notes .fridge-pantry-note {
-      z-index:2; transform:rotate(7deg); border-radius:2px 1px 9px 2px;
-      background:radial-gradient(ellipse at 100% 100%,#d6efff,transparent 38%),linear-gradient(145deg,#afd7f6,#78afe0);
+      --paper-light:#c8e4f2; --paper-mid:#97bed8; --paper-edge:#6288a3;
+      --fold-light:#e2f2fa; --fold-dark:#4e7596;
+      transform:rotate(7deg);
     }
     #automaticPantryNoteDialog:not(.personal-note-summary) {
       --note-fold:#76aad6;
