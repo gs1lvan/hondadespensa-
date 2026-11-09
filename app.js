@@ -1236,9 +1236,10 @@ let sharedWithGema=false;
 async function refreshPantrySharing(enabled=null){
  const request=++sharingRequest;
  const pantry=activePantry;
- sharingSection.hidden=!adminMode||!['playa','principal'].includes(pantrySystemKey(pantry))||
+ sharingSection.hidden=!adminMode||!pantry||
   session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
  if(sharingSection.hidden)return;
+ shareWithGema.checked=!!pantry.compartida;
  shareWithGema.disabled=true;
  sharingStatus.textContent=enabled===null?'Comprobando acceso…':'Guardando acceso…';
  const {data:shared,error}=await db.rpc('casa_principal_compartir_con_gema',{
