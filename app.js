@@ -968,6 +968,9 @@ function updateWeatherCalendar(){
  const date=$('weatherCalendarDate');
  date.textContent=parts.day+'/'+parts.month;
  date.dateTime=parts.year+'-'+parts.month.padStart(2,'0')+'-'+parts.day.padStart(2,'0');
+ $('weatherDayHand').setAttribute('transform','rotate('+Number(parts.day)*360/31+' 50 50)');
+ $('weatherMonthHand').setAttribute('transform','rotate('+Number(parts.month)*30+' 50 50)');
+ $('weatherDateDial').setAttribute('aria-label','Calendario: '+date.textContent+' (día azul, mes rojo)');
 }
 async function refreshWeather(){
  if(!$('weatherStation').hidden&&!document.hidden)updateWeatherCalendar();
@@ -995,8 +998,38 @@ async function refreshWeather(){
 function syncWeatherStation(){
  const items=$('items');
  $('weatherStation').hidden=items.hidden||items.dataset.home!=='nevera-vintage';
+ syncCalendarStyle();
  if(!$('weatherStation').hidden)refreshWeather();
 }
+let savingCalendarStyle=false;
+function syncCalendarStyle(){
+ const integrated=pantryStylePreference('calendar_style')==='integrated';
+ const station=$('weatherStation');
+ station.parentElement.dataset.calendar=integrated?'integrated':'independent';
+ $('weatherCalendarDate').parentElement.hidden=integrated;
+ $('weatherDateDial').toggleAttribute('hidden',!integrated);
+ $('calendarIndependent').checked=!integrated;
+ $('calendarIntegrated').checked=integrated;
+ $('calendarIndependent').disabled=$('calendarIntegrated').disabled=!usesVintageHome()||savingCalendarStyle;
+}
+for(const id of ['calendarIndependent','calendarIntegrated'])$(id).onchange=async event=>{
+ const current=session;
+ if(!current||savingCalendarStyle||!usesVintageHome())return;
+ const integrated=event.currentTarget.checked===(id==='calendarIntegrated');
+ const message=$('alternateHomeMessage');
+ savingCalendarStyle=true;
+ syncCalendarStyle();
+ try{
+  const {data,error}=await db.auth.updateUser({data:{[pantryStyleKey('calendar_style')]:integrated?'integrated':'independent'}});
+  if(error)throw error;
+  if(session===current){current.user=data.user;message.textContent='Calendario guardado.';}
+ }catch(error){
+  if(session===current)message.textContent='No se pudo guardar el calendario: '+error.message;
+ }finally{
+  savingCalendarStyle=false;
+  syncWeatherStation();
+ }
+};
 setInterval(refreshWeather,60000);
 document.addEventListener('visibilitychange',refreshWeather);
 
