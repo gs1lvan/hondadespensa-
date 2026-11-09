@@ -998,6 +998,8 @@ function applyAlternateHome(value){
  $('search').placeholder=home==='nevera-vintage'?'Buscar alimentos…':'🔎 Buscar alimentos…';
  if(home==='nevera-vintage')$('fridgeControls').append(toolbar);
  else $('items').before(toolbar);
+ if(home==='nevera-vintage')$('search').before(switchPantry);
+ else $('adminPanel').before(switchPantry);
  $('alternateHome').checked=!!home;
  const vintage=usesVintageHome();
  applyTypography(vintage?(pantryStylePreference('vintage_list_typography')??vintageTypography):pantryStylePreference('list_typography'));
@@ -1205,6 +1207,12 @@ body:has(.pantry-chooser:not([hidden])) { background:#071c32 url('textura-azul.s
 .pantry-chooser strong { font:700 clamp(18px,5vw,28px) Georgia,serif; overflow-wrap:anywhere }
 .pantry-chooser small { display:block; color:#c4d9e6; margin-top:4px }
 .pantry-switch { display:block; margin:0 auto 14px; padding:7px 12px; background:#0b2940; font-size:13px }
+#items[data-home=nevera-vintage] #toolbar .pantry-switch:not([hidden]) {
+ justify-self:center; margin:-6px 0 5px; max-width:100%; padding:4px 6px;
+ background:none; border:0; box-shadow:none; text-shadow:none; color:#26343b;
+ font-size:13px; line-height:1.25; text-align:center;
+}
+#items[data-home=nevera-vintage] #toolbar .pantry-switch:is(:hover,:focus-visible) { text-decoration:underline }
 .pantry-switch[hidden], .pantry-chooser[hidden], .beach-polaroid-caption[hidden] { display:none }
 .hero .beach-polaroid-caption { z-index:0; }
 .polaroid-scene { position:absolute; inset:0; clip-path:polygon(10.3% 14.7%,82.8% 10.3%,88.2% 81.8%,15% 86.8%) }
@@ -1400,7 +1408,7 @@ async function openPantry(pantry){
  categoryOrder=readCategoryOrder(session.user.user_metadata?.[pantryOrderKey(pantry)]);
  pantryChooser.hidden=true;
  switchPantry.hidden=availablePantries.length<2;
- switchPantry.textContent=pantry.nombre+' · Cambiar de despensa';
+ switchPantry.textContent=pantry.nombre+' | Cambiar de despensa';
  showApp(true);
  render();
  await refresh();
@@ -1480,7 +1488,7 @@ renamePantryButton.onclick=async()=>{
  pantry.nombre=saved;
  applyPantryPostcard(pantry);
  availablePantries.sort((a,b)=>esCompare(a.nombre,b.nombre));
- switchPantry.textContent=saved+' · Cambiar de despensa';
+ switchPantry.textContent=saved+' | Cambiar de despensa';
  deletePantryStatus.textContent='Nombre guardado.';
 };
 const deletePantryStatus=deletePantrySection.querySelector('[role="status"]');
