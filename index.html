@@ -10,7 +10,30 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
+  <script>
+    (() => {
+      try {
+        const user=JSON.parse(localStorage.getItem('sb-yqumpnoxmzkmnxnjrkjl-auth-token'))?.user;
+        if(!user?.id)return;
+        const cached=JSON.parse(localStorage.getItem('hondadespensa:fondo:'+user.id));
+        const pantryId=sessionStorage.getItem('hondadespensa:recarga:'+user.id);
+        const preferences=user.user_metadata;
+        const preference=cached?.preference??preferences?.['app_background_'+pantryId]
+          ??preferences?.chooser_background??preferences?.app_background;
+        if(!preference)return;
+        const root=document.documentElement;
+        if(preference.color)root.dataset.bgColor=preference.color;
+        if(preference.texture)root.dataset.bgTexture=preference.texture;
+        for(const key of ['customBackground','textColor','borderColor']){
+          if(/^#[0-9a-f]{6}$/i.test(preference[key]))root.style.setProperty('--'+key,preference[key]);
+        }
+        const metaColor=cached?.metaColor??preference.customBackground;
+        if(/^#[0-9a-f]{6}$/i.test(metaColor))document.querySelector('meta[name="theme-color"]').content=metaColor;
+      }catch{}
+    })();
+  </script>
   <link rel="stylesheet" href="styles.css?v=89">
+  <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
     body:has(#items[data-home=nevera-vintage]:not([hidden])) {
@@ -1079,7 +1102,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=108"></script>
+  <script type="module" src="app.js?v=109"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
