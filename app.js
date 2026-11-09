@@ -1144,7 +1144,8 @@ switchPantry.onclick=choosePantry;
 
 const sharingSection=document.createElement('section');
 sharingSection.hidden=true;
-sharingSection.innerHTML='<h2>Compartir despensa</h2><label><input type="checkbox"> Compartir con Gema</label><p class="hint" role="status"></p>';
+sharingSection.className='admin-section';
+sharingSection.innerHTML='<h2>Compartir despensa</h2><label class="alternate-home-setting"><input type="checkbox"> Compartir con Gema</label><p class="hint" role="status"></p>';
 $('adminPanel').prepend(sharingSection);
 const shareWithGema=sharingSection.querySelector('input');
 const sharingStatus=sharingSection.querySelector('[role="status"]');
