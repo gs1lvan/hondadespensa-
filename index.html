@@ -479,6 +479,33 @@
       height: 32px;
       font-size: 25px;
     }
+    #catalogItems .catalog-products {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+      padding: 0;
+    }
+    #catalogItems .catalog-products > button {
+      width: 100%;
+      min-height: 44px;
+      padding: 8px 12px;
+      text-align: start;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    #catalogItems .catalog-products > button + button {
+      border-top: 1px solid currentColor;
+      border-top-color: color-mix(in srgb, currentColor 23%, transparent);
+    }
+    #catalogItems .catalog-products > button:first-child {
+      font-weight: 700;
+      background: color-mix(in srgb, currentColor 8%, transparent);
+    }
+    #catalogItems .catalog-products > button:focus-visible {
+      outline-offset: -3px;
+    }
   </style>
 </head>
 <body>
