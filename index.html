@@ -690,9 +690,14 @@
       text-shadow:0 0 .45em currentColor;
     }
     #items[data-home=nevera-vintage] .food-group-title :is(.food-group-jump, .fridge-close-door) {
-      min-block-size:1.35rem; color:inherit; text-shadow:inherit;
+      min-inline-size:0; min-block-size:1.35rem; margin-inline-start:0;
+      padding:0 .15em; color:inherit; text-shadow:inherit;
     }
-    #items[data-home=nevera-vintage] .food-group-jump::before {
+    #items[data-home=nevera-vintage] .fridge-close-door::before {
+      content:""; inline-size:1px; block-size:.65em; margin-inline-end:.34em;
+      background:currentColor;
+    }
+    #items[data-home=nevera-vintage] .food-group-title :is(.food-group-jump, .fridge-close-door)::before {
       opacity:1; box-shadow:1px 1px #fff1cb;
     }
     :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .food-group-title {
@@ -710,6 +715,7 @@
     .food-group-title { grid-column:1 / -1; font-size:1.15rem; margin:.65rem 0 .9rem; }
     #items[data-home=nevera-vintage] .food-group-title {
       position:relative; isolation:isolate; text-align:center;
+      display:flex; align-items:center; justify-content:center; gap:.3em;
       margin:.15rem 0 .55rem; padding-block:.78rem .45rem;
       color:#304548; font:600 clamp(.82rem, 3.5vw, 1rem)/1.2 Georgia,serif;
       text-shadow:0 -1px #17292c, 0 1px #fff1cb;
