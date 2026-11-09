@@ -1001,6 +1001,7 @@ function applyAlternateHome(value){
  else $('items').before(toolbar);
  if(home==='nevera-vintage')$('search').before(switchPantry);
  else $('adminPanel').before(switchPantry);
+ updatePantrySwitchLabel();
  $('alternateHome').checked=!!home;
  $('startFridgeClosed').checked=pantryStylePreference('start_fridge_closed')===true;
  $('startFridgeClosed').disabled=!home;
@@ -1062,7 +1063,7 @@ $('startFridgeClosed').onchange=async event=>{
 function showApp(visible){
  if(!visible)adminMode=false;
  $('pantryFooter').hidden=!visible||adminMode;
- switchPantry.hidden=!visible||adminMode||availablePantries.length<2;
+ switchPantry.hidden=!visible||adminMode||(!usesVintageHome()&&availablePantries.length<2);
  const adminToggle=$('adminToggle');
  if(adminMode)$('adminPanel').prepend(adminToggle);
  else $('pantryFooter').append(adminToggle);
@@ -1274,11 +1275,6 @@ body:has(.pantry-chooser:not([hidden])) { background:#071c32 url('textura-azul.s
 .pantry-chooser strong { font:700 clamp(18px,5vw,28px) Georgia,serif; overflow-wrap:anywhere }
 .pantry-chooser small { display:block; color:#c4d9e6; margin-top:4px }
 .pantry-switch { display:block; margin:0 auto 14px; padding:7px 12px; background:#0b2940; font-size:13px }
-#items[data-home=nevera-vintage] #toolbar .pantry-switch:not([hidden]) {
- justify-self:center; margin:-6px 0 5px; max-width:100%; padding:4px 6px;
- background:none; border:0; box-shadow:none; text-shadow:none; color:#26343b;
- font-size:13px; line-height:1.25; text-align:center;
-}
 #items[data-home=nevera-vintage] #toolbar .pantry-switch:is(:hover,:focus-visible) { text-decoration:underline }
 .pantry-switch[hidden], .pantry-chooser[hidden], .beach-polaroid-caption[hidden] { display:none }
 .hero .beach-polaroid-caption { z-index:0; }
@@ -1475,11 +1471,16 @@ async function openPantry(pantry){
  $('adminFoodSearch').value='';
  categoryOrder=readCategoryOrder(session.user.user_metadata?.[pantryOrderKey(pantry)]);
  pantryChooser.hidden=true;
- switchPantry.hidden=availablePantries.length<2;
- switchPantry.textContent=pantry.nombre+' | Cambiar de despensa';
  showApp(true);
  render();
  await refresh();
+}
+function updatePantrySwitchLabel(){
+ if(!activePantry)return;
+ const name=activePantry.nombre;
+ const label=name+' | Cambiar de despensa';
+ switchPantry.textContent=usesVintageHome()?name:label;
+ switchPantry.setAttribute('aria-label',label);
 }
 switchPantry.onclick=choosePantry;
 
@@ -1556,7 +1557,7 @@ renamePantryButton.onclick=async()=>{
  pantry.nombre=saved;
  applyPantryPostcard(pantry);
  availablePantries.sort((a,b)=>esCompare(a.nombre,b.nombre));
- switchPantry.textContent=saved+' | Cambiar de despensa';
+ updatePantrySwitchLabel();
  deletePantryStatus.textContent='Nombre guardado.';
 };
 const deletePantryStatus=deletePantrySection.querySelector('[role="status"]');
