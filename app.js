@@ -1235,6 +1235,30 @@ async function refreshPantrySharing(enabled=null){
 }
 shareWithGema.onchange=()=>refreshPantrySharing(shareWithGema.checked);
 
+const deletePantrySection=document.createElement('section');
+deletePantrySection.className='admin-section';
+deletePantrySection.hidden=true;
+deletePantrySection.innerHTML='<h2>Despensa actual</h2><button type="button" class="danger">Eliminar despensa</button><p class="hint" role="status"></p>';
+sharingSection.after(deletePantrySection);
+const deletePantryButton=deletePantrySection.querySelector('button');
+const deletePantryStatus=deletePantrySection.querySelector('[role="status"]');
+deletePantryButton.onclick=async()=>{
+ const pantry=activePantry;
+ const current=session;
+ if(!pantry||!current||deletePantryButton.disabled)return;
+ if(!confirm('¿Eliminar «'+pantry.nombre+'»? Se borrarán sus alimentos y categorías. Esta acción es definitiva.'))return;
+ deletePantryButton.disabled=true;
+ deletePantryStatus.textContent='Eliminando despensa…';
+ const {error}=await db.rpc('eliminar_despensa_personal',{p_despensa_id:pantry.id});
+ deletePantryButton.disabled=false;
+ if(session!==current)return;
+ if(error){
+  deletePantryStatus.textContent='No se pudo eliminar: '+error.message;
+  return;
+ }
+ await signedIn(current);
+};
+
 async function signedIn(currentSession){
  session=currentSession;
  activePantry=null;
@@ -1295,6 +1319,8 @@ $('adminToggle').onclick=()=>{
  adminMode=!adminMode;recentAdminFoods.clear();showApp(true);
  if(adminMode)renderAdmin();else render();
  refreshPantrySharing();
+ deletePantrySection.hidden=!adminMode||!activePantry||activePantry.nombre==='Playa Honda';
+ deletePantryStatus.textContent='';
  window.scrollTo({top:0,behavior:'smooth'});
 };
 
