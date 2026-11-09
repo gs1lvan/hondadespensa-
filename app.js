@@ -1005,6 +1005,7 @@ function applyAlternateHome(value){
  $('alternateHome').checked=!!home;
  $('startFridgeClosed').checked=pantryStylePreference('start_fridge_closed')===true;
  $('startFridgeClosed').disabled=!home;
+ syncFridgeNotesSetting();
  const vintage=usesVintageHome();
  applyTypography(vintage?(pantryStylePreference('vintage_list_typography')??vintageTypography):pantryStylePreference('list_typography'));
  applyPantryIconSize(pantryStylePreference(vintage?'vintage_pantry_icon_size':'pantry_icon_size'));
@@ -1019,6 +1020,7 @@ $('alternateHome').onchange=async event=>{
  const message=$('alternateHomeMessage');
  checkbox.disabled=true;
  $('startFridgeClosed').disabled=true;
+ $('enableFridgeNotes').disabled=true;
  message.textContent='Guardando página de inicio…';
  try{
   const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('alternate_home')]:home??''}});
@@ -1043,6 +1045,7 @@ $('startFridgeClosed').onchange=async event=>{
  const message=$('alternateHomeMessage');
  checkbox.disabled=true;
  $('alternateHome').disabled=true;
+ $('enableFridgeNotes').disabled=true;
  message.textContent='Guardando apertura de la nevera…';
  try{
   const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('start_fridge_closed')]:checkbox.checked}});
@@ -1050,6 +1053,7 @@ $('startFridgeClosed').onchange=async event=>{
   if(session!==current)return;
   current.user=result.user;
   openedFridgeDoors.clear();
+  render();
   message.textContent='Apertura de la nevera guardada.';
  }catch(error){
   if(session!==current)return;
@@ -1058,8 +1062,142 @@ $('startFridgeClosed').onchange=async event=>{
  }finally{
   checkbox.disabled=!usesVintageHome();
   $('alternateHome').disabled=false;
+  syncFridgeNotesSetting();
  }
 };
+
+function syncFridgeNotesSetting(){
+ const setting=$('enableFridgeNotes');
+ setting.disabled=!usesVintageHome()||!$('startFridgeClosed').checked;
+ setting.checked=pantryStylePreference('fridge_notes_enabled')===true;
+}
+$('enableFridgeNotes').onchange=async event=>{
+ const setting=event.currentTarget;
+ const current=session;
+ if(!current||setting.disabled)return;
+ const home=$('alternateHome');
+ const doors=$('startFridgeClosed');
+ const status=$('alternateHomeMessage');
+ setting.disabled=home.disabled=doors.disabled=true;
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('fridge_notes_enabled')]:setting.checked}});
+  if(error)throw error;
+  if(session!==current)return;
+  current.user=result.user;
+  status.textContent='Preferencia de notas guardada.';
+  render();
+ }catch(error){
+  if(session===current)status.textContent='No se pudo guardar la preferencia: '+error.message;
+ }finally{
+  home.disabled=false;
+  doors.disabled=!usesVintageHome();
+  syncFridgeNotesSetting();
+ }
+};
+
+function renderFridgeNotes(main,topDoor){
+ const key='hondadespensa:notes:'+session.user.id+':'+activePantry.id;
+ let notes=[];
+ try{notes=JSON.parse(localStorage.getItem(key))??[];}catch{}
+ function save(next){
+  try{localStorage.setItem(key,JSON.stringify(next));notes=next;return true;}
+  catch{alert('No se pudieron guardar las notas en este dispositivo.');return false;}
+ }
+ const layer=document.createElement('div');
+ layer.className='fridge-notes';
+ if(!main.classList.contains('fridge-all-doors-closed')){
+  layer.style.aspectRatio=getComputedStyle(topDoor).aspectRatio;
+  layer.style.bottom='auto';
+ }
+ const add=document.createElement('button');
+ add.type='button';
+ add.className='fridge-add-note';
+ add.append('Añadir',document.createElement('br'),'nota');
+ layer.append(add);
+ main.append(layer);
+
+ function draw(){
+  layer.querySelectorAll('.fridge-note').forEach(button=>button.remove());
+  for(const note of notes){
+   const button=document.createElement('button');
+   button.type='button';
+   button.className='fridge-note';
+   button.textContent=note.number;
+   button.setAttribute('aria-label','Editar nota '+note.number);
+   function position(x,y){
+    button.style.left='calc('+100*x+'% - '+36*x+'px)';
+    button.style.top='calc('+100*y+'% - '+36*y+'px)';
+   }
+   position(note.x,note.y);
+   let drag;
+   let suppressClick=false;
+   button.onpointerdown=event=>{
+    if(event.button!==0||!event.isPrimary)return;
+    suppressClick=false;
+    drag={id:event.pointerId,x:event.clientX,y:event.clientY,moved:false,nx:note.x,ny:note.y};
+    button.setPointerCapture(event.pointerId);
+   };
+   button.onpointermove=event=>{
+    if(drag?.id!==event.pointerId)return;
+    const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
+    if(!drag.moved&&Math.hypot(dx,dy)<5)return;
+    drag.moved=true;
+    drag.nx=Math.min(1,Math.max(0,note.x+dx/Math.max(1,layer.clientWidth-36)));
+    drag.ny=Math.min(1,Math.max(0,note.y+dy/Math.max(1,layer.clientHeight-36)));
+    position(drag.nx,drag.ny);
+   };
+   button.onpointerup=event=>{
+    if(drag?.id!==event.pointerId)return;
+    const {moved,nx,ny}=drag;
+    drag=null;
+    suppressClick=moved;
+    if(moved&&(!free(nx,ny,note.number)||!save(notes.map(item=>item.number===note.number?{...item,x:nx,y:ny}:item)))){
+     position(note.x,note.y);
+    }else if(moved){note.x=nx;note.y=ny;}
+   };
+   button.onpointercancel=()=>{drag=null;position(note.x,note.y);};
+   button.onclick=event=>{
+    if(suppressClick&&event.detail){suppressClick=false;return;}
+    const dialog=$('fridgeNoteDialog');
+    const message=$('fridgeNoteMessage');
+    $('fridgeNoteTitle').textContent='Nota '+note.number;
+    message.value=notes.find(item=>item.number===note.number).message;
+    $('fridgeNoteSave').onclick=()=>{
+     if(save(notes.map(item=>item.number===note.number?{...item,message:message.value}:item)))dialog.close();
+    };
+    $('fridgeNoteDelete').onclick=()=>{
+     if(save(notes.filter(item=>item.number!==note.number))){dialog.close();draw();add.focus();}
+    };
+    dialog.showModal();
+    message.focus();
+   };
+   layer.append(button);
+  }
+ }
+ function free(x,y,number){
+  const width=layer.clientWidth-36,height=layer.clientHeight-36;
+  if(x*width+36>add.offsetLeft&&y*height<add.offsetTop+add.offsetHeight)return false;
+  return notes.every(note=>note.number===number||Math.abs(note.x-x)*width>=31||Math.abs(note.y-y)*height>=31);
+ }
+ add.onclick=()=>{
+  const number=Math.max(0,...notes.map(note=>note.number))+1;
+  const width=layer.clientWidth-36,height=layer.clientHeight-36;
+  const area=Math.min(height,topDoor.clientHeight-46);
+  for(let y=Math.round(area*.49);y<=area;y+=31){
+   for(let x=Math.round(width*.25);x<=width*.86;x+=31){
+    if(!free(x/width,y/height))continue;
+    if(save([...notes,{number,message:'',x:x/width,y:y/height}])){
+     draw();
+     layer.lastElementChild.focus();
+    }
+    return;
+   }
+  }
+  alert('Mueve o elimina alguna nota para hacer sitio.');
+ };
+ draw();
+}
+
 function showApp(visible){
  if(!visible)adminMode=false;
  $('pantryFooter').hidden=!visible||adminMode;
@@ -1206,6 +1344,10 @@ function render(){
   }else{
    main.append(title,groups[group]);
   }
+ }
+ const topDoor=main.firstElementChild?.matches('.empty')?main.children[1]:main.firstElementChild;
+ if(useDoors&&topDoor?.matches('.fridge-door')&&pantryStylePreference('fridge_notes_enabled')===true){
+  renderFridgeNotes(main,topDoor);
  }
  if(adminMode)renderAdmin();
 }
