@@ -646,7 +646,7 @@
       position:absolute; inset:5px 8px auto auto; display:grid;
       justify-items:stretch; transform:rotate(-5deg);
     }
-    .fridge-note-controls button { position:static; }
+    .fridge-notes .fridge-note-controls > button { position:static; display:block; }
     .fridge-note-divider {
       height:2px; margin:0 5px; border:0;
       background:linear-gradient(90deg,transparent,#795439b3 15%,#795439b3 85%,transparent);
@@ -1017,6 +1017,13 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
+  <template id="fridgeNoteControlsTemplate">
+    <div class="fridge-note-controls">
+      <button type="button" class="fridge-add-note">Añadir<br>nota</button>
+      <hr class="fridge-note-divider">
+      <button type="button" class="fridge-add-note">Resumir<br>notas</button>
+    </div>
+  </template>
   <dialog id="automaticPantryNoteDialog" class="fridge-note-dialog" aria-labelledby="automaticPantryNoteTitle">
     <form method="dialog">
       <header class="note-header">
@@ -1049,7 +1056,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=105"></script>
+  <script type="module" src="app.js?v=106"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

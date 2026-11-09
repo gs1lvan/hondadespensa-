@@ -1219,19 +1219,8 @@ function renderFridgeNotes(main,topDoor){
   layer.append(button);
  }
  if(pantryStylePreference('fridge_notes_enabled')!==true)return;
- const add=document.createElement('button');
- add.type='button';
- add.className='fridge-add-note';
- add.append('Añadir',document.createElement('br'),'nota');
- const controls=document.createElement('div');
- controls.className='fridge-note-controls';
- const divider=document.createElement('hr');
- divider.className='fridge-note-divider';
- const summary=document.createElement('button');
- summary.type='button';
- summary.className='fridge-add-note';
- summary.append('Resumir',document.createElement('br'),'notas');
- controls.append(add,divider,summary);
+ const controls=$('fridgeNoteControlsTemplate').content.firstElementChild.cloneNode(true);
+ const [add,summary]=controls.querySelectorAll('button');
  layer.append(controls);
  summary.onclick=()=>{
   const dialog=$('automaticPantryNoteDialog');
