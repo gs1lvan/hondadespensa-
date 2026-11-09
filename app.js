@@ -1191,6 +1191,8 @@ function renderFridgeNotes(main,topDoor){
   button.textContent='✓';
   button.setAttribute('aria-label','Abrir lista de la compra');
   button.onclick=()=>{
+   $('automaticPantryNoteDialog').classList.remove('personal-note-summary');
+   $('automaticPantryNoteTitle').textContent='Lista de la compra';
    const missing={dry:[],fresh:[]};
    for(const food of data){
     if(!food.have)missing[isFreshCategory(food.category)?'fresh':'dry'].push(food);
@@ -1221,7 +1223,38 @@ function renderFridgeNotes(main,topDoor){
  add.type='button';
  add.className='fridge-add-note';
  add.append('Añadir',document.createElement('br'),'nota');
- layer.append(add);
+ const controls=document.createElement('div');
+ controls.className='fridge-note-controls';
+ const divider=document.createElement('hr');
+ divider.className='fridge-note-divider';
+ const summary=document.createElement('button');
+ summary.type='button';
+ summary.className='fridge-add-note';
+ summary.append('Resumir',document.createElement('br'),'notas');
+ controls.append(add,divider,summary);
+ layer.append(controls);
+ summary.onclick=()=>{
+  const dialog=$('automaticPantryNoteDialog');
+  dialog.classList.add('personal-note-summary');
+  $('automaticPantryNoteTitle').textContent='Resumen de notas';
+  const list=$('automaticPantryNoteList');
+  list.replaceChildren();
+  for(const note of notes){
+   const title=document.createElement('h3');
+   title.textContent=note.title||'Nota '+note.number;
+   const rows=document.createElement('ul');
+   const items=note.items??(note.message??'').split(/\\r?\\n/).filter(line=>line.trim()).map(name=>({name}));
+   for(const item of items){
+    const row=document.createElement('li');
+    row.className='note-row';
+    row.textContent=[item.name,item.quantity].filter(Boolean).join(' · ');
+    rows.append(row);
+   }
+   list.append(title,rows);
+  }
+  if(!notes.length)list.textContent='Aún no hay notas personales.';
+  dialog.showModal();
+ };
 
  function draw(){
   layer.querySelectorAll('.fridge-note:not(.fridge-pantry-note)').forEach(button=>button.remove());
@@ -1336,7 +1369,7 @@ function renderFridgeNotes(main,topDoor){
  }
  function free(x,y,number){
   const width=layer.clientWidth-36,height=layer.clientHeight-36;
-  if(x*width+36>add.offsetLeft&&y*height<add.offsetTop+add.offsetHeight)return false;
+  if(x*width+36>controls.offsetLeft&&y*height<controls.offsetTop+controls.offsetHeight)return false;
   return notes.every(note=>note.number===number||Math.abs(note.x-x)*width>=31||Math.abs(note.y-y)*height>=31);
  }
  add.onclick=()=>{
