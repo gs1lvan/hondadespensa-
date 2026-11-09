@@ -970,7 +970,21 @@ function updateWeatherCalendar(){
  date.dateTime=parts.year+'-'+parts.month.padStart(2,'0')+'-'+parts.day.padStart(2,'0');
  $('weatherDayHand').setAttribute('transform','rotate('+Number(parts.day)*360/31+' 50 50)');
  $('weatherMonthHand').setAttribute('transform','rotate('+Number(parts.month)*30+' 50 50)');
- $('weatherDateDial').setAttribute('aria-label','Calendario: '+date.textContent+' (día azul, mes rojo)');
+ const dial=$('weatherDateDial');
+ dial.setAttribute('aria-label','Calendario: '+date.textContent+' (día azul, mes rojo)');
+ for(const label of dial.querySelectorAll('[data-month]')){
+  label.classList.toggle('calendar-current',label.dataset.month===parts.month);
+ }
+ const day=Number(parts.day);
+ for(const label of dial.querySelectorAll('[data-day]')){
+  const distance=Math.abs(Number(label.dataset.day)-day);
+  label.style.display=Math.min(distance,31-distance)<=2?'none':'';
+ }
+ const dayLabel=$('weatherCurrentDay');
+ const angle=day*2*Math.PI/31;
+ dayLabel.setAttribute('x',50+22*Math.sin(angle));
+ dayLabel.setAttribute('y',50-22*Math.cos(angle));
+ dayLabel.textContent=parts.day;
 }
 async function refreshWeather(){
  if(!$('weatherStation').hidden&&!document.hidden)updateWeatherCalendar();
