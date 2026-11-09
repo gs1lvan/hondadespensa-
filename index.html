@@ -586,6 +586,18 @@
     #items[data-home=nevera-vintage] .food-group-title .food-group-jump {
       inset-inline-end:.2rem; color:#304548; background:#f3e3bf; box-shadow:0 1px 2px #58432155;
     }
+    :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .food-group-title {
+      color:var(--textColor,var(--ink));
+    }
+    :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .food-group-jump {
+      color:var(--ink); background:var(--card-light); border-color:var(--ink);
+    }
+    :root[data-bg-color$="-claro"] #adminPanel #foodGroupOrder {
+      color:var(--ink); background:var(--card-light); border-color:var(--card-edge);
+    }
+    :root[data-bg-color$="-claro"] :is(.food-group-jump,#foodGroupOrder):focus-visible {
+      outline:2px solid currentColor; outline-offset:3px;
+    }
     .food-group-title { grid-column:1 / -1; font-size:1.15rem; margin:.65rem 0 .9rem; }
     #items[data-home=nevera-vintage] .food-group-title {
       position:relative; isolation:isolate; text-align:center;
