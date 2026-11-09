@@ -310,6 +310,10 @@ function applyBackground(value){
  const themeColor=document.querySelector('meta[name="theme-color"]');
  themeColor.content=preference.customBackground
   ?? (getComputedStyle(document.documentElement).getPropertyValue('--app-bg-color').trim() || '#071c32');
+ const userId=session?.user?.id;
+ if(userId){
+  try{localStorage.setItem('hondadespensa:fondo:'+userId,JSON.stringify({preference,metaColor:themeColor.content}));}catch{}
+ }
 }
 function mountBackground(panel){
  const section=document.createElement('div');
@@ -1706,9 +1710,9 @@ function pantryReloadSelection(pantryId){
  }
  return null;
 }
-function choosePantry(){
+function choosePantry(keepBackground=false){
  if(activePantry&&(savingViewStyle||savingIconFamily||$('alternateHome').disabled))return;
- if(!activePantry){
+ if(!activePantry&&keepBackground!==true){
   const preferences=session?.user?.user_metadata;
   const savedBackground=preferences?.chooser_background??preferences?.app_background
    ?? availablePantries.map(pantry=>preferences?.['app_background_'+pantry.id]).find(Boolean);
@@ -1948,7 +1952,13 @@ async function signedIn(currentSession,restorePantry=false){
  $('iconMessage').textContent='';
  $('typographyMessage').textContent='';
  const preferences=currentSession?.user?.user_metadata;
- applyBackground(preferences?.chooser_background??preferences?.app_background);
+ let lastBackground;
+ if(currentSession){
+  try{lastBackground=JSON.parse(localStorage.getItem('hondadespensa:fondo:'+currentSession.user.id))?.preference;}catch{}
+ }
+ const restoredPantryId=restorePantry?pantryReloadSelection():null;
+ applyBackground(lastBackground??preferences?.['app_background_'+restoredPantryId]
+  ??preferences?.chooser_background??preferences?.app_background);
  $('backgroundMessage').textContent='';
  categoryOrder=readCategoryOrder(currentSession?.user?.user_metadata?.category_order);
  refreshVersion++;
@@ -1976,7 +1986,7 @@ async function signedIn(currentSession,restorePantry=false){
  const selectedId=restorePantry?pantryReloadSelection():null;
  const selected=pantries.find(pantry=>pantry.id===selectedId);
  if(selected||pantries.length===1)await openPantry(selected??pantries[0]);
- else choosePantry();
+ else choosePantry(Boolean(lastBackground));
  await loadCatalog();
  if(session!==currentSession)return;
  channel=db.channel('alimentos-honda-v21').on('postgres_changes',{event:'*',schema:'public',table:'alimentos'},()=>refresh()).subscribe();
