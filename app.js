@@ -988,6 +988,7 @@ document.addEventListener('visibilitychange',refreshWeather);
 
 const alternateHomes=['nevera-vintage'];
 const vintageTypography={font:'serif',size:'mediano',weight:'normal'};
+const openedFridgeDoors=new Set();
 function usesVintageHome(){
  return $('items').dataset.home==='nevera-vintage';
 }
@@ -1001,6 +1002,8 @@ function applyAlternateHome(value){
  if(home==='nevera-vintage')$('search').before(switchPantry);
  else $('adminPanel').before(switchPantry);
  $('alternateHome').checked=!!home;
+ $('startFridgeClosed').checked=pantryStylePreference('start_fridge_closed')===true;
+ $('startFridgeClosed').disabled=!home;
  const vintage=usesVintageHome();
  applyTypography(vintage?(pantryStylePreference('vintage_list_typography')??vintageTypography):pantryStylePreference('list_typography'));
  applyPantryIconSize(pantryStylePreference(vintage?'vintage_pantry_icon_size':'pantry_icon_size'));
@@ -1014,6 +1017,7 @@ $('alternateHome').onchange=async event=>{
  const home=checkbox.checked?alternateHomes[0]:null;
  const message=$('alternateHomeMessage');
  checkbox.disabled=true;
+ $('startFridgeClosed').disabled=true;
  message.textContent='Guardando página de inicio…';
  try{
   const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('alternate_home')]:home??''}});
@@ -1029,6 +1033,30 @@ $('alternateHome').onchange=async event=>{
   message.textContent='No se pudo guardar la página de inicio: '+error.message;
  }finally{
   checkbox.disabled=false;
+ }
+};
+$('startFridgeClosed').onchange=async event=>{
+ const checkbox=event.currentTarget;
+ const current=session;
+ if(!current)return;
+ const message=$('alternateHomeMessage');
+ checkbox.disabled=true;
+ $('alternateHome').disabled=true;
+ message.textContent='Guardando apertura de la nevera…';
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('start_fridge_closed')]:checkbox.checked}});
+  if(error)throw error;
+  if(session!==current)return;
+  current.user=result.user;
+  openedFridgeDoors.clear();
+  message.textContent='Apertura de la nevera guardada.';
+ }catch(error){
+  if(session!==current)return;
+  checkbox.checked=pantryStylePreference('start_fridge_closed')===true;
+  message.textContent='No se pudo guardar la apertura de la nevera: '+error.message;
+ }finally{
+  checkbox.disabled=!usesVintageHome();
+  $('alternateHome').disabled=false;
  }
 };
 function showApp(visible){
@@ -1102,6 +1130,8 @@ function render(){
  const groupOrder=(foodGroupOrder.value==='fresh'?['fresh','dry']:['dry','fresh'])
   .filter(group=>groups[group].childElementCount);
  const vintage=usesVintageHome();
+ const useDoors=vintage&&pantryStylePreference('start_fridge_closed')===true&&!q;
+ main.classList.toggle('fridge-all-doors-closed',useDoors&&groupOrder.length>0&&groupOrder.every(group=>!openedFridgeDoors.has(group)));
  const displayedGroups=vintage?groupOrder:[groupOrder.find(group=>group===visibleFoodGroup)??groupOrder[0]].filter(Boolean);
  for(const [index,group] of displayedGroups.entries()){
   const title=document.createElement('h2');
@@ -1109,6 +1139,34 @@ function render(){
   title.textContent=group==='fresh'?'Alimentos frescos':'Alimentos secos';
   title.id='food-group-'+group;
   title.tabIndex=-1;
+  if(useDoors){
+   const door=document.createElement('button');
+   door.type='button';
+   door.id='fridge-door-'+group;
+   door.setAttribute('aria-expanded',String(openedFridgeDoors.has(group)));
+   if(!openedFridgeDoors.has(group)){
+    door.className='fridge-door'+(groupOrder.length===1?' fridge-door-single':'');
+    const plate=document.createElement('span');
+    plate.textContent=title.textContent;
+    door.append(plate);
+    door.onclick=()=>{
+     openedFridgeDoors.add(group);
+     render();
+     $(title.id).focus({preventScroll:true});
+    };
+    main.append(door);
+    continue;
+   }
+   door.className='fridge-close-door';
+   door.textContent='Cerrar puerta';
+   door.setAttribute('aria-label','Cerrar puerta de '+title.textContent.toLowerCase());
+   door.onclick=()=>{
+    openedFridgeDoors.delete(group);
+    render();
+    $(door.id).focus({preventScroll:true});
+   };
+   title.append(door);
+  }
   if(groupOrder.length===2){
    const target=group==='fresh'?'dry':'fresh';
    const jump=document.createElement('button');
@@ -1388,6 +1446,7 @@ function choosePantry(){
 }
 async function openPantry(pantry){
  activePantry=pantry;
+ openedFridgeDoors.clear();
  visibleFoodGroup=undefined;
  foodGroupOrder.value='dry';
  try{if(localStorage.getItem(foodGroupOrderKey())==='fresh')foodGroupOrder.value='fresh';}catch{}
