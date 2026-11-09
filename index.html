@@ -273,16 +273,6 @@
       outline: 2px solid #24384a;
       outline-offset: 2px;
     }
-    #categoryList .fridge-close-door {
-      margin-inline-start: 8px;
-      padding: 4px 6px;
-      border: 0;
-      background: transparent;
-      box-shadow: none;
-      color: #382a20;
-      font: 600 12px/1.2 system-ui, sans-serif;
-      text-decoration: underline;
-    }
     #items[data-home=nevera-vintage] .category {
       position: relative;
       border-bottom: 7px solid transparent;
@@ -679,7 +669,7 @@
     .food-group-title .food-group-switch:is(:hover,:focus-visible) {
       opacity:1; text-decoration:underline; outline-color:currentColor;
     }
-    .food-group-title .food-group-jump {
+    .food-group-title :is(.food-group-jump, .fridge-close-door) {
       display:inline-flex; align-items:center; justify-content:center; vertical-align:middle;
       min-inline-size:2.1rem; min-block-size:2rem; margin-inline-start:.42em;
       padding:0 .2em 0 .38em; border:0; border-radius:0; box-shadow:none;
@@ -689,10 +679,10 @@
       content:""; inline-size:1px; block-size:.65em; margin-inline-end:.34em;
       background:currentColor; opacity:.48;
     }
-    .food-group-title .food-group-jump:hover {
+    .food-group-title :is(.food-group-jump, .fridge-close-door):hover {
       text-shadow:0 0 .45em currentColor;
     }
-    #items[data-home=nevera-vintage] .food-group-title .food-group-jump {
+    #items[data-home=nevera-vintage] .food-group-title :is(.food-group-jump, .fridge-close-door) {
       min-block-size:1.35rem; color:inherit; text-shadow:inherit;
     }
     #items[data-home=nevera-vintage] .food-group-jump::before {
@@ -701,7 +691,7 @@
     :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .food-group-title {
       color:var(--textColor,var(--ink));
     }
-    :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .food-group-title .food-group-jump {
+    :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .food-group-title :is(.food-group-jump, .fridge-close-door) {
       color:#254b57;
     }
     :root[data-bg-color$="-claro"] #adminPanel #foodGroupOrder {
@@ -882,7 +872,7 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <script type="module" src="app.js?v=93"></script>
+  <script type="module" src="app.js?v=94"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

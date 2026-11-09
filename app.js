@@ -1158,7 +1158,7 @@ function render(){
     continue;
    }
    door.className='fridge-close-door';
-   door.textContent='Cerrar puerta';
+   door.textContent='×';
    door.setAttribute('aria-label','Cerrar puerta de '+title.textContent.toLowerCase());
    door.onclick=()=>{
     openedFridgeDoors.delete(group);
