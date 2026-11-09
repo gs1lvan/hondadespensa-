@@ -1243,7 +1243,7 @@ function renderFridgeNotes(main,topDoor){
    const title=document.createElement('h3');
    title.textContent=note.title||'Nota '+note.number;
    const rows=document.createElement('ul');
-   const items=note.items??(note.message??'').split(/\\r?\\n/).filter(line=>line.trim()).map(name=>({name}));
+   const items=note.items??(note.message??'').split(/\r?\n/).filter(line=>line.trim()).map(name=>({name}));
    for(const item of items){
     const row=document.createElement('li');
     row.className='note-row';
