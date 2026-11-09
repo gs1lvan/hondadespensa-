@@ -677,13 +677,23 @@
     #fridgeNoteDialog button {
       border:0; background:transparent; color:inherit; box-shadow:none; cursor:pointer;
     }
-    #fridgeNotePreview, #fridgeNoteMessage {
-      display:block; width:100%; box-sizing:border-box; margin:0 0 12px;
-      padding:4px 0; color:inherit; font:inherit; font-size:18px; line-height:1.45;
-      background:transparent; border:0; text-align:left;
+    #fridgeNoteDialog .note-row {
+      display:grid; grid-template-columns:minmax(0,1fr) 4rem 2rem;
+      align-items:center; gap:6px; width:100%; margin:0;
+      padding:0; border:0; border-bottom:1px solid #263e7030; border-radius:0;
+      color:inherit; font:inherit; text-align:left; min-height:36px;
     }
-    #fridgeNotePreview { white-space:pre-wrap; overflow-wrap:anywhere; }
-    #fridgeNoteMessage { resize:none; height:clamp(54px,calc(var(--note-viewport-height,100dvh) - 155px),180px); }
+    #fridgeNotePreview span { overflow-wrap:anywhere; }
+    #fridgeNoteDialog .note-row input {
+      box-sizing:border-box; width:100%; min-width:0; margin:0; padding:5px 2px;
+      background:transparent; color:inherit; border:0; border-radius:0;
+      font:inherit; font-size:16px;
+    }
+    #fridgeNoteDialog .note-row button { padding:0; min-width:0; min-height:36px; margin:0; }
+    #fridgeNoteRows {
+      overflow-y:auto;
+      max-height:max(72px,calc(var(--note-viewport-height,100dvh) - 175px));
+    }
     #fridgeNoteDialog [hidden] { display:none; }
     #fridgeNoteDialog .note-actions { display:flex; justify-content:space-between; gap:8px; }
     #fridgeNoteDialog #fridgeNoteSave { background:#263e70; color:#fff6ce; }
@@ -950,15 +960,16 @@
     <form method="dialog">
       <h2 id="fridgeNoteTitle">Nota</h2>
       <button class="note-close" aria-label="Cerrar" value="cancel" autofocus>×</button>
-      <button type="button" id="fridgeNotePreview"></button>
-      <textarea id="fridgeNoteMessage" aria-label="Mensaje" rows="4" hidden></textarea>
+      <div id="fridgeNotePreview"></div>
+      <div id="fridgeNoteRows" hidden></div>
+      <button type="button" id="fridgeNoteAdd" hidden>+ Añadir alimento</button>
       <div class="note-actions">
-        <button type="button" id="fridgeNoteDelete">Eliminar</button>
+        <button type="button" id="fridgeNoteDelete">Eliminar nota</button>
         <button type="button" id="fridgeNoteSave" hidden>Guardar</button>
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=98"></script>
+  <script type="module" src="app.js?v=99"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

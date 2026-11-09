@@ -1097,7 +1097,8 @@ $('enableFridgeNotes').onchange=async event=>{
 
 const fridgeNoteDialog=$('fridgeNoteDialog');
 const fridgeNotePreview=$('fridgeNotePreview');
-const fridgeNoteMessage=$('fridgeNoteMessage');
+const fridgeNoteRows=$('fridgeNoteRows');
+const fridgeNoteAdd=$('fridgeNoteAdd');
 const fridgeNoteSave=$('fridgeNoteSave');
 function positionFridgeNoteEditor(){
  if(!fridgeNoteDialog.open||!fridgeNoteDialog.classList.contains('note-editing'))return;
@@ -1108,14 +1109,38 @@ function positionFridgeNoteEditor(){
 window.visualViewport?.addEventListener('resize',positionFridgeNoteEditor);
 window.visualViewport?.addEventListener('scroll',positionFridgeNoteEditor);
 window.addEventListener('resize',positionFridgeNoteEditor);
-fridgeNotePreview.onclick=()=>{
- fridgeNoteDialog.classList.add('note-editing');
- fridgeNotePreview.hidden=true;
- fridgeNoteMessage.hidden=false;
- fridgeNoteSave.hidden=false;
- positionFridgeNoteEditor();
- fridgeNoteMessage.focus({preventScroll:true});
-};
+function appendFridgeNoteRow({name='',quantity=''}={}){
+ const row=document.createElement('div');
+ row.className='note-row';
+ const food=document.createElement('input');
+ food.type='text';
+ food.placeholder='Alimento';
+ food.setAttribute('aria-label','Alimento');
+ food.value=name;
+ const amount=document.createElement('input');
+ amount.type='text';
+ amount.placeholder='Cant.';
+ amount.setAttribute('aria-label','Cantidad');
+ amount.value=quantity;
+ const remove=document.createElement('button');
+ remove.type='button';
+ remove.textContent='×';
+ remove.setAttribute('aria-label','Quitar alimento');
+ remove.onclick=()=>{
+  const next=row.nextElementSibling||row.previousElementSibling;
+  row.remove();
+  (next?.firstElementChild||fridgeNoteAdd).focus();
+ };
+ row.append(food,amount,remove);
+ fridgeNoteRows.append(row);
+ row.onkeydown=event=>{
+  if(event.key!=='Enter'||event.isComposing||event.target===remove)return;
+  event.preventDefault();
+  (row.nextElementSibling?.firstElementChild||appendFridgeNoteRow()).focus();
+ };
+ return food;
+}
+fridgeNoteAdd.onclick=()=>appendFridgeNoteRow().focus();
 
 function renderFridgeNotes(main,topDoor){
  const key='hondadespensa:notes:'+session.user.id+':'+activePantry.id;
@@ -1181,14 +1206,51 @@ function renderFridgeNotes(main,topDoor){
    button.onclick=event=>{
     if(suppressClick&&event.detail){suppressClick=false;return;}
     $('fridgeNoteTitle').textContent='Nota '+note.number;
-    fridgeNoteMessage.value=notes.find(item=>item.number===note.number).message;
-    fridgeNotePreview.textContent=fridgeNoteMessage.value||'Toca para escribir';
+    const savedNote=notes.find(item=>item.number===note.number);
+    const items=savedNote.items??savedNote.message.split(/\r?\n/).filter(line=>line.trim()).map(name=>({name,quantity:''}));
+    fridgeNotePreview.replaceChildren();
+    fridgeNoteRows.replaceChildren();
+    const fields=items.map(appendFridgeNoteRow);
+    for(const [index,item] of items.entries()){
+     const row=document.createElement('button');
+     row.type='button';
+     row.className='note-row';
+     const name=document.createElement('span');
+     name.textContent=item.name;
+     const quantity=document.createElement('span');
+     quantity.textContent=item.quantity;
+     row.append(name,quantity);
+     row.onclick=()=>edit(fields[index]);
+     fridgeNotePreview.append(row);
+    }
+    if(!items.length){
+     const empty=document.createElement('button');
+     empty.type='button';
+     empty.textContent='Toca para añadir un alimento';
+     empty.onclick=()=>edit(appendFridgeNoteRow());
+     fridgeNotePreview.append(empty);
+    }
+    function edit(field){
+     fridgeNoteDialog.classList.add('note-editing');
+     fridgeNotePreview.hidden=true;
+     fridgeNoteRows.hidden=false;
+     fridgeNoteAdd.hidden=false;
+     fridgeNoteSave.hidden=false;
+     positionFridgeNoteEditor();
+     field.focus();
+    }
     fridgeNoteDialog.classList.remove('note-editing');
     fridgeNotePreview.hidden=false;
-    fridgeNoteMessage.hidden=true;
+    fridgeNoteRows.hidden=true;
+    fridgeNoteAdd.hidden=true;
     fridgeNoteSave.hidden=true;
     fridgeNoteSave.onclick=()=>{
-     if(save(notes.map(item=>item.number===note.number?{...item,message:fridgeNoteMessage.value}:item)))fridgeNoteDialog.close();
+     const items=Array.from(fridgeNoteRows.children,row=>({
+      name:row.children[0].value.trim(),
+      quantity:row.children[1].value.trim()
+     })).filter(item=>item.name);
+     const message=items.map(item=>item.name).join('\n');
+     if(save(notes.map(item=>item.number===note.number?{...item,items,message}:item)))fridgeNoteDialog.close();
     };
     $('fridgeNoteDelete').onclick=()=>{
      if(save(notes.filter(item=>item.number!==note.number))){fridgeNoteDialog.close();draw();add.focus();}
