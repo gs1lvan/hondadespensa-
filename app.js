@@ -960,7 +960,17 @@ function setWeatherGauge(id,value,unit,min,max){
  gauge.style.setProperty('--needle',(fraction*240-120)+'deg');
  gauge.dataset.reading='';
 }
+const weatherCalendarFormat=new Intl.DateTimeFormat('es-ES',{
+ timeZone:'Europe/Madrid',day:'numeric',month:'numeric',year:'numeric'
+});
+function updateWeatherCalendar(){
+ const parts=Object.fromEntries(weatherCalendarFormat.formatToParts().map(({type,value})=>[type,value]));
+ const date=$('weatherCalendarDate');
+ date.textContent=parts.day+'/'+parts.month;
+ date.dateTime=parts.year+'-'+parts.month.padStart(2,'0')+'-'+parts.day.padStart(2,'0');
+}
 async function refreshWeather(){
+ if(!$('weatherStation').hidden&&!document.hidden)updateWeatherCalendar();
  if($('weatherStation').hidden||document.hidden||weatherPending||
     Date.now()-lastWeatherAttempt<weatherRefreshMs)return;
  weatherPending=true;lastWeatherAttempt=Date.now();
