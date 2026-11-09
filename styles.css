@@ -516,3 +516,63 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
  background:radial-gradient(circle at 4px 50%,#6d4c36 1px,transparent 2px),radial-gradient(circle at calc(100% - 4px) 50%,#6d4c36 1px,transparent 2px),linear-gradient(#f6e7c5,#d4b88e);font:700 clamp(8px,2.15vw,11px)/1.15 Georgia,serif;letter-spacing:.025em;text-transform:uppercase;
 }
 .weather-credit,.weather-credit a{color:#3f433b;font:500 9px/1.25 system-ui}
+
+
+/* Panel de categorías de la despensa */
+#adminFoods .admin-category > summary {
+  display:flex; min-height:44px; gap:8px; padding:8px 10px;
+}
+#adminFoods .admin-category > summary .cat-name {
+  margin-inline-start:0; font-size:16px; font-weight:600; line-height:1.15;
+}
+#adminFoods .cat-count {
+  padding:2px 9px; border:1px solid #729aba66; border-radius:999px;
+  background:#477ba44d; font-size:12px;
+}
+#adminFoods .chevron { width:9px; height:9px; }
+#adminFoods :is(.admin-category-management,.category-add-food,.admin-food-row) {
+  border-top:1px solid #729aba66;
+}
+#adminFoods .admin-category-toolbar {
+  display:flex; align-items:center; justify-content:center; gap:4px; padding:4px 6px;
+}
+#adminFoods .category-order-actions { display:flex; gap:4px; }
+#adminFoods .admin-icon-button {
+  display:grid; place-items:center; flex:none; width:44px; height:44px;
+  min-height:44px; padding:0; border-radius:10px;
+}
+#adminFoods .admin-icon-button svg { width:18px; height:18px; }
+#adminFoods .admin-icon-button.danger { color:#ff9189; }
+:root[data-bg-color$="-claro"] #adminFoods .admin-icon-button.danger { color:#fff3ef; }
+#adminFoods .admin-category-all {
+  display:grid; justify-items:center; align-content:center; gap:2px;
+  min-width:44px; min-height:44px; cursor:pointer; font-size:11px;
+}
+#adminFoods input[type=checkbox] {
+  flex:none; width:17px; height:17px; min-height:0; margin:0; padding:0;
+  border-radius:4px; accent-color:#0786d9; cursor:pointer;
+}
+#adminFoods .category-add-food {
+  display:grid; grid-template-columns:minmax(0,1fr) 44px; gap:7px;
+  margin:0; padding:6px 9px;
+}
+#adminFoods .category-add-food input {
+  min-height:44px; padding:6px 10px; border-radius:10px; font-size:16px;
+}
+#adminFoods .category-add-food button svg { width:20px; height:20px; }
+#adminFoods .admin-food-row {
+  display:grid; grid-template-columns:minmax(0,1fr) auto;
+  gap:0; padding:0 4px 0 10px;
+}
+#adminFoods .admin-food-row .admin-label {
+  display:flex; align-items:center; gap:9px; min-height:44px; cursor:pointer;
+}
+#adminFoods .admin-food-row .admin-label strong {
+  font-size:14px; font-weight:500; line-height:1.2;
+}
+#adminFoods .admin-food-row .admin-actions { gap:0; }
+#adminFoods .admin-food-row .admin-icon-button {
+  border-color:transparent; background:transparent; box-shadow:none;
+}
+:root[data-bg-color$="-claro"] #adminFoods .admin-food-row .admin-icon-button.danger { color:#9f353a; }
+#adminFoods .admin-food-row .admin-edit { grid-column:1/-1; }

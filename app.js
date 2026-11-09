@@ -142,13 +142,13 @@ async function saveCategoryOrder(next){
 function categoryOrderControls(category){
  const ordered=orderedCategories(pantryCategories()),index=ordered.indexOf(category);
  const actions=document.createElement('span');actions.className='category-order-actions';
- actions.style.cssText='display:flex;gap:6px;grid-column:3;grid-row:2';
+
  for(const [delta,text,label] of [[-1,'↑','Subir'],[1,'↓','Bajar']]){
   const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=text;
   button.dataset.direction=String(delta);
   button.setAttribute('aria-label',label+' '+bareCategory(category));
   button.title=label+' categoría';
-  button.style.cssText='min-width:44px;min-height:44px;padding:6px;font-size:20px;line-height:1';
+  setAdminIcon(button,delta<0?'up':'down',label+' categoría');
   button.disabled=savingCategoryOrder||index+delta<0||index+delta>=ordered.length;
   button.onclick=async event=>{
    event.preventDefault();event.stopPropagation();
@@ -904,20 +904,36 @@ async function deletePantryCategory(category){
  }catch(error){adminMessage('No se pudo eliminar la categoría: '+error.message);}
  finally{categoryMutation=false;}
 }
+const adminIconPaths={
+ up:'M12 20V4m-6 6 6-6 6 6',
+ down:'M12 4v16m-6-6 6 6 6-6',
+ edit:'m4 16-1 5 5-1L21 7l-4-4L4 16Zm11-11 4 4',
+ trash:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7',
+ add:'M12 4v16M4 12h16'
+};
+function setAdminIcon(button,icon,label){
+ button.classList.add('admin-icon-button');
+ button.title=label;
+ button.setAttribute('aria-label',label);
+ button.innerHTML='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="'+adminIconPaths[icon]+'"/></svg>';
+}
 let pendingCategoryAvailability=null;
 function categoryAvailabilityActions(category){
- const actions=document.createElement('div');actions.className='admin-actions';
- actions.style.cssText='flex:0 0 100%;flex-wrap:wrap';
- for(const available of [false,true]){
-  const button=document.createElement('button');button.type='button';button.className='secondary';
-  button.textContent=available?'Marcar todo':'Desmarcar todo';
-  button.disabled=pendingCategoryAvailability||!data.some(item=>item.category===category&&item.have!==available);
-  button.onclick=async()=>{
+ const label=document.createElement('label');label.className='admin-category-all';
+ const check=document.createElement('input');check.type='checkbox';
+ const items=data.filter(item=>item.category===category);
+ const checked=items.filter(item=>item.have).length;
+ check.checked=items.length>0&&checked===items.length;
+ check.indeterminate=checked>0&&checked<items.length;
+ check.disabled=!!pendingCategoryAvailability||busy||!items.length;
+ check.setAttribute('aria-label','Todos los alimentos de '+bareCategory(category));
+ label.append(check,'Todos');
+ check.onchange=async()=>{
    if(pendingCategoryAvailability||!activePantry)return;
    const pantry=activePantry;
-   const ids=data.filter(item=>item.category===category&&item.have!==available).map(item=>item.id);
-   const verb=available?'Marcar':'Desmarcar';
-   if(!ids.length||!confirm('¿'+verb.toLowerCase()+' '+ids.length+' alimento(s) de «'+bareCategory(category)+'» en «'+pantry.nombre+'»?'))return;
+   const available=check.checked;
+   const ids=items.filter(item=>item.have!==available).map(item=>item.id);
+   if(!ids.length)return;
    const changedIds=new Set(ids);
    pendingCategoryAvailability={pantryId:pantry.id,ids:changedIds,available};
    data=data.map(item=>changedIds.has(item.id)?{...item,have:available}:item);
@@ -936,17 +952,17 @@ function categoryAvailabilityActions(category){
     render();
     if(activePantry?.id===pantry.id)await refresh();
    }
-  };
-  actions.append(button);
- }
- return actions;
+ };
+ return label;
 }
 function categoryManagement(category){
- const holder=document.createElement('div');holder.className='admin-row';
- const actions=document.createElement('div');actions.className='admin-actions';
+ const holder=document.createElement('div');holder.className='admin-category-management';
+ const actions=document.createElement('div');actions.className='admin-actions admin-category-toolbar';
  const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Editar categoría';
  const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Eliminar categoría';
- actions.append(edit,del);holder.append(actions,categoryAvailabilityActions(category));
+ setAdminIcon(edit,'edit','Editar categoría');
+ setAdminIcon(del,'trash','Eliminar categoría');
+ actions.append(categoryOrderControls(category),edit,del,categoryAvailabilityActions(category));holder.append(actions);
  edit.onclick=()=>{
   if(holder.querySelector('form')){holder.querySelector('form').remove();return;}
   const form=document.createElement('form');form.className='admin-edit';
@@ -2275,19 +2291,20 @@ function foodAvailabilityCheckbox(item){
  return check;
 }
 function makeAdminRow(item,type){
- const row=document.createElement('div');row.className='admin-row';
+ const row=document.createElement('div');row.className=type==='food'?'admin-row admin-food-row':'admin-row';
  const label=document.createElement(type==='food'?'label':'div');label.className='admin-label';
  if(type==='food'){
-  label.style.cssText='display:flex;align-items:center;gap:8px';
-  const check=foodAvailabilityCheckbox(item);
-  check.style.cssText='width:21px;height:21px;min-height:0;flex:none;accent-color:#2fa8fb';
-  label.append(check);
+  label.append(foodAvailabilityCheckbox(item));
  }
  const name=document.createElement('strong');name.textContent=type==='food'?item.name:item.nombre;
  label.append(name);
  const actions=document.createElement('div');actions.className='admin-actions';
  const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Editar';
  const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Eliminar';
+ if(type==='food'){
+  setAdminIcon(edit,'edit','Editar '+item.name);
+  setAdminIcon(del,'trash','Eliminar '+item.name);
+ }
  actions.append(edit,del);row.append(label,actions);
  edit.onclick=()=>{
   if(row.querySelector('.admin-edit')){row.querySelector('.admin-edit').remove();return;}
@@ -2316,20 +2333,22 @@ function makeAdminRow(item,type){
 const categoryFoodDrafts=new Map(),categoryFoodSaving=new Set();
 function categoryAddFoodForm(category,inAdmin=true){
  const form=document.createElement('form');form.className='add category-add-food'+(inAdmin?'':' pantry-quick-add');
- form.style.cssText='padding:10px 12px;margin:0;border-top:1px solid #476581';
+ if(!inAdmin)form.style.cssText='padding:10px 12px;margin:0;border-top:1px solid #476581';
  form.setAttribute('aria-label','Añadir alimento en '+bareCategory(category));
  const input=document.createElement('input');input.type='text';input.required=true;input.maxLength=100;
- input.placeholder='Añadir a esta categoría';input.setAttribute('aria-label','Nombre del nuevo alimento en '+bareCategory(category));
+ input.placeholder=inAdmin?'Nuevo alimento':'Añadir a esta categoría';input.setAttribute('aria-label','Nombre del nuevo alimento en '+bareCategory(category));
  input.value=categoryFoodDrafts.get(category)||'';
  input.oninput=()=>categoryFoodDrafts.set(category,input.value);
- const button=document.createElement('button');button.type='submit';button.textContent=inAdmin?'＋ Añadir alimento':'Añadir';
+ const button=document.createElement('button');button.type='submit';button.textContent='Añadir';
+ if(inAdmin)setAdminIcon(button,'add','Añadir alimento');
  input.disabled=button.disabled=categoryFoodSaving.has(category);
  form.append(input,button);
  form.onsubmit=async event=>{
   event.preventDefault();const name=input.value.trim();
   if(!name||categoryFoodSaving.has(category))return;
   categoryFoodDrafts.set(category,input.value);categoryFoodSaving.add(category);
-  input.disabled=button.disabled=true;button.textContent='Añadiendo…';
+  input.disabled=button.disabled=true;
+  if(!inAdmin)button.textContent='Añadiendo…';
   try{
    if(await addSharedFood(name,category,inAdmin)){
     categoryFoodDrafts.delete(category);
@@ -2368,15 +2387,9 @@ function renderGroupedAdmin(container,rows,type,query){
  }
  for(const category of (type==='food'?orderedCategories(groups.keys()):[...groups.keys()].sort(esCompare))){
   const section=document.createElement('details');section.className='category admin-category';
-  const header=categoryHeader(category,groups.get(category).length+' alimentos',type==='food'?pantryCategoryByName.get(category)?.icono:undefined);
-  if(type==='food'){
-   header.style.cssText='display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px 10px';
-   header.querySelector('.cat-icon').style.cssText='grid-column:1;grid-row:1';
-   header.querySelector('.cat-name').style.cssText='grid-column:2;grid-row:1';
-   header.querySelector('.chevron').style.cssText='grid-column:3;grid-row:1;justify-self:end;margin-right:6px';
-   header.querySelector('.cat-count').style.cssText='grid-column:2;grid-row:2;white-space:normal';
-   header.append(categoryOrderControls(category));
-  }
+  const count=groups.get(category).length;
+  const header=categoryHeader(category,type==='food'?String(count):count+' alimentos',type==='food'?pantryCategoryByName.get(category)?.icono:undefined);
+  if(type==='food')header.querySelector('.cat-count').setAttribute('aria-label',count+' alimentos');
   section.append(header);
   if(type==='food')section.append(categoryManagement(category),categoryAddFoodForm(category));
   for(const item of groups.get(category).sort(type==='food'?compareAdminFoods:(a,b)=>esCompare(a.nombre,b.nombre)))section.append(makeAdminRow(item,type));
