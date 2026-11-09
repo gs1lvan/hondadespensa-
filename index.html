@@ -589,6 +589,14 @@
     }
     .food-group-order:not([hidden]) { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-block:.75rem; }
     .food-group-title { position:relative; scroll-margin-top:1rem; }
+    .food-group-title .food-group-switch {
+      margin-inline-start:.4em; padding:.15em .35em .15em .55em;
+      border:0; border-inline-start:1px solid currentColor; border-radius:0;
+      background:transparent; color:inherit; font:inherit; opacity:.72;
+    }
+    .food-group-title .food-group-switch:is(:hover,:focus-visible) {
+      opacity:1; text-decoration:underline; outline-color:currentColor;
+    }
     .food-group-title .food-group-jump {
       display:inline-flex; align-items:center; justify-content:center; vertical-align:middle;
       min-inline-size:2.1rem; min-block-size:2rem; margin-inline-start:.42em;
@@ -788,7 +796,7 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <script type="module" src="app.js?v=90"></script>
+  <script type="module" src="app.js?v=91"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
