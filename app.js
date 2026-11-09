@@ -1124,7 +1124,21 @@ function pantrySystemKey(pantry){
 function pantryOrderKey(pantry){
  return pantrySystemKey(pantry)==='playa'?'category_order':'category_order_'+pantry.id;
 }
+function pantryReloadSelection(pantryId){
+ const userId=session?.user?.id;
+ if(!userId)return null;
+ const key='hondadespensa:recarga:'+userId;
+ try{
+  if(pantryId===undefined)return sessionStorage.getItem(key);
+  if(pantryId===null)sessionStorage.removeItem(key);
+  else sessionStorage.setItem(key,pantryId);
+ }catch{
+  // The selector still works when browser storage is blocked.
+ }
+ return null;
+}
 function choosePantry(){
+ pantryReloadSelection(null);
  activePantry=null;
  refreshVersion++;
  showApp(false);
@@ -1207,6 +1221,7 @@ function choosePantry(){
 }
 async function openPantry(pantry){
  activePantry=pantry;
+ pantryReloadSelection(pantry.id);
  refreshVersion++;
  data=[];
  pantryCategoryByName=new Map();
@@ -1298,7 +1313,7 @@ deletePantryButton.onclick=async()=>{
  await signedIn(current);
 };
 
-async function signedIn(currentSession){
+async function signedIn(currentSession,restorePantry=false){
  session=currentSession;
  activePantry=null;
  availablePantries=[];
@@ -1335,7 +1350,9 @@ async function signedIn(currentSession){
   return;
  }
  availablePantries=pantries;
- if(pantries.length===1)await openPantry(pantries[0]);
+ const selectedId=restorePantry?pantryReloadSelection():null;
+ const selected=pantries.find(pantry=>pantry.id===selectedId);
+ if(selected||pantries.length===1)await openPantry(selected??pantries[0]);
  else choosePantry();
  await loadCatalog();
  if(session!==currentSession)return;
@@ -1620,7 +1637,7 @@ $('adminFoods').before(emptyCategoryHint);
 
 const {data:authData,error:authError}=await db.auth.getSession();
 if(authError)setStatus('Error de sesión: '+authError.message);
-await signedIn(authData.session);
+await signedIn(authData.session,performance.getEntriesByType('navigation')[0]?.type==='reload');
 db.auth.onAuthStateChange((event,s)=>{
  if(event==='SIGNED_OUT'&&session)signedIn(null);
 });
