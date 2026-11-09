@@ -1095,6 +1095,28 @@ $('enableFridgeNotes').onchange=async event=>{
  }
 };
 
+const fridgeNoteDialog=$('fridgeNoteDialog');
+const fridgeNotePreview=$('fridgeNotePreview');
+const fridgeNoteMessage=$('fridgeNoteMessage');
+const fridgeNoteSave=$('fridgeNoteSave');
+function positionFridgeNoteEditor(){
+ if(!fridgeNoteDialog.open||!fridgeNoteDialog.classList.contains('note-editing'))return;
+ const viewport=window.visualViewport;
+ fridgeNoteDialog.style.setProperty('--note-viewport-top',(viewport?.offsetTop??0)+'px');
+ fridgeNoteDialog.style.setProperty('--note-viewport-height',(viewport?.height??window.innerHeight)+'px');
+}
+window.visualViewport?.addEventListener('resize',positionFridgeNoteEditor);
+window.visualViewport?.addEventListener('scroll',positionFridgeNoteEditor);
+window.addEventListener('resize',positionFridgeNoteEditor);
+fridgeNotePreview.onclick=()=>{
+ fridgeNoteDialog.classList.add('note-editing');
+ fridgeNotePreview.hidden=true;
+ fridgeNoteMessage.hidden=false;
+ fridgeNoteSave.hidden=false;
+ positionFridgeNoteEditor();
+ fridgeNoteMessage.focus({preventScroll:true});
+};
+
 function renderFridgeNotes(main,topDoor){
  const key='hondadespensa:notes:'+session.user.id+':'+activePantry.id;
  let notes=[];
@@ -1123,7 +1145,7 @@ function renderFridgeNotes(main,topDoor){
    button.type='button';
    button.className='fridge-note';
    button.textContent=note.number;
-   button.setAttribute('aria-label','Editar nota '+note.number);
+   button.setAttribute('aria-label','Abrir nota '+note.number);
    function position(x,y){
     button.style.left='calc('+100*x+'% - '+36*x+'px)';
     button.style.top='calc('+100*y+'% - '+36*y+'px)';
@@ -1158,18 +1180,20 @@ function renderFridgeNotes(main,topDoor){
    button.onpointercancel=()=>{drag=null;position(note.x,note.y);};
    button.onclick=event=>{
     if(suppressClick&&event.detail){suppressClick=false;return;}
-    const dialog=$('fridgeNoteDialog');
-    const message=$('fridgeNoteMessage');
     $('fridgeNoteTitle').textContent='Nota '+note.number;
-    message.value=notes.find(item=>item.number===note.number).message;
-    $('fridgeNoteSave').onclick=()=>{
-     if(save(notes.map(item=>item.number===note.number?{...item,message:message.value}:item)))dialog.close();
+    fridgeNoteMessage.value=notes.find(item=>item.number===note.number).message;
+    fridgeNotePreview.textContent=fridgeNoteMessage.value||'Toca para escribir';
+    fridgeNoteDialog.classList.remove('note-editing');
+    fridgeNotePreview.hidden=false;
+    fridgeNoteMessage.hidden=true;
+    fridgeNoteSave.hidden=true;
+    fridgeNoteSave.onclick=()=>{
+     if(save(notes.map(item=>item.number===note.number?{...item,message:fridgeNoteMessage.value}:item)))fridgeNoteDialog.close();
     };
     $('fridgeNoteDelete').onclick=()=>{
-     if(save(notes.filter(item=>item.number!==note.number))){dialog.close();draw();add.focus();}
+     if(save(notes.filter(item=>item.number!==note.number))){fridgeNoteDialog.close();draw();add.focus();}
     };
-    dialog.showModal();
-    message.focus();
+    fridgeNoteDialog.showModal();
    };
    layer.append(button);
   }

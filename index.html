@@ -660,14 +660,33 @@
     .fridge-note:nth-of-type(odd) { transform:rotate(5deg); }
     .fridge-note:is(:focus-visible,:active) { z-index:1; }
     #fridgeNoteDialog {
-      width:min(360px,calc(100% - 32px)); padding:18px; border:1px solid #947653;
-      border-radius:13px; background:#fff0d0; color:#342719; box-shadow:0 8px 25px #24180c66;
+      box-sizing:border-box; width:min(360px,calc(100% - 32px)); padding:20px;
+      border:0; border-radius:1px 2px 14px 2px;
+      background:linear-gradient(135deg,transparent 96%,#dcb659 96%),
+        linear-gradient(#efd280 0,#f7df92 32px,#fff0ad 33px,#ffe694 100%);
+      color:#263e70; box-shadow:2px 9px 20px #24180c66;
     }
     #fridgeNoteDialog::backdrop { background:#211a1266; }
-    #fridgeNoteDialog h2 { margin:0 36px 12px 0; }
-    #fridgeNoteDialog .note-close { position:absolute; top:10px; right:10px; }
-    #fridgeNoteMessage { display:block; width:100%; box-sizing:border-box; margin:5px 0 12px; }
+    #fridgeNoteDialog.note-editing {
+      top:calc(var(--note-viewport-top,0px) + max(12px,env(safe-area-inset-top)));
+      bottom:auto; margin:0 auto;
+      max-height:calc(var(--note-viewport-height,100dvh) - max(12px,env(safe-area-inset-top)) - 12px);
+    }
+    #fridgeNoteDialog h2 { margin:0 36px 12px 0; color:inherit; }
+    #fridgeNoteDialog .note-close { position:absolute; top:6px; right:8px; }
+    #fridgeNoteDialog button {
+      border:0; background:transparent; color:inherit; box-shadow:none; cursor:pointer;
+    }
+    #fridgeNotePreview, #fridgeNoteMessage {
+      display:block; width:100%; box-sizing:border-box; margin:0 0 12px;
+      padding:4px 0; color:inherit; font:inherit; font-size:18px; line-height:1.45;
+      background:transparent; border:0; text-align:left;
+    }
+    #fridgeNotePreview { white-space:pre-wrap; overflow-wrap:anywhere; }
+    #fridgeNoteMessage { resize:none; height:clamp(54px,calc(var(--note-viewport-height,100dvh) - 155px),180px); }
+    #fridgeNoteDialog [hidden] { display:none; }
     #fridgeNoteDialog .note-actions { display:flex; justify-content:space-between; gap:8px; }
+    #fridgeNoteDialog #fridgeNoteSave { background:#263e70; color:#fff6ce; }
   </style>
   <style>
     :root[data-bg-color$="-claro"] body:has(.pantry-chooser:not([hidden])) {
@@ -930,16 +949,16 @@
   <dialog id="fridgeNoteDialog" aria-labelledby="fridgeNoteTitle">
     <form method="dialog">
       <h2 id="fridgeNoteTitle">Nota</h2>
-      <button class="note-close" aria-label="Cerrar" value="cancel">×</button>
-      <label for="fridgeNoteMessage">Mensaje</label>
-      <textarea id="fridgeNoteMessage" rows="4"></textarea>
+      <button class="note-close" aria-label="Cerrar" value="cancel" autofocus>×</button>
+      <button type="button" id="fridgeNotePreview"></button>
+      <textarea id="fridgeNoteMessage" aria-label="Mensaje" rows="4" hidden></textarea>
       <div class="note-actions">
         <button type="button" id="fridgeNoteDelete">Eliminar</button>
-        <button type="button" id="fridgeNoteSave">Guardar</button>
+        <button type="button" id="fridgeNoteSave" hidden>Guardar</button>
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=97"></script>
+  <script type="module" src="app.js?v=98"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
