@@ -1001,6 +1001,7 @@ $('alternateHome').onchange=async event=>{
 function showApp(visible){
  if(!visible)adminMode=false;
  $('pantryFooter').hidden=!visible;
+ switchPantry.hidden=!visible||(!adminMode&&availablePantries.length<2);
  const adminToggle=$('adminToggle');
  adminToggle.setAttribute('aria-label',adminMode?'Volver a despensa':'Administrar');
  adminToggle.innerHTML=adminMode?'← Volver a despensa':'<span aria-hidden="true">&#9881;&#65038;</span>';
@@ -1084,7 +1085,10 @@ switchPantry.className='pantry-switch';
 pantryStyle.textContent=`
 body:has(.pantry-chooser:not([hidden])) { background:#071c32 url('textura-azul.svg'); }
 .pantry-chooser { color:#fff1ce; font-family:Georgia,serif; padding-bottom:18px }
-.pantry-chooser h2 { text-align:center; font-size:clamp(24px,6vw,36px) }
+.pantry-chooser h2 { text-align:center; font-size:clamp(24px,6vw,36px); outline:none }
+.pantry-chooser .pantry-create { display:block; width:auto; margin:18px auto 0 }
+.pantry-chooser .pantry-create-form { max-width:360px; margin:14px auto }
+.pantry-create-form input { display:block; width:100%; margin:6px 0 12px }
 .pantry-chooser button { display:grid; grid-template-columns:minmax(70px,28%) 1fr auto; gap:12px; align-items:center; width:100%; margin-bottom:14px; padding:9px 13px; background:#0b2940; color:#fff1ce; border:1px solid #76a4c1; border-radius:18px; text-align:left }
 .pantry-chooser img { display:block; width:100%; border-radius:8px }
 .pantry-chooser strong { font:700 clamp(18px,5vw,28px) Georgia,serif; overflow-wrap:anywhere }
@@ -1119,6 +1123,37 @@ function choosePantry(){
   card.onclick=()=>openPantry(pantry);
   pantryChooser.append(card);
  }
+ const create=document.createElement('button');
+ create.type='button';
+ create.className='pantry-create';
+ create.textContent='+ Crear despensa';
+ const form=document.createElement('form');
+ form.className='pantry-create-form';
+ form.hidden=true;
+ form.innerHTML='<label>Nombre de la despensa<input name="pantryName" maxlength="60" required></label><button class="pantry-create" type="submit">Crear</button><p class="hint" role="status"></p>';
+ const input=form.elements.pantryName;
+ const submit=form.querySelector('button');
+ const status=form.querySelector('[role="status"]');
+ create.onclick=()=>{
+  form.hidden=!form.hidden;
+  if(!form.hidden)input.focus();
+ };
+ form.onsubmit=async event=>{
+  event.preventDefault();
+  const nombre=input.value.trim();
+  if(!nombre||submit.disabled)return;
+  const current=session;
+  submit.disabled=true;
+  status.textContent='Creando despensa…';
+  const {data:id,error}=await db.rpc('crear_despensa_personal',{p_nombre:nombre});
+  if(session!==current)return;
+  submit.disabled=false;
+  if(error){status.textContent='No se pudo crear la despensa: '+error.message;return;}
+  const pantry={id,nombre};
+  availablePantries.push(pantry);
+  await openPantry(pantry);
+ };
+ pantryChooser.append(create,form);
  heading.focus();
 }
 async function openPantry(pantry){
@@ -1201,8 +1236,8 @@ async function signedIn(currentSession){
  setStatus('Cargando despensas…');
  const {data:pantries,error}=await db.from('despensas').select('id,nombre').order('nombre');
  if(session!==currentSession)return;
- if(error||!pantries?.length){
-  setStatus(error?'No se pudieron cargar las despensas: '+error.message:'Tu cuenta todavía no tiene una despensa asignada.');
+ if(error){
+  setStatus('No se pudieron cargar las despensas: '+error.message);
   $('loginForm').hidden=false;
   return;
  }
