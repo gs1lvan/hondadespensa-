@@ -664,31 +664,35 @@
       background:linear-gradient(145deg,#c3e5ff,#82bdf1);
     }
     #automaticPantryNoteDialog {
-      box-sizing:border-box; width:min(360px,calc(100% - 32px)); max-height:80dvh;
-      overflow:auto; padding:20px; background:#b7ddff; color:#153555;
+      --note-fold:#76aad6;
+      --note-paper-top:#e0f2ff;
+      --note-paper-bottom:#b7ddff;
+      --note-header-top:#92bce2;
+      --note-header-bottom:#acd4f3;
+      max-height:80dvh;
     }
-    #automaticPantryNoteDialog h2 { color:inherit; }
-    #automaticPantryNoteList { list-style:none; padding:0; }
-    #automaticPantryNoteList li { padding:7px 0; border-bottom:1px solid #15355540; }
-    #fridgeNoteDialog {
+    #automaticPantryNoteList h3 { margin:12px 0 4px; color:inherit; }
+    #automaticPantryNoteList ul { list-style:none; margin:0; padding:0; }
+    #automaticPantryNoteList .note-row { display:block; overflow-wrap:anywhere; }
+    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) {
       box-sizing:border-box; width:min(360px,calc(100% - 32px)); padding:20px;
       border:0; border-radius:1px 2px 14px 2px;
-      background:linear-gradient(135deg,transparent 96%,#dcb659 96%),
-        linear-gradient(#fff0ad,#ffe694);
+      background:linear-gradient(135deg,transparent 96%,var(--note-fold,#dcb659) 96%),
+        linear-gradient(var(--note-paper-top,#fff0ad),var(--note-paper-bottom,#ffe694));
       color:#263e70; box-shadow:2px 9px 20px #24180c66;
     }
-    #fridgeNoteDialog::backdrop { background:#211a1266; }
+    :is(#fridgeNoteDialog,#automaticPantryNoteDialog)::backdrop { background:#211a1266; }
     #fridgeNoteDialog.note-editing {
       top:calc(var(--note-viewport-top,0px) + max(12px,env(safe-area-inset-top)));
       bottom:auto; margin:0 auto;
       max-height:calc(var(--note-viewport-height,100dvh) - max(12px,env(safe-area-inset-top)) - 12px);
     }
-    #fridgeNoteDialog .note-header {
+    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) .note-header {
       display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center;
       gap:8px; margin:-20px -20px 12px; padding:12px 12px 12px 20px;
-      background:linear-gradient(#efd280,#f7df92);
+      background:linear-gradient(var(--note-header-top,#efd280),var(--note-header-bottom,#f7df92));
     }
-    #fridgeNoteDialog h2 { position:relative; margin:0; color:inherit; overflow-wrap:anywhere; }
+    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) h2 { position:relative; margin:0; color:inherit; overflow-wrap:anywhere; }
     #fridgeNoteDialog .note-title-pencil {
       position:absolute; inset-inline-end:8px; top:50%; transform:translateY(-50%);
       font-size:18px; pointer-events:none;
@@ -704,11 +708,11 @@
     #fridgeNoteDialog :is(#fridgeNoteEditTitle,#fridgeNoteTitleInput):focus {
       outline:2px solid #263e70; outline-offset:2px;
     }
-    #fridgeNoteDialog .note-close { margin:0; }
-    #fridgeNoteDialog button {
+    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) .note-close { margin:0; }
+    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) button {
       border:0; background:transparent; color:inherit; box-shadow:none; cursor:pointer;
     }
-    #fridgeNoteDialog .note-row {
+    :is(#fridgeNoteDialog,#automaticPantryNoteDialog) .note-row {
       display:grid; grid-template-columns:minmax(0,1fr) 4rem 2rem;
       align-items:center; gap:6px; width:100%; margin:0;
       padding:0; border:0; border-bottom:1px solid #263e7030; border-radius:0;
@@ -992,9 +996,13 @@
     </footer>
   </div>
   <dialog id="automaticPantryNoteDialog" aria-labelledby="automaticPantryNoteTitle">
-    <h2 id="automaticPantryNoteTitle">Lista de la compra</h2>
-    <ul id="automaticPantryNoteList"></ul>
-    <form method="dialog"><button>Cerrar</button></form>
+    <form method="dialog">
+      <header class="note-header">
+        <h2 id="automaticPantryNoteTitle">Lista de la compra</h2>
+        <button class="note-close" aria-label="Cerrar" autofocus>×</button>
+      </header>
+      <div id="automaticPantryNoteList"></div>
+    </form>
   </dialog>
   <dialog id="fridgeNoteDialog" aria-labelledby="fridgeNoteTitle">
     <form method="dialog">
@@ -1015,7 +1023,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=102"></script>
+  <script type="module" src="app.js?v=103"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

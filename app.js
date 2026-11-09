@@ -1171,14 +1171,27 @@ function renderFridgeNotes(main,topDoor){
   button.textContent='✓';
   button.setAttribute('aria-label','Abrir lista de la compra');
   button.onclick=()=>{
-   const missing=data.filter(food=>!food.have).sort((a,b)=>esCompare(a.name,b.name));
+   const missing={dry:[],fresh:[]};
+   for(const food of data){
+    if(!food.have)missing[isFreshCategory(food.category)?'fresh':'dry'].push(food);
+   }
    const list=$('automaticPantryNoteList');
    list.replaceChildren();
-   for(const name of missing.length?missing.map(food=>food.name):['No faltan alimentos.']){
-    const row=document.createElement('li');
-    row.textContent=name;
-    list.append(row);
+   const order=foodGroupOrder.value==='fresh'?['fresh','dry']:['dry','fresh'];
+   for(const group of order){
+    if(!missing[group].length)continue;
+    const title=document.createElement('h3');
+    title.textContent=group==='fresh'?'Alimentos frescos':'Alimentos secos';
+    const rows=document.createElement('ul');
+    for(const food of missing[group].sort((a,b)=>esCompare(a.name,b.name))){
+     const row=document.createElement('li');
+     row.className='note-row';
+     row.textContent=food.name;
+     rows.append(row);
+    }
+    list.append(title,rows);
    }
+   if(!list.childElementCount)list.textContent='No faltan alimentos.';
    $('automaticPantryNoteDialog').showModal();
   };
   layer.append(button);
