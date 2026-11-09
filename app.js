@@ -1460,7 +1460,9 @@ function renderFridgeNotes(main,topDoor){
     if(!free(x/width,y/height))continue;
     if(save([...notes,{number,message:'',createdAt:new Date().toISOString(),x:x/width,y:y/height}])){
      draw();
-     layer.lastElementChild.focus();
+     const newNoteButton=layer.lastElementChild;
+     newNoteButton.focus();
+     newNoteButton.click();
     }
     return;
    }
