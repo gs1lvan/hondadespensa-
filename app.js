@@ -905,14 +905,12 @@ async function deletePantryCategory(category){
  finally{categoryMutation=false;}
 }
 let categoryAvailabilitySaving=false;
-function categoryAvailabilityMenu(category){
- const menu=document.createElement('details');
- const toggle=document.createElement('summary');toggle.textContent='⋯';
- toggle.setAttribute('aria-label','Cambiar disponibilidad de '+bareCategory(category));
+function categoryAvailabilityActions(category){
  const actions=document.createElement('div');actions.className='admin-actions';
+ actions.style.cssText='flex:0 0 100%;flex-wrap:wrap';
  for(const available of [false,true]){
   const button=document.createElement('button');button.type='button';button.className='secondary';
-  button.textContent=available?'Marcar todos':'Desmarcar todos';
+  button.textContent=available?'Marcar todo':'Desmarcar todo';
   button.disabled=categoryAvailabilitySaving||!data.some(item=>item.category===category&&item.have!==available);
   button.onclick=async()=>{
    if(categoryAvailabilitySaving||!activePantry)return;
@@ -938,15 +936,14 @@ function categoryAvailabilityMenu(category){
   };
   actions.append(button);
  }
- menu.append(toggle,actions);
- return menu;
+ return actions;
 }
 function categoryManagement(category){
  const holder=document.createElement('div');holder.className='admin-row';
  const actions=document.createElement('div');actions.className='admin-actions';
  const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Editar categoría';
  const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Eliminar categoría';
- actions.append(edit,del,categoryAvailabilityMenu(category));holder.append(actions);
+ actions.append(edit,del);holder.append(actions,categoryAvailabilityActions(category));
  edit.onclick=()=>{
   if(holder.querySelector('form')){holder.querySelector('form').remove();return;}
   const form=document.createElement('form');form.className='admin-edit';
@@ -1577,14 +1574,7 @@ function render(){
   details.append(categoryAddFoodForm(category,false));
   for(const x of rows){
    const row=document.createElement('div');row.className='item'+(x.have?' done':'');
-   const check=document.createElement('input');check.type='checkbox';check.checked=x.have;check.disabled=busy;
-   check.setAttribute('aria-label','Tengo '+x.name);
-   check.onchange=async()=>{
-    check.disabled=true;
-    const {error}=await db.from('alimentos').update({disponible:check.checked}).eq('id',x.id).eq('despensa_id',activePantry.id);
-    if(error)alert('No se pudo guardar: '+error.message);
-    await refresh();
-   };
+   const check=foodAvailabilityCheckbox(x);
    const name=document.createElement('span');name.textContent=x.name;row.append(check,name);details.append(row);
   }
   groups[isFreshCategory(category)?'fresh':'dry'].append(details);
@@ -2269,9 +2259,26 @@ function renderCatalogList(holder,search,groups,openCategories){
  }
  if(!remaining){const p=document.createElement('p');p.className='empty';p.textContent=q?'No hay alimentos disponibles con esa búsqueda.':'Todos los alimentos del catálogo ya están añadidos.';holder.append(p);}
 }
+function foodAvailabilityCheckbox(item){
+ const check=document.createElement('input');check.type='checkbox';check.checked=item.have;check.disabled=busy;
+ check.setAttribute('aria-label','Tengo '+item.name);
+ check.onchange=async()=>{
+  check.disabled=true;
+  const {error}=await db.from('alimentos').update({disponible:check.checked}).eq('id',item.id).eq('despensa_id',activePantry.id);
+  if(error)alert('No se pudo guardar: '+error.message);
+  await refresh();
+ };
+ return check;
+}
 function makeAdminRow(item,type){
  const row=document.createElement('div');row.className='admin-row';
- const label=document.createElement('div');label.className='admin-label';
+ const label=document.createElement(type==='food'?'label':'div');label.className='admin-label';
+ if(type==='food'){
+  label.style.cssText='display:flex;align-items:center;gap:8px';
+  const check=foodAvailabilityCheckbox(item);
+  check.style.cssText='width:21px;height:21px;min-height:0;flex:none;accent-color:#2fa8fb';
+  label.append(check);
+ }
  const name=document.createElement('strong');name.textContent=type==='food'?item.name:item.nombre;
  label.append(name);
  const actions=document.createElement('div');actions.className='admin-actions';
