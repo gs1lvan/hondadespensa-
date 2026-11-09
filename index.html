@@ -663,7 +663,7 @@
       box-sizing:border-box; width:min(360px,calc(100% - 32px)); padding:20px;
       border:0; border-radius:1px 2px 14px 2px;
       background:linear-gradient(135deg,transparent 96%,#dcb659 96%),
-        linear-gradient(#efd280 0,#f7df92 32px,#fff0ad 33px,#ffe694 100%);
+        linear-gradient(#fff0ad,#ffe694);
       color:#263e70; box-shadow:2px 9px 20px #24180c66;
     }
     #fridgeNoteDialog::backdrop { background:#211a1266; }
@@ -672,8 +672,17 @@
       bottom:auto; margin:0 auto;
       max-height:calc(var(--note-viewport-height,100dvh) - max(12px,env(safe-area-inset-top)) - 12px);
     }
-    #fridgeNoteDialog h2 { margin:0 36px 12px 0; color:inherit; }
-    #fridgeNoteDialog .note-close { position:absolute; top:6px; right:8px; }
+    #fridgeNoteDialog .note-header {
+      display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center;
+      gap:8px; margin:-20px -20px 12px; padding:12px 12px 12px 20px;
+      background:linear-gradient(#efd280,#f7df92);
+    }
+    #fridgeNoteDialog h2 { margin:0; color:inherit; overflow-wrap:anywhere; }
+    #fridgeNoteDialog #fridgeNoteEditTitle {
+      margin:0; padding:0; text-align:left; font:inherit;
+    }
+    #fridgeNoteTitleInput { box-sizing:border-box; width:100%; font:inherit; color:inherit; }
+    #fridgeNoteDialog .note-close { margin:0; }
     #fridgeNoteDialog button {
       border:0; background:transparent; color:inherit; box-shadow:none; cursor:pointer;
     }
@@ -958,8 +967,13 @@
   </div>
   <dialog id="fridgeNoteDialog" aria-labelledby="fridgeNoteTitle">
     <form method="dialog">
-      <h2 id="fridgeNoteTitle">Nota</h2>
-      <button class="note-close" aria-label="Cerrar" value="cancel" autofocus>×</button>
+      <header class="note-header">
+        <h2 id="fridgeNoteTitle">
+          <button type="button" id="fridgeNoteEditTitle" title="Editar título">Nota</button>
+          <input id="fridgeNoteTitleInput" aria-label="Título de la nota" maxlength="100" hidden>
+        </h2>
+        <button class="note-close" aria-label="Cerrar" value="cancel" autofocus>×</button>
+      </header>
       <div id="fridgeNotePreview"></div>
       <div id="fridgeNoteRows" hidden></div>
       <button type="button" id="fridgeNoteAdd" hidden>+ Añadir alimento</button>
@@ -969,7 +983,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=99"></script>
+  <script type="module" src="app.js?v=100"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
