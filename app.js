@@ -1164,7 +1164,10 @@ function choosePantry(){
   radio.name='pantryIcon';
   radio.value=key;
   radio.required=true;
-  radio.disabled=key==='casa'||availablePantries.some(pantry=>folded(pantry.nombre)===folded(title));
+  radio.disabled=key==='casa'||availablePantries.some(pantry=>
+   (key==='playa'&&pantrySystemKey(pantry)==='playa')||
+   folded(pantry.nombre)===folded(title)
+  );
   const image=document.createElement('img');
   image.src=src;
   image.alt='';
