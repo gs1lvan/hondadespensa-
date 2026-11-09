@@ -1108,6 +1108,7 @@ function render(){
    jump.type='button';
    jump.className='food-group-jump';
    jump.textContent=index===0?'↓':'↑';
+   jump.title=target==='fresh'?'Ir a alimentos frescos':'Ir a alimentos secos';
    jump.setAttribute('aria-label',target==='fresh'?'Ir a alimentos frescos':'Ir a alimentos secos');
    jump.onclick=()=>{
     const heading=$('food-group-'+target);
