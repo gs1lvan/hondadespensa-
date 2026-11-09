@@ -1285,7 +1285,8 @@ function renderFridgeNotes(main,topDoor){
  }
  if(pantryStylePreference('fridge_notes_enabled')!==true)return;
  controls=$('fridgeNoteControlsTemplate').content.firstElementChild.cloneNode(true);
- const [add,summary]=controls.querySelectorAll('button');
+ const [add,summary,deleteAll]=controls.querySelectorAll('button');
+ const deleteDivider=deleteAll.previousElementSibling;
  layer.append(controls);
  summary.onclick=()=>{
   const dialog=$('automaticPantryNoteDialog');
@@ -1310,7 +1311,13 @@ function renderFridgeNotes(main,topDoor){
   dialog.showModal();
  };
 
+ deleteAll.onclick=()=>{
+  if(notes.length<2||!confirm('¿Borrar las '+notes.length+' notas personales de esta despensa?'))return;
+  if(save([])){draw();add.focus();}
+ };
+
  function draw(){
+  deleteAll.hidden=deleteDivider.hidden=notes.length<2;
   layer.querySelectorAll('.fridge-note:not(.fridge-pantry-note)').forEach(button=>button.remove());
   for(const note of notes){
    const button=document.createElement('button');
