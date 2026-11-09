@@ -68,8 +68,11 @@ function suggestedCategoryIcon(category) {
 function categoryIcon(category,emoji=suggestedCategoryIcon(category)) {
  const box=document.createElement('span');
  box.className='cat-icon';box.setAttribute('aria-hidden','true');
- const slot=iconSlots.indexOf(emoji);
- if(slot<0)box.textContent=emoji;
+ // Catalog copies can contain the generic basket when the source category was renamed.
+ const suggested=emoji==='🧺'?suggestedCategoryIcon(category):emoji;
+ const resolved=iconSlots.includes(suggested)?suggested:emoji;
+ const slot=iconSlots.indexOf(resolved);
+ if(slot<0)box.textContent=resolved;
  else box.append(iconSprite(slot));
  return box;
 }
