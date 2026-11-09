@@ -163,13 +163,20 @@ function renderStylePanel(){
  }
  panel.setAttribute('aria-busy',String(savingViewStyle));
 }
+function pantryStyleKey(key){
+ return activePantry?key+'_'+activePantry.id:key;
+}
+function pantryStylePreference(key){
+ const preferences=session?.user?.user_metadata;
+ return preferences?.[pantryStyleKey(key)]??preferences?.[key];
+}
 async function saveViewStyle(next){
  if(!session||savingViewStyle||next===viewStyle)return;
  const previous=viewStyle;
  savingViewStyle=true;applyViewStyle(next);
  $('styleMessage').textContent='Guardando estilo…';
  try{
-  const {data:result,error}=await db.auth.updateUser({data:{view_style:next}});
+  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('view_style')]:next}});
   if(error)throw error;
   session.user=result.user;
   $('styleMessage').textContent='Estilo guardado en tu cuenta.';
@@ -518,7 +525,7 @@ function mountBackground(panel){
  message.className='hint';
  message.setAttribute('role','status');
  picker.onclick=()=>{
-  const saved=backgroundPreference(session?.user?.user_metadata?.app_background);
+  const saved=backgroundPreference(pantryStylePreference('app_background'));
   draft=saved;
   target='customBackground';
   texture.value=saved.texture;
@@ -529,7 +536,7 @@ function mountBackground(panel){
  apply.onclick=async()=>{
   const current=session;
   if(!current||savingIconFamily)return;
-  const previous=current.user?.user_metadata?.app_background;
+  const previous=pantryStylePreference('app_background');
   const choice={...draft,texture:texture.value};
   dialog.close();
   savingIconFamily=true;
@@ -537,7 +544,7 @@ function mountBackground(panel){
   applyBackground(choice);
   message.textContent='Guardando fondo…';
   try{
-   const {data:result,error}=await db.auth.updateUser({data:{app_background:choice}});
+   const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('app_background')]:choice}});
    if(error)throw error;
    if(session===current){
     current.user=result.user;
@@ -663,7 +670,7 @@ function mountTypography(panel){
 async function saveTypography(){
  const current=session;
  const key=usesVintageHome()?'vintage_list_typography':'list_typography';
- const previous=current?.user?.user_metadata?.[key]??(usesVintageHome()?vintageTypography:undefined);
+ const previous=pantryStylePreference(key)??(usesVintageHome()?vintageTypography:undefined);
  if(!current||savingIconFamily){
   applyTypography(previous);
   return;
@@ -676,7 +683,7 @@ async function saveTypography(){
  message.textContent='Guardando tipografía…';
  applyTypography(choice);
  try{
-  const {data:result,error}=await db.auth.updateUser({data:{[key]:choice}});
+  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey(key)]:choice}});
   if(error)throw error;
   if(session===current){
    current.user=result.user;
@@ -714,7 +721,7 @@ async function savePantryIconSize(size){
  applyPantryIconSize(size);
  message.textContent='Guardando tamaño…';
  try{
-  const {data:result,error}=await db.auth.updateUser({data:{[key]:size}});
+  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey(key)]:size}});
   if(error)throw error;
   if(session===current){
    current.user=result.user;
@@ -748,7 +755,7 @@ async function saveIconFamily(value,forAdmin=false){
  message.textContent='Guardando preferencia…';
  applyIconFamily(family,adminFamily);
  try{
-  const {data:result,error}=await db.auth.updateUser({data:forAdmin?{admin_icon_family:adminFamily}:{icon_family:family}});
+  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey(forAdmin?'admin_icon_family':'icon_family')]:forAdmin?adminFamily:family}});
   if(error)throw error;
   if(session===current){
    current.user=result.user;
@@ -971,11 +978,10 @@ function applyAlternateHome(value){
  if(home==='nevera-vintage')$('fridgeControls').append(toolbar);
  else $('items').before(toolbar);
  $('alternateHome').checked=!!home;
- const preferences=session?.user?.user_metadata;
  const vintage=usesVintageHome();
- applyTypography(vintage?(preferences?.vintage_list_typography??vintageTypography):preferences?.list_typography);
- applyPantryIconSize(vintage?preferences?.vintage_pantry_icon_size:preferences?.pantry_icon_size);
- applyIconFamily(preferences?.icon_family,preferences?.admin_icon_family);
+ applyTypography(vintage?(pantryStylePreference('vintage_list_typography')??vintageTypography):pantryStylePreference('list_typography'));
+ applyPantryIconSize(pantryStylePreference(vintage?'vintage_pantry_icon_size':'pantry_icon_size'));
+ applyIconFamily(pantryStylePreference('icon_family'),pantryStylePreference('admin_icon_family'));
  syncWeatherStation();
 }
 $('alternateHome').onchange=async event=>{
@@ -987,15 +993,15 @@ $('alternateHome').onchange=async event=>{
  checkbox.disabled=true;
  message.textContent='Guardando página de inicio…';
  try{
-  const {data:result,error}=await db.auth.updateUser({data:{alternate_home:home}});
+  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('alternate_home')]:home??''}});
   if(error)throw error;
   if(session!==current)return;
   current.user=result.user;
-  applyAlternateHome(result.user.user_metadata?.alternate_home);
+  applyAlternateHome(pantryStylePreference('alternate_home'));
   message.textContent='Página de inicio guardada en tu cuenta.';
  }catch(error){
   if(session!==current)return;
-  applyAlternateHome(current.user.user_metadata?.alternate_home);
+  applyAlternateHome(pantryStylePreference('alternate_home'));
   message.textContent='No se pudo guardar la página de inicio: '+error.message;
  }finally{
   checkbox.disabled=false;
@@ -1138,6 +1144,7 @@ function pantryReloadSelection(pantryId){
  return null;
 }
 function choosePantry(){
+ if(activePantry&&(savingViewStyle||savingIconFamily||$('alternateHome').disabled))return;
  pantryReloadSelection(null);
  activePantry=null;
  refreshVersion++;
@@ -1221,6 +1228,9 @@ function choosePantry(){
 }
 async function openPantry(pantry){
  activePantry=pantry;
+ applyAlternateHome(pantryStylePreference('alternate_home'));
+ applyViewStyle(pantryStylePreference('view_style'));
+ applyBackground(pantryStylePreference('app_background'));
  pantryReloadSelection(pantry.id);
  refreshVersion++;
  data=[];
