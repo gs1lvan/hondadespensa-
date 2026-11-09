@@ -1131,6 +1131,7 @@ function render(){
   .filter(group=>groups[group].childElementCount);
  const vintage=usesVintageHome();
  const useDoors=vintage&&pantryStylePreference('start_fridge_closed')===true&&!q;
+ main.classList.toggle('fridge-with-doors',useDoors&&groupOrder.length>0);
  main.classList.toggle('fridge-all-doors-closed',useDoors&&groupOrder.length>0&&groupOrder.every(group=>!openedFridgeDoors.has(group)));
  const displayedGroups=vintage?groupOrder:[groupOrder.find(group=>group===visibleFoodGroup)??groupOrder[0]].filter(Boolean);
  for(const [index,group] of displayedGroups.entries()){
@@ -1195,7 +1196,15 @@ function render(){
    }
    title.append(jump);
   }
-  main.append(title,groups[group]);
+  if(useDoors){
+   const compartment=document.createElement('section');
+   compartment.className='fridge-compartment';
+   compartment.setAttribute('aria-labelledby',title.id);
+   compartment.append(title,groups[group]);
+   main.append(compartment);
+  }else{
+   main.append(title,groups[group]);
+  }
  }
  if(adminMode)renderAdmin();
 }
