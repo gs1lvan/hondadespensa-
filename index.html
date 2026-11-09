@@ -1113,6 +1113,8 @@
       <button type="button" class="fridge-add-note">Añadir<br>nota</button>
       <hr class="fridge-note-divider">
       <button type="button" class="fridge-add-note">Resumir<br>notas</button>
+      <hr class="fridge-note-divider" hidden>
+      <button type="button" class="fridge-add-note" hidden>Borrar<br>todas</button>
     </div>
   </template>
   <dialog id="automaticPantryNoteDialog" class="fridge-note-dialog" aria-labelledby="automaticPantryNoteTitle">
@@ -1147,7 +1149,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=110"></script>
+  <script type="module" src="app.js?v=111"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
