@@ -1204,6 +1204,10 @@ function renderFridgeNotes(main,topDoor){
    const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
    if(!drag.moved&&Math.hypot(dx,dy)<5)return;
    const [width,height]=dimensions();
+   if(!drag.moved){
+    layer.querySelector('.fridge-note-on-top')?.classList.remove('fridge-note-on-top');
+    button.classList.add('fridge-note-on-top');
+   }
    drag.moved=true;
    drag.nx=Math.min(1,Math.max(0,note.x+dx/width));
    drag.ny=Math.min(1,Math.max(0,note.y+dy/height));
@@ -1385,8 +1389,9 @@ function renderFridgeNotes(main,topDoor){
    return top+origin.top>=rect.top&&top+origin.top+size<=rect.bottom;
   }))return false;
   if(controls&&left+size>controls.offsetLeft&&top<controls.offsetTop+controls.offsetHeight)return false;
+  const maxOverlap=number===undefined?5:22;
   return [...notes,...(blue?[blue]:[])].every(note=>note.number===number||
-   Math.abs(note.x-x)*width>=size-5||Math.abs(note.y-y)*height>=size-5);
+   Math.abs(note.x-x)*width>=size-maxOverlap||Math.abs(note.y-y)*height>=size-maxOverlap);
  }
  add.onclick=()=>{
   const number=Math.max(0,...notes.map(note=>note.number))+1;
