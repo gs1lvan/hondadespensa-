@@ -553,6 +553,27 @@
     }
   </style>
   <style>
+    :root[data-bg-color$="-claro"] body:has(.pantry-chooser:not([hidden])) {
+      background-color:var(--customBackground,var(--app-bg-color));
+      background-image:var(--app-bg-texture,none);
+      background-size:var(--app-bg-tile,230px 230px);
+      background-attachment:fixed;
+    }
+    :root[data-bg-color$="-claro"] :is(.pantry-chooser,.pantry-create-dialog) {
+      color:var(--textColor,var(--ink));
+    }
+    :root[data-bg-color$="-claro"] :is(.pantry-chooser button,.pantry-create-dialog) {
+      background:var(--card-inner);
+      border-color:var(--borderColor,var(--card-edge));
+    }
+    :root[data-bg-color$="-claro"] .pantry-chooser small {
+      color:var(--textColor,var(--muted));
+    }
+    :root[data-bg-color$="-claro"] .pantry-icon-options label:has(:checked) {
+      color:var(--textColor,var(--ink));
+      background:var(--card-dark);
+      border-color:var(--borderColor,var(--card-edge));
+    }
     .food-group-order:not([hidden]) { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-block:.75rem; }
     .food-group-title { grid-column:1 / -1; font-size:1.15rem; margin:.65rem 0 .9rem; }
     #items[data-home=nevera-vintage] .food-group-title {
@@ -722,7 +743,7 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <script type="module" src="app.js?v=86"></script>
+  <script type="module" src="app.js?v=87"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
