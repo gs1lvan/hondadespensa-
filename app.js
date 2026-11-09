@@ -1000,7 +1000,7 @@ async function refreshWeather(){
   if(!Number.isFinite(temperature)||!Number.isFinite(humidity)||humidity<0||humidity>100||!time){
    throw new Error('Lecturas incompletas');
   }
-  setWeatherGauge('weatherTemperature',temperature,'°C',-10,50);
+  setWeatherGauge('weatherTemperature',temperature,'°C',-20,60);
   setWeatherGauge('weatherHumidity',humidity,'%',0,100);
   lastWeatherTime=time;
   $('weatherStatus').textContent=time+' · estimación';
