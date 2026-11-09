@@ -157,9 +157,16 @@
       background: transparent;
       box-shadow: none;
     }
-    #items[data-home=nevera-vintage] #toolbar::before {
-      content: "HondaDespensa";
-      margin-bottom: 10px;
+    #items[data-home=nevera-vintage] #toolbar .pantry-switch:not([hidden]) {
+      justify-self:center;
+      max-width:100%;
+      min-height:32px;
+      margin:0 0 10px;
+      padding:4px 24px;
+      border:1px solid;
+      border-radius:6px;
+      overflow-wrap:anywhere;
+      text-shadow:0 1px #ffebca;
       color: #17252e;
       border-color: #927857;
       font: 600 clamp(17px, 4.5vw, 24px)/1.15 "Dancing Script", "Segoe Script", "Snell Roundhand", cursive;
@@ -170,6 +177,7 @@
         linear-gradient(#ddc8a6, #a68b6c 60%, #ceb696);
       box-shadow: inset 0 1px #ffebca, 0 2px 3px #654a3566;
     }
+    #items[data-home=nevera-vintage] #toolbar::before { content:none; }
     #items[data-home=nevera-vintage] .fridge-dial {
       padding: 0;
       pointer-events: auto;
@@ -885,7 +893,7 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <script type="module" src="app.js?v=95"></script>
+  <script type="module" src="app.js?v=96"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
