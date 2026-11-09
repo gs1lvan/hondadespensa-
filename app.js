@@ -1089,6 +1089,7 @@ body:has(.pantry-chooser:not([hidden])) { background:#071c32 url('textura-azul.s
 .pantry-chooser .pantry-create { display:block; width:auto; margin:18px auto 0 }
 .pantry-create-dialog { width:min(440px, calc(100% - 28px)); max-height:calc(100dvh - 32px); overflow:auto; padding:18px; border:1px solid #76a4c1; border-radius:18px; background:#0b2940 url('textura-azul.svg'); color:#fff1ce }
 .pantry-create-dialog::backdrop { background:#03101cba }
+.pantry-load-defaults { margin-top:12px }
 .pantry-create-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px }
 .pantry-chooser .pantry-create-actions button { display:block; width:auto; margin:0 }
 .pantry-icon-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; border:1px solid #76a4c1; border-radius:12px; padding:8px }
@@ -1151,7 +1152,7 @@ function choosePantry(){
  const dialog=document.createElement('dialog');
  dialog.className='pantry-create-dialog';
  dialog.setAttribute('aria-labelledby','pantry-create-title');
- form.innerHTML='<h2 id="pantry-create-title">Crear despensa</h2><fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset><div class="pantry-create-actions"><button type="button" data-cancel>Cancelar</button><button type="submit">Crear</button></div><p class="hint" role="status"></p>';
+ form.innerHTML='<h2 id="pantry-create-title">Crear despensa</h2><fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset><label class="alternate-home-setting pantry-load-defaults"><input type="checkbox" name="loadDefaults"> Cargar alimentos por defecto</label><div class="pantry-create-actions"><button type="button" data-cancel>Cancelar</button><button type="submit">Crear</button></div><p class="hint" role="status"></p>';
  const iconOptions=form.querySelector('fieldset');
  for(const [key,title,src] of pantryIcons){
   const label=document.createElement('label');
@@ -1183,7 +1184,10 @@ function choosePantry(){
   const current=session;
   submit.disabled=true;
   status.textContent='Creando despensa…';
-  const {data:id,error}=await db.rpc('crear_despensa_personal',{p_nombre:nombre,p_icono:icono});
+  const loadDefaults=form.elements.loadDefaults.checked;
+  const {data:id,error}=await db.rpc('crear_despensa_personal',loadDefaults
+   ?{p_nombre:nombre,p_icono:icono,p_cargar_catalogo:true}
+   :{p_nombre:nombre,p_icono:icono});
   if(session!==current)return;
   submit.disabled=false;
   if(error){status.textContent='No se pudo crear la despensa: '+error.message;return;}
