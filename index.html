@@ -603,7 +603,10 @@
       text-shadow:0 0 .45em currentColor;
     }
     #items[data-home=nevera-vintage] .food-group-title .food-group-jump {
-      min-block-size:1.35rem; color:#304548; text-shadow:0 1px #fff1cb;
+      min-block-size:1.35rem; color:inherit; text-shadow:inherit;
+    }
+    #items[data-home=nevera-vintage] .food-group-jump::before {
+      opacity:1; box-shadow:1px 1px #fff1cb;
     }
     :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .food-group-title {
       color:var(--textColor,var(--ink));
