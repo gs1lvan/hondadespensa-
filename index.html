@@ -580,6 +580,12 @@
     </section>
 
     <section id="adminPanel" class="admin-panel" hidden aria-label="Panel de administración">
+      <label class="food-group-order" hidden>Orden de alimentos
+        <select id="foodGroupOrder">
+          <option value="dry">Secos primero</option>
+          <option value="fresh">Frescos primero</option>
+        </select>
+      </label>
       <div class="admin-account">
         <div><small>CUENTA ACTIVA</small><strong id="accountName">Usuario</strong></div>
         <button id="signOut" class="text-action" type="button">Cerrar sesión</button>
@@ -676,12 +682,6 @@
         </div>
         <button class="fridge-dial" id="clearFridgeSearch" type="button" aria-label="Borrar búsqueda"></button>
       </div>
-      <label class="food-group-order" hidden>Orden de alimentos
-        <select id="foodGroupOrder">
-          <option value="dry">Secos primero</option>
-          <option value="fresh">Frescos primero</option>
-        </select>
-      </label>
       <div id="categoryList"></div>
     </main>
     <div class="fridge-feet" aria-hidden="true"></div>
