@@ -1094,12 +1094,28 @@ function render(){
   }
   groups[isFreshCategory(category)?'fresh':'dry'].append(details);
  }
- const groupOrder=foodGroupOrder.value==='fresh'?['fresh','dry']:['dry','fresh'];
- for(const group of groupOrder){
-  if(!groups[group].childElementCount)continue;
+ const groupOrder=(foodGroupOrder.value==='fresh'?['fresh','dry']:['dry','fresh'])
+  .filter(group=>groups[group].childElementCount);
+ for(const [index,group] of groupOrder.entries()){
   const title=document.createElement('h2');
   title.className='food-group-title';
   title.textContent=group==='fresh'?'Alimentos frescos':'Alimentos secos';
+  title.id='food-group-'+group;
+  title.tabIndex=-1;
+  if(groupOrder.length===2){
+   const target=groupOrder[1-index];
+   const jump=document.createElement('button');
+   jump.type='button';
+   jump.className='food-group-jump';
+   jump.textContent=index===0?'↓':'↑';
+   jump.setAttribute('aria-label',target==='fresh'?'Ir a alimentos frescos':'Ir a alimentos secos');
+   jump.onclick=()=>{
+    const heading=$('food-group-'+target);
+    heading.focus({preventScroll:true});
+    heading.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+   };
+   title.append(jump);
+  }
   main.append(title,groups[group]);
  }
  if(adminMode)renderAdmin();
