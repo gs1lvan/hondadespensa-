@@ -1115,6 +1115,15 @@ body:has(.pantry-chooser:not([hidden])) { background:#071c32 url('textura-azul.s
 .pantry-switch[hidden], .pantry-chooser[hidden], .beach-polaroid-caption[hidden] { display:none }
 .hero .pantry-postcard { transform:scale(.76) rotate(-5deg); transform-origin:18% 10%; border-radius:8px; filter:drop-shadow(0 4px 5px #0007) }
 .hero .beach-polaroid-caption { z-index:0; }
+.hero .pantry-photo-switch { display:none }
+body:has(#items:not([hidden]):not([data-home=nevera-vintage])) .hero .pantry-photo-switch {
+ display:block; z-index:1; pointer-events:auto; padding:0; border:0; border-radius:12px;
+ background:transparent; box-shadow:none; clip-path:inset(0 20% 20% 10%);
+}
+body:has(#items:not([hidden]):not([data-home=nevera-vintage])) .hero .pantry-photo-switch:focus-visible {
+ clip-path:none; outline:2px solid #e2c794; outline-offset:-4px;
+}
+body:has(#items:not([hidden]):not([data-home=nevera-vintage])) .pantry-switch { display:none }
 .beach-polaroid-caption span { position:absolute; top:71%; left:18%; width:61%; text-align:center; transform:rotate(-5deg); color:#203b40; font:italic 700 clamp(11px,3vw,20px)/1 Georgia,serif }
 `;
 document.head.append(pantryStyle);
@@ -1138,6 +1147,12 @@ beachCaption.className='polaroid beach-polaroid-caption';
 beachCaption.hidden=true;
 beachCaption.innerHTML='<span>Casa de playa</span>';
 pantryPhoto.after(beachCaption);
+const pantryPhotoButton=document.createElement('button');
+pantryPhotoButton.type='button';
+pantryPhotoButton.className='polaroid pantry-photo-switch';
+pantryPhotoButton.setAttribute('aria-label','Cambiar de despensa');
+pantryPhotoButton.onclick=choosePantry;
+beachCaption.after(pantryPhotoButton);
 
 function applyPantryPostcard(pantry){
  const icon=pantry?.icono??(pantrySystemKey(pantry)==='playa'?'playa':'casa');
