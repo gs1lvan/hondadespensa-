@@ -1142,6 +1142,36 @@ async function openPantry(pantry){
 }
 switchPantry.onclick=choosePantry;
 
+const sharingSection=document.createElement('section');
+sharingSection.hidden=true;
+sharingSection.innerHTML='<h2>Compartir despensa</h2><label><input type="checkbox"> Compartir con Gema</label><p class="hint" role="status"></p>';
+$('adminPanel').prepend(sharingSection);
+const shareWithGema=sharingSection.querySelector('input');
+const sharingStatus=sharingSection.querySelector('[role="status"]');
+let sharingRequest=0;
+let sharedWithGema=false;
+
+async function refreshPantrySharing(enabled=null){
+ const request=++sharingRequest;
+ const pantry=activePantry;
+ sharingSection.hidden=!adminMode||pantry?.nombre!=='Casa principal'||
+  session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
+ if(sharingSection.hidden)return;
+ shareWithGema.disabled=true;
+ sharingStatus.textContent=enabled===null?'Comprobando acceso…':'Guardando acceso…';
+ const {data:shared,error}=await db.rpc('casa_principal_compartir_con_gema',{
+  p_despensa_id:pantry.id,p_compartir:enabled
+ });
+ if(request!==sharingRequest||activePantry!==pantry)return;
+ if(!error)sharedWithGema=shared;
+ shareWithGema.checked=sharedWithGema;
+ shareWithGema.disabled=!!error&&enabled===null;
+ sharingStatus.textContent=error
+  ? 'No se pudo consultar o guardar el acceso. Comprueba la configuración en Supabase.'
+  : shared?'Gema tiene acceso a Casa principal.':'Casa principal es privada.';
+}
+shareWithGema.onchange=()=>refreshPantrySharing(shareWithGema.checked);
+
 async function signedIn(currentSession){
  session=currentSession;
  activePantry=null;
@@ -1201,6 +1231,7 @@ $('signOut').onclick=async()=>{
 $('adminToggle').onclick=()=>{
  adminMode=!adminMode;recentAdminFoods.clear();showApp(true);
  if(adminMode)renderAdmin();else render();
+ refreshPantrySharing();
  window.scrollTo({top:0,behavior:'smooth'});
 };
 
