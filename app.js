@@ -1276,10 +1276,31 @@ shareWithGema.onchange=()=>refreshPantrySharing(shareWithGema.checked);
 const deletePantrySection=document.createElement('section');
 deletePantrySection.className='admin-section';
 deletePantrySection.hidden=true;
-deletePantrySection.innerHTML='<h2>Despensa actual</h2><button type="button" data-rename>Editar nombre</button> <button type="button" class="danger" data-delete>Eliminar despensa</button><p class="hint" role="status"></p>';
+deletePantrySection.innerHTML='<h2>Despensa actual</h2><label class="alternate-home-setting"><input type="checkbox" data-protect> Protección contra borrado</label><button type="button" data-rename>Editar nombre</button> <button type="button" class="danger" data-delete>Eliminar despensa</button><p class="hint" role="status"></p>';
 sharingSection.after(deletePantrySection);
 const deletePantryButton=deletePantrySection.querySelector('[data-delete]');
 const renamePantryButton=deletePantrySection.querySelector('[data-rename]');
+const protectPantry=deletePantrySection.querySelector('[data-protect]');
+let protectionRequest=0;
+async function refreshPantryProtection(enabled=null){
+ const request=++protectionRequest;
+ const pantry=activePantry;
+ protectPantry.closest('label').hidden=deletePantryButton.hidden;
+ if(!adminMode||!pantry||deletePantryButton.hidden)return;
+ protectPantry.disabled=true;
+ deletePantryButton.disabled=true;
+ const {data:protectedState,error}=await db.rpc('proteccion_borrado_despensa',{
+  p_despensa_id:pantry.id,p_proteger:enabled
+ });
+ if(request!==protectionRequest||activePantry!==pantry)return;
+ if(!error)pantry.protegida=protectedState;
+ protectPantry.checked=!!pantry.protegida;
+ protectPantry.disabled=!!error&&enabled===null;
+ deletePantryButton.disabled=!!error||!!protectedState;
+ deletePantryStatus.textContent=error?'No se pudo comprobar o guardar la protección.'
+  :protectedState?'Desmarca la protección antes de eliminar esta despensa.':'';
+}
+protectPantry.onchange=()=>refreshPantryProtection(protectPantry.checked);
 renamePantryButton.onclick=async()=>{
  const pantry=activePantry;
  if(!pantry||renamePantryButton.disabled)return;
@@ -1382,6 +1403,7 @@ $('adminToggle').onclick=()=>{
  deletePantryButton.hidden=!!pantrySystemKey(activePantry)&&session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
  renamePantryButton.hidden=!!pantrySystemKey(activePantry)&&session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
  deletePantryStatus.textContent='';
+ refreshPantryProtection();
  window.scrollTo({top:0,behavior:'smooth'});
 };
 
