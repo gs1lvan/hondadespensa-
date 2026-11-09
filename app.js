@@ -1229,7 +1229,7 @@ let sharedWithGema=false;
 async function refreshPantrySharing(enabled=null){
  const request=++sharingRequest;
  const pantry=activePantry;
- sharingSection.hidden=!adminMode||pantrySystemKey(pantry)!=='principal'||
+ sharingSection.hidden=!adminMode||!['playa','principal'].includes(pantrySystemKey(pantry))||
   session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
  if(sharingSection.hidden)return;
  shareWithGema.disabled=true;
@@ -1351,7 +1351,7 @@ $('adminToggle').onclick=()=>{
  if(adminMode)renderAdmin();else render();
  refreshPantrySharing();
  deletePantrySection.hidden=!adminMode||!activePantry;
- deletePantryButton.hidden=pantrySystemKey(activePantry)==='playa';
+ deletePantryButton.hidden=!!pantrySystemKey(activePantry)&&session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
  renamePantryButton.hidden=!!pantrySystemKey(activePantry)&&session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
  deletePantryStatus.textContent='';
  window.scrollTo({top:0,behavior:'smooth'});
