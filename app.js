@@ -1087,7 +1087,10 @@ body:has(.pantry-chooser:not([hidden])) { background:#071c32 url('textura-azul.s
 .pantry-chooser { color:#fff1ce; font-family:Georgia,serif; padding-bottom:18px }
 .pantry-chooser h2 { text-align:center; font-size:clamp(24px,6vw,36px); outline:none }
 .pantry-chooser .pantry-create { display:block; width:auto; margin:18px auto 0 }
-.pantry-chooser .pantry-create-form { max-width:360px; margin:14px auto }
+.pantry-create-dialog { width:min(440px, calc(100% - 28px)); max-height:calc(100dvh - 32px); overflow:auto; padding:18px; border:1px solid #76a4c1; border-radius:18px; background:#0b2940 url('textura-azul.svg'); color:#fff1ce }
+.pantry-create-dialog::backdrop { background:#03101cba }
+.pantry-create-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px }
+.pantry-chooser .pantry-create-actions button { display:block; width:auto; margin:0 }
 .pantry-create-form input[name=pantryName] {
  display:block; width:100%; min-height:46px; margin:8px 0 16px; padding:10px 14px;
  border:1px solid #76a4c1; border-radius:13px; background:#0b2940; color:#fff1ce;
@@ -1149,8 +1152,10 @@ function choosePantry(){
  create.textContent='+ Crear despensa';
  const form=document.createElement('form');
  form.className='pantry-create-form';
- form.hidden=true;
- form.innerHTML='<label>Nombre de la despensa<input name="pantryName" placeholder="Ej. Casa de campo" maxlength="60" required></label><fieldset class="pantry-icon-options"><legend>Icono de la despensa</legend></fieldset><button class="pantry-create" type="submit">Crear</button><p class="hint" role="status"></p>';
+ const dialog=document.createElement('dialog');
+ dialog.className='pantry-create-dialog';
+ dialog.setAttribute('aria-labelledby','pantry-create-title');
+ form.innerHTML='<h2 id="pantry-create-title">Crear despensa</h2><label>Nombre de la despensa<input name="pantryName" placeholder="Ej. Casa de campo" maxlength="60" required></label><fieldset class="pantry-icon-options"><legend>Icono de la despensa</legend></fieldset><div class="pantry-create-actions"><button type="button" data-cancel>Cancelar</button><button type="submit">Crear</button></div><p class="hint" role="status"></p>';
  const iconOptions=form.querySelector('fieldset');
  for(const [key,title,src] of pantryIcons){
   const label=document.createElement('label');
@@ -1166,12 +1171,13 @@ function choosePantry(){
   iconOptions.append(label);
  }
  const input=form.elements.pantryName;
- const submit=form.querySelector('button');
+ const submit=form.querySelector('[type="submit"]');
+ const cancel=form.querySelector('[data-cancel]');
  const status=form.querySelector('[role="status"]');
- create.onclick=()=>{
-  form.hidden=!form.hidden;
-  if(!form.hidden)input.focus();
- };
+ dialog.append(form);
+ create.onclick=()=>dialog.showModal();
+ cancel.onclick=()=>{if(!submit.disabled)dialog.close();};
+ dialog.addEventListener('cancel',event=>{if(submit.disabled)event.preventDefault();});
  form.onsubmit=async event=>{
   event.preventDefault();
   const nombre=input.value.trim();
@@ -1186,9 +1192,10 @@ function choosePantry(){
   if(error){status.textContent='No se pudo crear la despensa: '+error.message;return;}
   const pantry={id,nombre,icono};
   availablePantries.push(pantry);
+  dialog.close();
   await openPantry(pantry);
  };
- pantryChooser.append(create,form);
+ pantryChooser.append(create,dialog);
  heading.focus();
 }
 async function openPantry(pantry){
