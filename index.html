@@ -479,13 +479,13 @@
       height: 32px;
       font-size: 25px;
     }
-    #catalogItems .catalog-products {
+    :is(#catalogItems, #freshCatalogItems) .catalog-products {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
       gap: 0;
       padding: 0;
     }
-    #catalogItems .catalog-products > button {
+    :is(#catalogItems, #freshCatalogItems) .catalog-products > button {
       width: 100%;
       min-height: 44px;
       padding: 8px 12px;
@@ -495,15 +495,15 @@
       border-radius: 0;
       box-shadow: none;
     }
-    #catalogItems .catalog-products > button + button {
+    :is(#catalogItems, #freshCatalogItems) .catalog-products > button + button {
       border-top: 1px solid currentColor;
       border-top-color: color-mix(in srgb, currentColor 23%, transparent);
     }
-    #catalogItems .catalog-products > button:first-child {
+    :is(#catalogItems, #freshCatalogItems) .catalog-products > button:first-child {
       font-weight: 700;
       background: color-mix(in srgb, currentColor 8%, transparent);
     }
-    #catalogItems .catalog-products > button:focus-visible {
+    :is(#catalogItems, #freshCatalogItems) .catalog-products > button:focus-visible {
       outline-offset: -3px;
     }
     body:has(#items:not([hidden]):not([data-home=nevera-vintage])) .pantry-switch:not([hidden]) {
@@ -606,6 +606,12 @@
         <p class="hint">Te presento una lista más o menos estructurada con los alimentos de larga duración que puedes usar, recuerda que puedes borrarlas todas y generar tus propias categorías, pero siempre tendrás está base para volver a empezar.</p>
         <input id="catalogSearch" placeholder="Buscar en el catálogo…" aria-label="Buscar en catálogo">
         <div id="catalogItems"></div>
+      </details>
+      <details class="admin-section admin-catalog" id="freshCatalog" hidden>
+        <summary>🥬 Añadir desde el catálogo de alimentos frescos</summary>
+        <p class="hint">Añade alimentos frescos y refrigerados a la despensa actual.</p>
+        <input id="freshCatalogSearch" placeholder="Buscar alimentos frescos…" aria-label="Buscar alimentos frescos">
+        <div id="freshCatalogItems"></div>
       </details>
       <details class="admin-section admin-catalog" hidden>
         <summary>✏️ Administrar catálogo</summary>
