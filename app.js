@@ -109,6 +109,7 @@ function categoryHeader(category,countText,emoji) {
 let data=[],session=null,channel=null,catalogChannel=null,busy=false,catalogRows=[],catalogReady=false,adminMode=false;
 const openCategories=new Set(),catalogOpen=new Set();
 const adminOpenCategories={food:new Set(),catalog:new Set()};
+const adminFoodGroupOpen=new Map();
 const recentAdminFoods=new Map();
 let recentAdminFoodSequence=0;
 const adminFoodKey=item=>JSON.stringify([item.category,folded(item.name)]);
@@ -1940,6 +1941,8 @@ async function openPantry(pantry){
  pantryCategoryByName=new Map();
  openCategories.clear();
  adminOpenCategories.food.clear();
+ adminFoodGroupOpen.clear();
+ $('adminFoods').replaceChildren();
  categoryFoodDrafts.clear();
  recentAdminFoods.clear();
  $('search').value='';
@@ -2376,6 +2379,12 @@ function renderGroupedAdmin(container,rows,type,query){
  for(const section of container.querySelectorAll('details.admin-category')){
   if(section.open)open.add(section.dataset.category);else open.delete(section.dataset.category);
  }
+ if(type==='food'&&!container.dataset.query){
+  for(const group of container.querySelectorAll(':scope > details[data-food-group]')){
+   adminFoodGroupOpen.set(group.dataset.foodGroup,group.open);
+  }
+ }
+ if(type==='food')container.dataset.query=query;
  container.replaceChildren();const groups=new Map();
  if(type==='food')for(const category of pantryCategories())if(!query||folded(category).includes(query))groups.set(category,[]);
  for(const item of rows){
@@ -2385,6 +2394,7 @@ function renderGroupedAdmin(container,rows,type,query){
   if(!groups.has(category))groups.set(category,[]);
   groups.get(category).push(item);
  }
+ const foodGroups=new Map();
  for(const category of (type==='food'?orderedCategories(groups.keys()):[...groups.keys()].sort(esCompare))){
   const section=document.createElement('details');section.className='category admin-category';
   const count=groups.get(category).length;
@@ -2394,7 +2404,31 @@ function renderGroupedAdmin(container,rows,type,query){
   if(type==='food')section.append(categoryManagement(category),categoryAddFoodForm(category));
   for(const item of groups.get(category).sort(type==='food'?compareAdminFoods:(a,b)=>esCompare(a.nombre,b.nombre)))section.append(makeAdminRow(item,type));
   section.dataset.category=category;
-  section.open=open.has(category)||!!query;container.append(section);
+  section.open=open.has(category)||!!query;
+  if(type==='catalog'){
+   container.append(section);
+   continue;
+  }
+  const group=isFreshCategory(category)?'fresh':'dry';
+  if(!foodGroups.has(group)){
+   const details=document.createElement('details');details.className='category admin-food-group';
+   details.dataset.foodGroup=group;
+   details.open=!!query||(adminFoodGroupOpen.get(group)??true);
+   foodGroups.set(group,{details,count:0});
+  }
+  const foodGroup=foodGroups.get(group);
+  foodGroup.details.append(section);
+  foodGroup.count+=count;
+ }
+ for(const group of ['dry','fresh']){
+  const foodGroup=foodGroups.get(group);
+  if(!foodGroup)continue;
+  const title=group==='dry'?'Alimentos secos':'Alimentos frescos';
+  const header=categoryHeader(title,String(foodGroup.count));
+  header.querySelector('.cat-icon')?.remove();
+  header.querySelector('.cat-count').setAttribute('aria-label',foodGroup.count+' alimentos');
+  foodGroup.details.prepend(header);
+  container.append(foodGroup.details);
  }
  if(!groups.size){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';container.append(p);}
 }
