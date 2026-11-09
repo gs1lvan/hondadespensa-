@@ -692,8 +692,8 @@
       max-height:calc(var(--note-viewport-height,100dvh) - max(12px,env(safe-area-inset-top)) - 12px);
     }
     .fridge-note-dialog .note-header {
-      display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center;
-      gap:8px; margin:-20px -20px 12px; padding:12px 12px 12px 20px;
+      display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center;
+      gap:4px; margin:-20px -20px 12px; padding:12px 12px 12px 20px;
       background:linear-gradient(var(--note-header-top,#efd280),var(--note-header-bottom,#f7df92));
     }
     .fridge-note-dialog h2 { position:relative; margin:0; color:inherit; overflow-wrap:anywhere; }
@@ -712,7 +712,7 @@
     #fridgeNoteDialog :is(#fridgeNoteEditTitle,#fridgeNoteTitleInput):focus {
       outline:2px solid #263e70; outline-offset:2px;
     }
-    .fridge-note-dialog .note-close {
+    .fridge-note-dialog :is(.note-close,.note-copy) {
       align-self:start; display:grid; place-items:center;
       width:44px; height:44px; min-width:44px; padding:0; margin:0;
       font-size:24px; line-height:1;
@@ -1007,6 +1007,7 @@
     <form method="dialog">
       <header class="note-header">
         <h2 id="automaticPantryNoteTitle">Lista de la compra</h2>
+        <button type="button" class="note-copy" id="copyAutomaticPantryNote" aria-label="Copiar nota" title="Copiar nota"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 5V4H4v12h1"/></svg></button>
         <button type="submit" class="note-close" aria-label="Cerrar" value="cancel" autofocus>×</button>
       </header>
       <div id="automaticPantryNoteList"></div>
@@ -1020,6 +1021,7 @@
           <input id="fridgeNoteTitleInput" aria-label="Título de la nota" maxlength="100" hidden>
           <span class="note-title-pencil" aria-hidden="true">✎</span>
         </h2>
+        <button type="button" class="note-copy" id="copyPersonalFridgeNote" aria-label="Copiar nota" title="Copiar nota"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 5V4H4v12h1"/></svg></button>
         <button class="note-close" aria-label="Cerrar" value="cancel" autofocus>×</button>
       </header>
       <div id="fridgeNotePreview"></div>
@@ -1031,7 +1033,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=103"></script>
+  <script type="module" src="app.js?v=104"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

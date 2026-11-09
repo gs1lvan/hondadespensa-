@@ -1107,6 +1107,26 @@ const fridgeNotePreview=$('fridgeNotePreview');
 const fridgeNoteRows=$('fridgeNoteRows');
 const fridgeNoteAdd=$('fridgeNoteAdd');
 const fridgeNoteSave=$('fridgeNoteSave');
+async function copyFridgeNote(lines){
+ try{
+  await navigator.clipboard.writeText(lines.join('\n'));
+ }catch{
+  alert('No se pudo copiar la nota al portapapeles.');
+ }
+}
+$('copyAutomaticPantryNote').onclick=()=>{
+ const lines=Array.from($('automaticPantryNoteList').querySelectorAll('h3,li'),row=>row.textContent);
+ return copyFridgeNote([$('automaticPantryNoteTitle').textContent,...lines]);
+};
+$('copyPersonalFridgeNote').onclick=()=>{
+ const title=$('fridgeNoteTitleInput');
+ const rows=Array.from(fridgeNoteRows.children,row=>{
+  const name=row.children[0].value.trim();
+  const quantity=row.children[1].value.trim();
+  return name&&[name,quantity].filter(Boolean).join(' · ');
+ }).filter(Boolean);
+ return copyFridgeNote([title.value.trim()||title.placeholder,...rows]);
+};
 function positionFridgeNoteEditor(){
  if(!fridgeNoteDialog.open||!fridgeNoteDialog.classList.contains('note-editing'))return;
  const viewport=window.visualViewport;
