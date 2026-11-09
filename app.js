@@ -951,7 +951,18 @@ function localItems(){
 }
 const weatherRefreshMs=15*60*1000;
 const playaHondaWeather='https://api.open-meteo.com/v1/forecast?latitude=37.63237&longitude=-0.73530&current=temperature_2m,relative_humidity_2m&timezone=Europe%2FMadrid';
+const weatherReadingKey='hondadespensa.weather.playa-honda';
 let weatherPending=false,lastWeatherAttempt=0,lastWeatherTime='';
+function displayWeatherReading({temperature,humidity,time},stale=false){
+ if(!Number.isFinite(temperature)||!Number.isFinite(humidity)||humidity<0||humidity>100||
+    typeof time!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(time)){
+  throw new Error('Lecturas incompletas');
+ }
+ setWeatherGauge('weatherTemperature',temperature,'°C',-20,60);
+ setWeatherGauge('weatherHumidity',humidity,'%',0,100);
+ lastWeatherTime=time.slice(11);
+ $('weatherStatus').textContent=stale?'Última lectura · '+time.slice(8,10)+'/'+time.slice(5,7)+' '+lastWeatherTime:lastWeatherTime+' · estimación';
+}
 const weatherFormat=new Intl.NumberFormat('es-ES',{maximumFractionDigits:1});
 function setWeatherGauge(id,value,unit,min,max){
  const gauge=$(id);
@@ -979,22 +990,23 @@ async function refreshWeather(){
  if($('weatherStation').hidden||document.hidden||weatherPending||
     Date.now()-lastWeatherAttempt<weatherRefreshMs)return;
  weatherPending=true;lastWeatherAttempt=Date.now();
+ if(!lastWeatherTime){
+  try{
+   const saved=JSON.parse(localStorage.getItem(weatherReadingKey));
+   if(saved)displayWeatherReading(saved,true);
+  }catch{}
+ }
  try{
-  const response=await fetch(playaHondaWeather,{signal:AbortSignal.timeout(10000)});
+  const response=await fetch(playaHondaWeather,{signal:AbortSignal.timeout(15000),cache:'no-store'});
   if(!response.ok)throw new Error('Open-Meteo '+response.status);
   const {current}=await response.json();
-  const temperature=current?.temperature_2m,humidity=current?.relative_humidity_2m;
-  const time=current?.time?.match(/T([0-2][0-9]:[0-5][0-9])$/)?.[1];
-  if(!Number.isFinite(temperature)||!Number.isFinite(humidity)||humidity<0||humidity>100||!time){
-   throw new Error('Lecturas incompletas');
-  }
-  setWeatherGauge('weatherTemperature',temperature,'°C',-20,60);
-  setWeatherGauge('weatherHumidity',humidity,'%',0,100);
-  lastWeatherTime=time;
-  $('weatherStatus').textContent=time+' · estimación';
+  const reading={temperature:current?.temperature_2m,humidity:current?.relative_humidity_2m,time:current?.time};
+  displayWeatherReading(reading);
+  try{localStorage.setItem(weatherReadingKey,JSON.stringify(reading));}catch{}
  }catch{
-  $('weatherStatus').textContent=lastWeatherTime?'Sin actualizar · '+lastWeatherTime:'Sin datos';
-  lastWeatherAttempt=Date.now()-weatherRefreshMs+60000;
+  $('weatherStatus').textContent=lastWeatherTime?'Sin actualizar · '+$('weatherStatus').textContent.replace(/^Sin actualizar · /,''):'Sin datos · reintentando';
+  lastWeatherAttempt=Date.now()-weatherRefreshMs+15000;
+  setTimeout(refreshWeather,15000);
  }finally{weatherPending=false;}
 }
 function syncWeatherStation(){
