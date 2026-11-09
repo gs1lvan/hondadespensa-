@@ -1108,12 +1108,13 @@ function render(){
    jump.type='button';
    jump.className='food-group-jump';
    jump.textContent=index===0?'↓':'↑';
-   jump.title=target==='fresh'?'Ir a alimentos frescos':'Ir a alimentos secos';
-   jump.setAttribute('aria-label',target==='fresh'?'Ir a alimentos frescos':'Ir a alimentos secos');
+   const groupName=group==='fresh'?'alimentos frescos':'alimentos secos';
+   jump.title='Mover '+groupName+(index===0?' abajo':' arriba');
+   jump.setAttribute('aria-label',jump.title);
    jump.onclick=()=>{
-    const heading=$('food-group-'+target);
-    heading.focus({preventScroll:true});
-    heading.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+    foodGroupOrder.value=target==='fresh'?'fresh':'dry';
+    foodGroupOrder.onchange();
+    $('food-group-'+group).querySelector('.food-group-jump').focus({preventScroll:true});
    };
    title.append(jump);
   }
