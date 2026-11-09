@@ -1317,7 +1317,9 @@ function renderFridgeNotes(main,topDoor){
  };
 
  function draw(){
-  deleteAll.hidden=deleteDivider.hidden=notes.length<2;
+  const hasMultipleNotes=notes.length>1;
+  summary.hidden=summary.previousElementSibling.hidden=!hasMultipleNotes;
+  deleteAll.hidden=deleteDivider.hidden=!hasMultipleNotes;
   layer.querySelectorAll('.fridge-note:not(.fridge-pantry-note)').forEach(button=>button.remove());
   for(const note of notes){
    const button=document.createElement('button');
