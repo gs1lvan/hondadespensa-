@@ -904,34 +904,37 @@ async function deletePantryCategory(category){
  }catch(error){adminMessage('No se pudo eliminar la categoría: '+error.message);}
  finally{categoryMutation=false;}
 }
-let categoryAvailabilitySaving=false;
+let pendingCategoryAvailability=null;
 function categoryAvailabilityActions(category){
  const actions=document.createElement('div');actions.className='admin-actions';
  actions.style.cssText='flex:0 0 100%;flex-wrap:wrap';
  for(const available of [false,true]){
   const button=document.createElement('button');button.type='button';button.className='secondary';
   button.textContent=available?'Marcar todo':'Desmarcar todo';
-  button.disabled=categoryAvailabilitySaving||!data.some(item=>item.category===category&&item.have!==available);
+  button.disabled=pendingCategoryAvailability||!data.some(item=>item.category===category&&item.have!==available);
   button.onclick=async()=>{
-   if(categoryAvailabilitySaving||!activePantry)return;
+   if(pendingCategoryAvailability||!activePantry)return;
    const pantry=activePantry;
    const ids=data.filter(item=>item.category===category&&item.have!==available).map(item=>item.id);
    const verb=available?'Marcar':'Desmarcar';
    if(!ids.length||!confirm('¿'+verb.toLowerCase()+' '+ids.length+' alimento(s) de «'+bareCategory(category)+'» en «'+pantry.nombre+'»?'))return;
-   categoryAvailabilitySaving=true;
-   for(const action of actions.children)action.disabled=true;
+   const changedIds=new Set(ids);
+   pendingCategoryAvailability={pantryId:pantry.id,ids:changedIds,available};
+   data=data.map(item=>changedIds.has(item.id)?{...item,have:available}:item);
+   render();
    try{
     const {error}=await db.from('alimentos').update({disponible:available}).eq('despensa_id',pantry.id).in('id',ids);
     if(error)throw error;
-    if(activePantry?.id===pantry.id){
-     await refresh();
-     adminMessage('Disponibilidad actualizada en '+bareCategory(category)+'.');
-    }
+    if(activePantry?.id===pantry.id)adminMessage('Disponibilidad actualizada en '+bareCategory(category)+'.');
    }catch(error){
-    adminMessage('No se pudo actualizar la disponibilidad: '+error.message);
+    if(activePantry?.id===pantry.id){
+     data=data.map(item=>changedIds.has(item.id)?{...item,have:!available}:item);
+     adminMessage('No se pudo actualizar la disponibilidad: '+error.message);
+    }
    }finally{
-    categoryAvailabilitySaving=false;
-    renderAdmin();
+    pendingCategoryAvailability=null;
+    render();
+    if(activePantry?.id===pantry.id)await refresh();
    }
   };
   actions.append(button);
@@ -1677,7 +1680,8 @@ async function refresh(){
  if(error){setStatus('Sin conexión o sin permisos: '+error.message);$('auth').hidden=false;$('status').hidden=false;return;}
  const nextCategories=new Map(categories.data.map(row=>[row.nombre,row]));
  const namesById=new Map(categories.data.map(row=>[row.id,row.nombre]));
- const next=rows.map(x=>({id:x.id,name:x.nombre,category:namesById.get(x.categoria_id)??x.categoria,have:!!x.disponible}));
+ const next=rows.map(x=>({id:x.id,name:x.nombre,category:namesById.get(x.categoria_id)??x.categoria,have:pendingCategoryAvailability?.pantryId===pantryId&&pendingCategoryAvailability.ids.has(x.id)
+  ?pendingCategoryAvailability.available:!!x.disponible}));
  const changed=JSON.stringify(next)!==JSON.stringify(data)||
   JSON.stringify([...nextCategories.values()])!==JSON.stringify([...pantryCategoryByName.values()]);
  pantryCategoryByName=nextCategories;
@@ -2260,7 +2264,7 @@ function renderCatalogList(holder,search,groups,openCategories){
  if(!remaining){const p=document.createElement('p');p.className='empty';p.textContent=q?'No hay alimentos disponibles con esa búsqueda.':'Todos los alimentos del catálogo ya están añadidos.';holder.append(p);}
 }
 function foodAvailabilityCheckbox(item){
- const check=document.createElement('input');check.type='checkbox';check.checked=item.have;check.disabled=busy;
+ const check=document.createElement('input');check.type='checkbox';check.checked=item.have;check.disabled=busy||(pendingCategoryAvailability?.pantryId===activePantry?.id&&pendingCategoryAvailability?.ids.has(item.id));
  check.setAttribute('aria-label','Tengo '+item.name);
  check.onchange=async()=>{
   check.disabled=true;
