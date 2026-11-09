@@ -659,18 +659,25 @@
       text-shadow:0 1px #fff1d1,0 -1px #79543977;
     }
     .fridge-note {
-      display:grid; place-items:center; width:36px; height:36px; padding:0;
+      display:grid; place-items:center; width:52px; height:52px; padding:3px 0; align-content:center;
       border:0; border-radius:0 0 4px 0; touch-action:none; user-select:none;
-      background:linear-gradient(145deg,#ffeeb0,#ffdf77 78%,#e9bc5e);
-      box-shadow:1px 3px 5px #57391877,inset 0 1px #fff7d0;
+      background:radial-gradient(ellipse at 100% 100%,#fff5c5 4%,transparent 34%),linear-gradient(145deg,#f7dfa3,#ffe596 70%,#d6a655);
+      box-shadow:3px 7px 7px -2px #57391899,inset 0 1px #fff7d0;
       color:#214486; font:700 20px/1 "Dancing Script","Segoe Script",cursive;
       text-shadow:.25px .25px #21448666; transform:rotate(-5deg);
+    }
+    .fridge-note time { font-size:12px; line-height:1; }
+    .fridge-note::after {
+      content:""; position:absolute; right:0; bottom:0; width:15px; height:12px;
+      border-radius:80% 0 50% 0;
+      background:linear-gradient(145deg,transparent 35%,#fff9 55%,#56341244);
+      pointer-events:none;
     }
     .fridge-note:nth-of-type(odd) { transform:rotate(5deg); }
     .fridge-note:is(:focus-visible,:active) { z-index:1; }
     .fridge-notes .fridge-pantry-note {
-      inset:9px auto auto 12px; z-index:2;
-      background:linear-gradient(145deg,#c3e5ff,#82bdf1);
+      z-index:2; transform:rotate(7deg); border-radius:2px 1px 9px 2px;
+      background:radial-gradient(ellipse at 100% 100%,#d6efff,transparent 38%),linear-gradient(145deg,#afd7f6,#78afe0);
     }
     #automaticPantryNoteDialog:not(.personal-note-summary) {
       --note-fold:#76aad6;
@@ -1056,7 +1063,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=106"></script>
+  <script type="module" src="app.js?v=107"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

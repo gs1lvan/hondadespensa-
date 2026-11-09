@@ -1179,18 +1179,66 @@ function renderFridgeNotes(main,topDoor){
  }
  const layer=document.createElement('div');
  layer.className='fridge-notes';
- if(!main.classList.contains('fridge-all-doors-closed')){
-  layer.style.aspectRatio=getComputedStyle(topDoor).aspectRatio;
-  layer.style.bottom='auto';
- }
  main.append(layer);
+ const doors=[...main.querySelectorAll(':scope > .fridge-door')];
+ const size=52;
+ const dimensions=()=>[Math.max(1,layer.clientWidth-size),Math.max(1,layer.clientHeight-size)];
+ let blue;
+ let controls;
+ function attachDrag(button,note,commit,open){
+  function position(x,y){
+   button.style.left='calc('+100*x+'% - '+size*x+'px)';
+   button.style.top='calc('+100*y+'% - '+size*y+'px)';
+  }
+  position(note.x,note.y);
+  let drag;
+  let suppressClick=false;
+  button.onpointerdown=event=>{
+   if(event.button!==0||!event.isPrimary)return;
+   suppressClick=false;
+   drag={id:event.pointerId,x:event.clientX,y:event.clientY};
+   button.setPointerCapture(event.pointerId);
+  };
+  button.onpointermove=event=>{
+   if(drag?.id!==event.pointerId)return;
+   const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
+   if(!drag.moved&&Math.hypot(dx,dy)<5)return;
+   const [width,height]=dimensions();
+   drag.moved=true;
+   drag.nx=Math.min(1,Math.max(0,note.x+dx/width));
+   drag.ny=Math.min(1,Math.max(0,note.y+dy/height));
+   position(drag.nx,drag.ny);
+  };
+  button.onpointerup=event=>{
+   if(drag?.id!==event.pointerId)return;
+   const {moved,nx,ny}=drag;
+   drag=null;
+   suppressClick=moved;
+   if(moved&&free(nx,ny,note.number)&&commit(nx,ny)){
+    note.x=nx;
+    note.y=ny;
+   }else position(note.x,note.y);
+  };
+  button.onpointercancel=()=>{drag=null;position(note.x,note.y);};
+  button.onclick=event=>{
+   if(suppressClick&&event.detail){suppressClick=false;return;}
+   open();
+  };
+ }
  if(pantryStylePreference('automatic_pantry_note_enabled')===true){
   const button=document.createElement('button');
   button.type='button';
   button.className='fridge-note fridge-pantry-note';
   button.textContent='✓';
   button.setAttribute('aria-label','Abrir lista de la compra');
-  button.onclick=()=>{
+  layer.append(button);
+  const [width,height]=dimensions();
+  blue={number:0,x:12/width,y:9/height};
+  try{Object.assign(blue,JSON.parse(localStorage.getItem(key+':blue')));}catch{}
+  attachDrag(button,blue,(x,y)=>{
+   try{localStorage.setItem(key+':blue',JSON.stringify({x,y}));return true;}
+   catch{return false;}
+  },()=>{
    $('automaticPantryNoteDialog').classList.remove('personal-note-summary');
    $('automaticPantryNoteTitle').textContent='Lista de la compra';
    const missing={dry:[],fresh:[]};
@@ -1215,11 +1263,10 @@ function renderFridgeNotes(main,topDoor){
    }
    if(!list.childElementCount)list.textContent='No faltan alimentos.';
    $('automaticPantryNoteDialog').showModal();
-  };
-  layer.append(button);
+  });
  }
  if(pantryStylePreference('fridge_notes_enabled')!==true)return;
- const controls=$('fridgeNoteControlsTemplate').content.firstElementChild.cloneNode(true);
+ controls=$('fridgeNoteControlsTemplate').content.firstElementChild.cloneNode(true);
  const [add,summary]=controls.querySelectorAll('button');
  layer.append(controls);
  summary.onclick=()=>{
@@ -1253,40 +1300,13 @@ function renderFridgeNotes(main,topDoor){
    button.className='fridge-note';
    button.textContent=note.number;
    button.setAttribute('aria-label','Abrir nota '+note.number);
-   function position(x,y){
-    button.style.left='calc('+100*x+'% - '+36*x+'px)';
-    button.style.top='calc('+100*y+'% - '+36*y+'px)';
+   if(note.createdAt){
+    const date=document.createElement('time');
+    date.dateTime=note.createdAt;
+    date.textContent=new Date(note.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'});
+    button.append(date);
    }
-   position(note.x,note.y);
-   let drag;
-   let suppressClick=false;
-   button.onpointerdown=event=>{
-    if(event.button!==0||!event.isPrimary)return;
-    suppressClick=false;
-    drag={id:event.pointerId,x:event.clientX,y:event.clientY,moved:false,nx:note.x,ny:note.y};
-    button.setPointerCapture(event.pointerId);
-   };
-   button.onpointermove=event=>{
-    if(drag?.id!==event.pointerId)return;
-    const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
-    if(!drag.moved&&Math.hypot(dx,dy)<5)return;
-    drag.moved=true;
-    drag.nx=Math.min(1,Math.max(0,note.x+dx/Math.max(1,layer.clientWidth-36)));
-    drag.ny=Math.min(1,Math.max(0,note.y+dy/Math.max(1,layer.clientHeight-36)));
-    position(drag.nx,drag.ny);
-   };
-   button.onpointerup=event=>{
-    if(drag?.id!==event.pointerId)return;
-    const {moved,nx,ny}=drag;
-    drag=null;
-    suppressClick=moved;
-    if(moved&&(!free(nx,ny,note.number)||!save(notes.map(item=>item.number===note.number?{...item,x:nx,y:ny}:item)))){
-     position(note.x,note.y);
-    }else if(moved){note.x=nx;note.y=ny;}
-   };
-   button.onpointercancel=()=>{drag=null;position(note.x,note.y);};
-   button.onclick=event=>{
-    if(suppressClick&&event.detail){suppressClick=false;return;}
+   attachDrag(button,note,(x,y)=>save(notes.map(item=>item.number===note.number?{...item,x,y}:item)),()=>{
     const savedNote=notes.find(item=>item.number===note.number);
     const titleButton=$('fridgeNoteEditTitle');
     const titleInput=$('fridgeNoteTitleInput');
@@ -1352,23 +1372,30 @@ function renderFridgeNotes(main,topDoor){
      if(save(notes.filter(item=>item.number!==note.number))){fridgeNoteDialog.close();draw();add.focus();}
     };
     fridgeNoteDialog.showModal();
-   };
+   });
    layer.append(button);
   }
  }
  function free(x,y,number){
-  const width=layer.clientWidth-36,height=layer.clientHeight-36;
-  if(x*width+36>controls.offsetLeft&&y*height<controls.offsetTop+controls.offsetHeight)return false;
-  return notes.every(note=>note.number===number||Math.abs(note.x-x)*width>=31||Math.abs(note.y-y)*height>=31);
+  const [width,height]=dimensions();
+  const left=x*width,top=y*height;
+  const origin=layer.getBoundingClientRect();
+  if(!doors.some(door=>{
+   const rect=door.getBoundingClientRect();
+   return top+origin.top>=rect.top&&top+origin.top+size<=rect.bottom;
+  }))return false;
+  if(controls&&left+size>controls.offsetLeft&&top<controls.offsetTop+controls.offsetHeight)return false;
+  return [...notes,...(blue?[blue]:[])].every(note=>note.number===number||
+   Math.abs(note.x-x)*width>=size-5||Math.abs(note.y-y)*height>=size-5);
  }
  add.onclick=()=>{
   const number=Math.max(0,...notes.map(note=>note.number))+1;
-  const width=layer.clientWidth-36,height=layer.clientHeight-36;
-  const area=Math.min(height,topDoor.clientHeight-46);
-  for(let y=Math.round(area*.49);y<=area;y+=31){
-   for(let x=Math.round(width*.25);x<=width*.86;x+=31){
+  const [width,height]=dimensions();
+  const area=Math.min(height,topDoor.clientHeight-size);
+  for(let y=Math.round(area*.49);y<=height;y+=size-5){
+   for(let x=Math.round(width*.25);x<=width*.86;x+=size-5){
     if(!free(x/width,y/height))continue;
-    if(save([...notes,{number,message:'',x:x/width,y:y/height}])){
+    if(save([...notes,{number,message:'',createdAt:new Date().toISOString(),x:x/width,y:y/height}])){
      draw();
      layer.lastElementChild.focus();
     }
