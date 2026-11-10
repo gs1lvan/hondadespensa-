@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=91">
+  <link rel="stylesheet" href="styles.css?v=92">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -996,16 +996,23 @@
     </section>
 
     <section id="adminPanel" class="admin-panel" hidden aria-label="Panel de administración">
+      <details class="admin-group-panel" id="adminPantryPanel" open>
+        <summary>Despensa actual</summary>
+        <div class="admin-group-content" id="adminPantryPanelContent">
+          <!-- Compartir despensa y sus controles se insertan aquí desde app.js,
+               seguidos de la gestión de la despensa y de la cuenta activa. -->
+          <div class="admin-account">
+            <div><small>CUENTA ACTIVA</small><strong id="accountName">Usuario</strong></div>
+            <button id="signOut" class="text-action" type="button">Cerrar sesión</button>
+          </div>
+        </div>
+      </details>
       <label class="food-group-order" hidden>Orden de alimentos
         <select id="foodGroupOrder">
           <option value="dry">Secos primero</option>
           <option value="fresh">Frescos primero</option>
         </select>
       </label>
-      <div class="admin-account">
-        <div><small>CUENTA ACTIVA</small><strong id="accountName">Usuario</strong></div>
-        <button id="signOut" class="text-action" type="button">Cerrar sesión</button>
-      </div>
       <section class="admin-section">
         <h2>Página de inicio</h2>
         <label class="alternate-home-setting">
@@ -1186,7 +1193,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=120"></script>
+  <script type="module" src="app.js?v=121"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
