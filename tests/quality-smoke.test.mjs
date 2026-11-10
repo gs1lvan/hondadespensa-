@@ -147,6 +147,57 @@ test('catálogos secos y frescos juntos en Añadir categorías por defecto',()=>
  assert.equal((html.match(/id="adminDefaultCategoriesPanel"/g)||[]).length,1,'No duplicar el panel');
 });
 
+test('el borrado de categoría incluye alimentos con confirmación y respeta la despensa', async()=>{
+ const js=read('app.js');
+ const start=js.indexOf('async function deletePantryCategory(category){');
+ const end=js.indexOf('const adminIconPaths={',start);
+ assert.ok(start>=0&&end>start,'No se ha encontrado la función de borrado');
+ const make=new Function('scope','with(scope){'+js.slice(start,end)+';return deletePantryCategory;}');
+ for(const [quantity,accept] of [[3,true],[3,false],[0,true]]){
+  let foods=Array.from({length:quantity},(_,i)=>({id:'target-'+i,despensa_id:'p1',categoria_id:'c1'}));
+  foods.push({id:'other-category',despensa_id:'p1',categoria_id:'c2'});
+  foods.push({id:'other-pantry',despensa_id:'p2',categoria_id:'c1'});
+  let categories=[{id:'c1',despensa_id:'p1'},{id:'c2',despensa_id:'p1'}];
+  const dialogs=[],messages=[];
+  const db={from(table){
+   const query={table,operation:'select',filters:{},ids:null};
+   const builder={
+    select(){return builder;},
+    delete(){query.operation='delete';return builder;},
+    eq(key,value){query.filters[key]=value;return builder;},
+    in(key,ids){query.ids=new Set(ids);return builder;},
+    then(resolve,reject){
+     const source=table==='alimentos'?foods:categories;
+     const matches=source.filter(item=>Object.entries(query.filters).every(([key,value])=>item[key]===value)
+      &&(!query.ids||query.ids.has(item.id)));
+     if(query.operation==='delete'){
+      const removed=new Set(matches.map(item=>item.id));
+      if(table==='alimentos')foods=foods.filter(item=>!removed.has(item.id));
+      else categories=categories.filter(item=>!removed.has(item.id));
+     }
+     return Promise.resolve({data:matches.map(item=>({id:item.id})),error:null}).then(resolve,reject);
+    }
+   };
+   return builder;
+  }};
+  const scope={
+   db,activePantry:{id:'p1'},session:{user:{id:'test'}},categoryMutation:false,
+   pantryCategoryByName:new Map([['Carnes',{id:'c1'}]]),
+   bareCategory:value=>value,confirm:message=>{dialogs.push(message);return accept;},
+   adminOpenCategories:{food:new Set(['Carnes'])},openCategories:new Set(),categoryFoodDrafts:new Map(),
+   refresh:async()=>{},adminMessage:message=>messages.push(message)
+  };
+  await make(scope)('Carnes');
+  assert.equal(dialogs.length,1,'La confirmación debe mostrarse una sola vez');
+  if(quantity)assert.match(dialogs[0],new RegExp(quantity+' alimentos'),'La confirmación debe incluir la cantidad');
+  assert.equal(foods.filter(food=>food.categoria_id==='c1'&&food.despensa_id==='p1').length,accept?0:quantity);
+  assert.ok(foods.some(food=>food.id==='other-category'),'No borrar otras categorías');
+  assert.ok(foods.some(food=>food.id==='other-pantry'),'No borrar otras despensas');
+  assert.equal(categories.some(category=>category.id==='c1'),!accept);
+  assert.equal(messages.length,accept?1:0);
+ }
+});
+
 test('los grupos de alimentos tienen una casilla Todos junto al ojito', () => {
   const js=read('app.js');
   assert.match(js,/admin-category-all admin-group-all/);
