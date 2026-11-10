@@ -21,7 +21,7 @@ test('JavaScript principal y service worker tienen sintaxis válida', () => {
 });
 
 test('el manifiesto PWA es válido y sus iconos existen', () => {
-  assert.equal(manifest.name, 'HondaDespensa');
+  assert.equal(manifest.name, 'HondaDespensa DEV');
   assert.equal(manifest.display, 'standalone');
   assert.ok(Array.isArray(manifest.icons) && manifest.icons.length >= 2);
   for (const icon of manifest.icons) {
@@ -70,3 +70,10 @@ test('no se ha añadido una clave de servicio al cliente web', () => {
 // No afirma que esa política esté activa en el proyecto Supabase real.
 test.todo('auditar las políticas RLS reales por usuario y despensa');
 test.todo('ejecutar flujos E2E Android con dos cuentas y datos ficticios');
+
+test('la versión de desarrollo se distingue visualmente de producción', () => {
+  assert.match(html, /<title>HondaDespensa DEV<\/title>/);
+  assert.match(html, /HondaDespensa DEV · ENTORNO DE PRUEBAS/);
+  assert.match(sw, /hondadespensa-dev-v1/);
+  assert.ok(manifest.id?.includes('entorno=desarrollo'));
+});
