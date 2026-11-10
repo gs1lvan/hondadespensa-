@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=92">
+  <link rel="stylesheet" href="styles.css?v=93">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -1007,14 +1007,11 @@
           </div>
         </div>
       </details>
-      <label class="food-group-order" hidden>Orden de alimentos
-        <select id="foodGroupOrder">
-          <option value="dry">Secos primero</option>
-          <option value="fresh">Frescos primero</option>
-        </select>
-      </label>
+      <details class="admin-group-panel" id="adminAlternateHomePanel">
+        <summary>Página de inicio alternativa</summary>
+        <div class="admin-group-content">
       <section class="admin-section">
-        <h2>Página de inicio</h2>
+        <h2>Opciones de la página de inicio</h2>
         <label class="alternate-home-setting">
           <input id="alternateHome" type="checkbox">
           Activar página de inicio alternativa
@@ -1042,18 +1039,34 @@
         <p class="hint">Nevera vintage</p>
         <p id="alternateHomeMessage" class="admin-msg" role="status"></p>
       </section>
-      <details class="admin-section admin-add-collapsible">
-        <summary>➕ Añadir alimento</summary>
-        <div id="adminAddMount"></div>
+        </div>
       </details>
+      <details class="admin-group-panel" id="adminStylesPanel">
+        <summary>Estilos</summary>
+        <div class="admin-group-content" id="adminStylesPanelContent"></div>
+      </details>
+      <details class="admin-group-panel" id="adminFoodsPanel">
+        <summary>Alimentos de vuestra despensa</summary>
+        <div class="admin-group-content">
+          <label class="food-group-order" hidden>Orden de alimentos
+            <select id="foodGroupOrder">
+              <option value="dry">Secos primero</option>
+              <option value="fresh">Frescos primero</option>
+            </select>
+          </label>
       <section class="admin-section">
-        <h2>Alimentos de vuestra despensa</h2>
         <div class="admin-toolbar">
           <input id="adminFoodSearch" placeholder="Buscar alimento…" aria-label="Buscar alimentos en administración">
           <button id="dedup" class="secondary" type="button">Eliminar duplicados</button>
         </div>
         <div id="adminFoods" class="admin-list"></div>
       </section>
+        </div>
+      </details>
+      <details class="admin-section admin-add-collapsible">
+        <summary>➕ Añadir alimento</summary>
+        <div id="adminAddMount"></div>
+      </details>
       <details class="admin-section admin-catalog">
         <summary>📚 Añadir catálogo de alimentos secos</summary>
         <p class="hint">Te presento una lista más o menos estructurada con los alimentos de larga duración que puedes usar, recuerda que puedes borrarlas todas y generar tus propias categorías, pero siempre tendrás está base para volver a empezar.</p>
@@ -1193,7 +1206,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=121"></script>
+  <script type="module" src="app.js?v=122"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
