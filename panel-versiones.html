@@ -154,8 +154,19 @@ var groups = [
 ["classic","Inicio clásico"],["vintage","Nevera vintage"],["closed","Puertas cerradas al iniciar"],["doors","Abrir y cerrar puertas independientes"],["polaroid","Fotografía y marco vintage"],["decoration","Decoración de la nevera"],["expanded","Vista de alimentos ampliada"],["compact","Vista compacta"],["weather","Estación meteorológica de Playa Honda"],["calendar","Calendario independiente"],["integrated","Calendario integrado"]]},
 {id:"notas",name:"Notas y compras",symbol:"📝",items:[
 ["notes","Notas personales amarillas"],["drag","Notas arrastrables"],["titles","Títulos y numeración"],["notefoods","Filas de alimentos y cantidades"],["copy","Copiar contenido de notas"],["summary","Resumir notas"],["delnote","Eliminar notas"],["blue","Nota azul automática de agotados"]]},
-{id:"aspecto",name:"Temas y apariencia",symbol:"🎨",items:[
-["dark","Temas oscuros"],["light","Temas claros"],["colors","Colores personalizados"],["textures","Texturas de fondo"],["fonts","Tipografías personalizadas"],["illustrated","Iconos ilustrados"],["simple","Iconos sencillos"],["stencil","Esténcil con envases"],["stencilbare","Esténcil sin envases"],["adminicons","Iconos de administración"],["iconsize","Tamaño de los iconos"],["prefs","Preferencias por usuario y despensa"]]},
+{id:"estilos",name:"Estilos visuales",symbol:"🎨",items:[
+["ampliado","Vista ampliada"],["compactado","Vista compactada"],["dark","Temas oscuros"],["light","Temas claros"],
+["tema_marino","Azul marino | oscuro"],["tema_petroleo","Azul petróleo | oscuro"],["tema_bosque","Verde bosque | oscuro"],["tema_grafito","Gris grafito | oscuro"],["tema_ciruela","Ciruela | oscuro"],
+["tema_petroleo_claro","Azul petróleo | claro"],["tema_bosque_claro","Verde bosque | claro"],["tema_ciruela_claro","Ciruela | claro"],
+["colors","Colores personalizados (fondo, texto y bordes)"],["textures","Texturas de fondo"],["fonts","Tipografías personalizadas"],["fontweight","Grosor de la tipografía"],["fontsize","Tamaño de la tipografía"],["prefs","Preferencias guardadas por usuario y despensa"]]},
+{id:"iconos",name:"Familias de iconos",symbol:"🖼️",items:[
+["illustrated","Secos · iconos ilustrados"],["simple","Secos · iconos sencillos"],["stencil","Secos · esténcil con envases"],["stencilbare","Secos · esténcil sin envases"],
+["fresh_illustrated","Frescos · iconos ilustrados"],["fresh_simple","Frescos · iconos sencillos"],["fresh_stencil","Frescos · esténcil con envases"],["fresh_stencilbare","Frescos · esténcil sin envases"],
+["iconselector","Selector de familia de iconos"],["adminicons","Iconos de categorías en Administración"],["iconsize","Tamaño de los iconos"],["iconstylelight","Contraste de los iconos en temas claros"]]},
+{id:"adminpaneles",name:"Paneles de Administración",symbol:"☷",items:[
+["admin_inicio","Página de inicio"],["admin_estilos","Estilos"],["admin_anadir","Añadir alimento"],["admin_alimentos","Alimentos de vuestra despensa"],
+["admin_catalogo_secos","Añadir catálogo de alimentos secos"],["admin_catalogo_frescos","Añadir catálogo de alimentos frescos"],["admin_catalogo_gestion","Administrar catálogo"],
+["admin_compartir","Compartir despensa"],["admin_despensa","Despensa actual"]]},
 {id:"tecnica",name:"Funciones técnicas",symbol:"⚙",items:[
 ["pwa","Instalación PWA"],["offline","Caché y acceso sin conexión"],["realtime","Sincronización en tiempo real"],["fallback","Sincronización de respaldo"],["cloud","Datos en Supabase"],["restore","Recuperar configuración al iniciar"]]}
 ];
@@ -220,6 +231,11 @@ function markdown(){
  return out.join("\n");
 }
 function payload(){return {app:"HondaDespensa",target:"DEV",source:"PROD",savedAt:new Date().toISOString(),decisions:groups.map(function(g){return {grupo:g.name,funciones:g.items.map(function(it){return {id:it[0],nombre:it[1],decision:state[it[0]]};})};})};}
+window.addEventListener("storage",function(event){
+ if(event.key!==key)return;
+ try{var fresh=JSON.parse(event.newValue||"{}");all.forEach(function(item){state[item.id]=valid.includes(fresh[item.id])?fresh[item.id]:"pendiente";});render();}
+ catch(e){}
+});
 $("search").addEventListener("input",render);
 $("pendingOnly").addEventListener("change",render);
 $("clearSearch").addEventListener("click",function(){$("search").value="";$("pendingOnly").checked=false;render();});
