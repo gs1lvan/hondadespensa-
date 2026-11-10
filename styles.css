@@ -774,6 +774,23 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
  #adminFoods .admin-food-group-bar .admin-group-all{flex-basis:34px;min-width:34px}
 }
 
+/* Los dos catálogos predeterminados comparten un panel plegable. */
+#adminDefaultCategoriesPanel .admin-default-categories-hint{
+ margin:5px 0 12px;line-height:1.5;
+}
+#adminDefaultCategoriesPanel .admin-catalog{
+ margin-top:0;padding:9px 0;border-top:1px solid var(--card-edge,#527ba1);
+}
+#adminDefaultCategoriesPanel .admin-catalog > summary{
+ font-size:16px;line-height:1.35;padding:9px 0;
+}
+#adminDefaultCategoriesPanel .admin-catalog > summary::after{
+ white-space:nowrap;
+}
+#adminDefaultCategoriesPanel .admin-catalog[open]{
+ padding-bottom:12px;
+}
+
 /* Acceso directo a Administrar categorías, como panel independiente. */
 #adminCategoriesPanel .admin-toolbar{margin-top:7px}
 #adminCategoriesPanel .admin-group-content>.admin-section{border-top:0;padding-top:5px}
