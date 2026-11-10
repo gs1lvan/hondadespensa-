@@ -110,7 +110,6 @@ let data=[],session=null,channel=null,catalogChannel=null,busy=false,catalogRows
 const openCategories=new Set(),catalogOpen=new Set();
 const adminOpenCategories={food:new Set(),catalog:new Set()};
 const adminFoodGroupOpen=new Map();
-let adminFirstCategoryInitialized=false;
 const recentAdminFoods=new Map();
 let recentAdminFoodSequence=0;
 const adminFoodKey=item=>JSON.stringify([item.category,folded(item.name)]);
@@ -2164,7 +2163,6 @@ async function openPantry(pantry){
  openCategories.clear();
  adminOpenCategories.food.clear();
  adminFoodGroupOpen.clear();
- adminFirstCategoryInitialized=false;
  $('adminFoods').replaceChildren();
  categoryFoodDrafts.clear();
  recentAdminFoods.clear();
@@ -2631,6 +2629,8 @@ function renderGroupedAdmin(container,rows,type,query){
  const open=adminOpenCategories[type];
  // Leer el estado actual antes de reconstruir la lista, sin esperar al evento toggle.
  for(const section of container.querySelectorAll('details.admin-category')){
+  // No recordar las aperturas temporales provocadas por la búsqueda.
+  if(type==='food'&&container.dataset.query)continue;
   if(section.open)open.add(section.dataset.category);else open.delete(section.dataset.category);
  }
  // El estado de los grupos se guarda cuando el usuario toca su flecha.
@@ -2646,10 +2646,6 @@ function renderGroupedAdmin(container,rows,type,query){
  }
  const foodGroups=new Map();
  const categories=type==='food'?orderedCategories(groups.keys()):[...groups.keys()].sort(esCompare);
- if(type==='food'&&!adminFirstCategoryInitialized&&categories.length&&!query){
-  open.add(categories[0]); // Primera tarjeta abierta, como en Administrar categorías original.
-  adminFirstCategoryInitialized=true;
- }
  for(const category of categories){
   const section=document.createElement('details');section.className='category admin-category';
   const count=groups.get(category).length;
@@ -2689,7 +2685,7 @@ function renderGroupedAdmin(container,rows,type,query){
   header.className='category-header admin-food-group-bar';
   header.append(...original.childNodes);
   header.querySelector('.cat-count').setAttribute('aria-label',foodGroup.count+' alimentos');
-  const expanded=!!query||(adminFoodGroupOpen.get(group)??true);
+  const expanded=!!query||(adminFoodGroupOpen.get(group)??false);
   foodGroup.cards.hidden=!expanded;
   const collapse=document.createElement('button');
   collapse.type='button';
