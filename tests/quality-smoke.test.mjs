@@ -80,6 +80,30 @@ test('el primer panel de Administración agrupa compartir, despensa y cuenta act
   assert.match(js, /sharingSection\.after\(deletePantrySection\)/, 'Gestión de despensa debe seguir a compartir');
 });
 
+test('Administración distribuye inicio, Estilos y alimentos en paneles padres', () => {
+  const js = read('app.js');
+  const headings = [
+    'adminPantryPanel', 'adminAlternateHomePanel', 'adminStylesPanel', 'adminFoodsPanel'
+  ].map(id => html.indexOf('id="' + id + '"'));
+  assert.ok(headings.every(i => i >= 0), 'Falta alguno de los cuatro paneles padres');
+  assert.ok(headings.every((i, n) => n === 0 || headings[n - 1] < i), 'Orden de paneles incorrecto');
+  const alternate = html.slice(headings[1], headings[2]);
+  for (const id of [
+    'alternateHome', 'startFridgeClosed', 'enableFridgeNotes',
+    'enableAutomaticPantryNote', 'calendarIndependent', 'calendarIntegrated'
+  ]) assert.ok(alternate.includes('id="' + id + '"'), 'Opción de inicio fuera de su panel: ' + id);
+  const foods = html.slice(headings[3], html.indexOf('id="adminAddMount"'));
+  assert.match(foods, /id="foodGroupOrder"/, 'Orden de alimentos fuera de su panel');
+  assert.match(foods, /id="adminFoodSearch"/, 'Buscador de alimentos fuera de su panel');
+  assert.match(foods, /id="adminFoods"/, 'Lista de alimentos fuera de su panel');
+  assert.match(js, /document\.createElement\('section'\);panel\.className='admin-section style-panel'/);
+  assert.match(js, /\$\('adminStylesPanelContent'\)\.append\(panel\)/, 'Estilos no se monta en su panel');
+  for (const section of [
+    'Vista de la despensa', 'Tamaño de los iconos de la despensa',
+    'mountTypography(panel)', 'mountBackground(panel)', 'mountIconOptions(panel)'
+  ]) assert.ok(js.includes(section), 'Falta un ajuste visual: ' + section);
+});
+
 test('no hay IDs literales duplicados en index.html', () => {
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
   assert.equal(new Set(ids).size, ids.length, 'Hay atributos id duplicados');
