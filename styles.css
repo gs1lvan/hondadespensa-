@@ -631,3 +631,14 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 [data-view-style=compactado] .admin-group-panel > summary{font-size:17px;min-height:45px;padding:11px 13px}
 [data-view-style=compactado] .admin-group-content{padding:0 11px 12px}
 @media(prefers-reduced-motion:reduce){.admin-group-panel > summary::after{transition:none}}
+
+/* Los ajustes de inicio, Estilos y alimentos utilizan el mismo panel padre que Despensa actual. */
+.admin-group-panel > .admin-group-content > .admin-section:first-child{
+ border-top:0;
+ padding-top:7px;
+}
+#adminStylesPanelContent .style-panel{margin:0;padding-top:9px}
+#adminStylesPanelContent .style-panel h2:first-child{margin-top:0}
+#adminAlternateHomePanel .admin-group-content > .admin-section > h2{font-size:16px;opacity:.88}
+#adminFoodsPanel .food-group-order:not([hidden]){margin:4px 0 12px}
+#adminFoodsPanel .admin-toolbar{margin-top:7px}
