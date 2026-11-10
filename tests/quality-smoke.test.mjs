@@ -126,6 +126,27 @@ test('Administración distribuye inicio, Estilos y alimentos en paneles padres',
   ]) assert.ok(js.includes(section), 'Falta un ajuste visual: ' + section);
 });
 
+test('catálogos secos y frescos juntos en Añadir categorías por defecto',()=>{
+ const start=html.indexOf('id="adminDefaultCategoriesPanel"');
+ const end=html.indexOf('<summary>✏️ Administrar catálogo</summary>',start);
+ assert.ok(start>=0&&end>start,'No existe el panel de categorías por defecto');
+ const region=html.slice(start,end);
+ assert.match(html,/<details class="admin-group-panel" id="adminDefaultCategoriesPanel">/,'El nuevo panel debe comenzar plegado');
+ assert.match(region,/<summary>Añadir categorías por defecto<\/summary>/);
+ assert.match(region,/Si quieres empezar tu despensa y no tienes claro qué categorías añadir/);
+ assert.match(region,/Eres libre de añadir, eliminar o editar las que quieras\./);
+ assert.match(region,/Añadir catálogo de alimentos secos/);
+ assert.match(region,/Añadir desde el catálogo de alimentos frescos/);
+ for(const id of ['catalogSearch','catalogItems','freshCatalog','freshCatalogSearch','freshCatalogItems']){
+  assert.ok(region.includes('id="'+id+'"'),'No se ha conservado el control '+id);
+ }
+ const js=read('app.js');
+ assert.match(js,/renderCatalogList\(\$\('catalogItems'\),\$\('catalogSearch'\),groups,catalogOpen\)/);
+ assert.match(js,/renderCatalogList\(\$\('freshCatalogItems'\),\$\('freshCatalogSearch'\),Object\.entries\(freshCatalogGroups\),freshCatalogOpen\)/);
+ assert.match(js,/\$\('freshCatalog'\)\.hidden=false/,'El catálogo de frescos debe mantenerse operativo');
+ assert.equal((html.match(/id="adminDefaultCategoriesPanel"/g)||[]).length,1,'No duplicar el panel');
+});
+
 test('los grupos de alimentos tienen una casilla Todos junto al ojito', () => {
   const js=read('app.js');
   assert.match(js,/admin-category-all admin-group-all/);
