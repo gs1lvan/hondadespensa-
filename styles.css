@@ -761,3 +761,8 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
  #adminFoods .admin-food-group-bar .cat-count{padding-inline:5px}
  #adminFoods .admin-food-group-bar .admin-group-all{flex-basis:34px;min-width:34px}
 }
+
+/* Acceso directo a Administrar categorías, como panel independiente. */
+#adminCategoriesPanel .admin-toolbar{margin-top:7px}
+#adminCategoriesPanel .admin-group-content>.admin-section{border-top:0;padding-top:5px}
+#adminCategoriesPanel .admin-list{min-width:0}
