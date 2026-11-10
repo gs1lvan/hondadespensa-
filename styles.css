@@ -682,3 +682,41 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 }
 #adminNotesPanel .admin-note-tag-remove:focus-visible{outline:2px solid currentColor;outline-offset:1px}
 #adminNotesPanel .admin-note-tag-item button:disabled{opacity:.5}
+
+/* Administración de etiquetas: filas y acciones como en categorías. */
+#adminNotesPanel .admin-note-tag-list{
+ display:grid;gap:0;margin:12px 0;border:1px solid var(--card-edge,#729aba);
+ border-radius:14px;overflow:hidden;
+}
+#adminNotesPanel .admin-note-tag-row{
+ display:flex;flex-wrap:wrap;align-items:center;gap:7px;
+ min-width:0;min-height:54px;padding:5px 8px;
+ background:var(--card-inner,#09243b);border-bottom:1px solid var(--card-edge,#729aba66);
+}
+#adminNotesPanel .admin-note-tag-row:last-child{border-bottom:0}
+#adminNotesPanel .admin-note-tag-name{
+ flex:1 1 92px;min-width:0;overflow-wrap:anywhere;font-size:clamp(13px,3.5vw,16px);
+}
+#adminNotesPanel .admin-note-tag-actions{display:flex;gap:4px;align-items:center;margin-inline-start:auto}
+#adminNotesPanel .admin-note-tag-actions .admin-icon-button{
+ display:grid;place-items:center;flex:0 0 38px;width:38px;height:42px;min-height:42px;
+ padding:0;border-radius:9px;box-shadow:none;
+}
+#adminNotesPanel .admin-note-tag-actions .admin-icon-button svg{width:17px;height:17px}
+#adminNotesPanel .admin-note-tag-actions .admin-icon-button.danger{color:#ffaaa4}
+#adminNotesPanel .admin-note-tag-actions .admin-icon-button:disabled{opacity:.35}
+#adminNotesPanel .admin-note-tag-edit{
+ display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:0 0 100%;padding:6px 0 4px;
+}
+#adminNotesPanel .admin-note-tag-edit input{
+ flex:1 1 130px;min-width:0;min-height:44px;padding:8px 10px;border-radius:10px;font-size:16px;
+}
+#adminNotesPanel .admin-note-tag-edit button{min-height:44px;padding:8px 11px;font-size:13px}
+#adminNotesPanel .admin-note-tag-form #noteTagAdd{
+ display:grid;place-items:center;min-width:48px;min-height:48px;padding:0;font-size:26px;line-height:1;
+}
+@media(max-width:385px){
+ #adminNotesPanel .admin-note-tag-row{padding:5px}
+ #adminNotesPanel .admin-note-tag-actions{gap:2px}
+ #adminNotesPanel .admin-note-tag-actions .admin-icon-button{flex-basis:34px;width:34px}
+}
