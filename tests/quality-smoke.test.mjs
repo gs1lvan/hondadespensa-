@@ -136,6 +136,16 @@ test('Notas dispone de panel de tags y nube independiente del título libre',()=
  for(const tag of ['Lidl','Mercadona','Frutería','Carnicería','Panadería','Pescadería','Farmacia','Ferretería','Mercado','Bazar'])
   assert.ok(js.includes("'"+tag+"'"),'Falta '+tag);
 });
+test('Las etiquetas de Notas se administran con controles por fila',()=>{
+ const js=read('app.js');
+ assert.ok(js.includes("row.className='admin-note-tag-row'"),'Faltan filas individuales');
+ assert.ok(js.includes("setAdminIcon(edit,'edit','Editar etiqueta '+tag)"),'Falta edición');
+ assert.ok(js.includes("setAdminIcon(remove,'trash','Eliminar etiqueta '+tag)"),'Falta eliminación');
+ assert.ok(js.includes("savePersonalNoteTags(next,'Orden de etiquetas guardado.')"),'Falta reordenación');
+ assert.ok(js.includes("savePersonalNoteTags(current.map(other=>other===tag?value:other),'Etiqueta modificada.')"),'Falta guardar edición');
+ assert.ok(js.includes("note.tags=next"),'No debe sustituirse el título por una etiqueta');
+ assert.ok(html.includes('id="noteTagAdd" type="submit" aria-label="Añadir etiqueta"'),'El botón de alta debe ser accesible');
+});
 test('no hay IDs literales duplicados en index.html', () => {
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
   assert.equal(new Set(ids).size, ids.length, 'Hay atributos id duplicados');
