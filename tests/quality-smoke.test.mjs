@@ -56,6 +56,18 @@ test('las versiones del JS y CSS en HTML están precargadas en la PWA', () => {
   }
 });
 
+test('se pueden ocultar secos y frescos de forma independiente sin borrar los alimentos', () => {
+  const js = read('app.js');
+  for (const id of ['showDryFoods', 'showFreshFoods']) {
+    assert.match(html, new RegExp('id="' + id + '" type="checkbox"'), 'Falta casilla ' + id);
+  }
+  assert.ok(html.indexOf('id="showFreshFoods"') < html.indexOf('id="foodGroupOrder"'), 'Los controles deben ir antes del orden');
+  assert.match(js, /pantryStyleKey\('show_'\+group\+'_foods'\)/, 'La visibilidad debe guardarse por despensa');
+  assert.match(js, /const visibleData=data\.filter/, 'La lista debe respetar los grupos visibles');
+  assert.match(js, /const categories=orderedCategories\(pantryCategories\(\)\)/, 'Las categorías deben filtrarse solo al mostrar');
+  assert.match(js, /renderGroupedAdmin\(\$\('adminFoods'\),data,'food'/, 'Administración mantiene el inventario completo');
+});
+
 test('no hay IDs literales duplicados en index.html', () => {
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
   assert.equal(new Set(ids).size, ids.length, 'Hay atributos id duplicados');
