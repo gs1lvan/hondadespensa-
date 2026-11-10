@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=95">
+  <link rel="stylesheet" href="styles.css?v=96">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -1069,14 +1069,14 @@
         <div class="admin-group-content">
           <section class="admin-section admin-note-tags">
             <h2>Etiquetas de las notas personales</h2>
-            <p class="hint">Elige las etiquetas disponibles en las notas. Los títulos se pueden escribir libremente.</p>
+            <p class="hint">Añade, ordena, edita o elimina las etiquetas que aparecen en las notas. El título seguirá siendo libre.</p>
             <form id="noteTagForm" class="admin-note-tag-form">
               <input id="noteTagInput" type="text" maxlength="30" autocomplete="off" placeholder="Nueva etiqueta" aria-label="Nueva etiqueta de notas" required>
-              <button id="noteTagAdd" type="submit">Añadir</button>
+              <button id="noteTagAdd" type="submit" aria-label="Añadir etiqueta" title="Añadir etiqueta">+</button>
             </form>
             <div id="adminNoteTags" class="admin-note-tag-list" aria-label="Etiquetas disponibles"></div>
             <p id="noteTagsStatus" class="admin-msg" role="status"></p>
-            <p class="hint">Eliminar una etiqueta del catálogo no borra las notas ni cambia sus títulos.</p>
+            <p class="hint">Si editas o eliminas una etiqueta, las ya elegidas en notas existentes se conservan sin alterar el título.</p>
           </section>
         </div>
       </details>
@@ -1246,7 +1246,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=125"></script>
+  <script type="module" src="app.js?v=126"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
