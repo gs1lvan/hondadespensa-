@@ -2022,8 +2022,8 @@ let sharedWithGema=false;
 async function refreshPantrySharing(enabled=null){
  const request=++sharingRequest;
  const pantry=activePantry;
- sharingSection.hidden=!adminMode||!pantry||
-  session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
+ // Mostrar siempre el apartado; Supabase decide si la cuenta puede compartir.
+ sharingSection.hidden=!adminMode||!pantry;
  if(sharingSection.hidden)return;
  shareWithGema.checked=!!pantry.compartida;
  shareWithGema.disabled=true;
@@ -2033,10 +2033,11 @@ async function refreshPantrySharing(enabled=null){
  });
  if(request!==sharingRequest||activePantry!==pantry)return;
  if(!error){sharedWithGema=shared;pantry.compartida=shared;}
- shareWithGema.checked=sharedWithGema;
- shareWithGema.disabled=!!error&&enabled===null;
+ shareWithGema.checked=error?!!pantry.compartida:!!sharedWithGema;
+ // Nunca dejar activo el control si el servidor no confirma los permisos.
+ shareWithGema.disabled=!!error;
  sharingStatus.textContent=error
-  ? 'No se pudo consultar o guardar el acceso. Comprueba la configuración en Supabase.'
+  ? 'No se pudo consultar o guardar el acceso. Por seguridad, compartir está desactivado hasta que se comprueben los permisos.'
   : shared?'Gema tiene acceso a esta despensa.':'Esta despensa es privada.';
 }
 shareWithGema.onchange=()=>refreshPantrySharing(shareWithGema.checked);
@@ -2172,6 +2173,16 @@ $('signOut').onclick=async()=>{
  if(error){adminMessage('No se pudo cerrar sesión: '+error.message);return;}
  await signedIn(null);
 };
+// Refrescar los apartados al abrirlos, incluso si la PWA se reanudó desde caché.
+$('adminProfilePanel').addEventListener('toggle',()=>{
+ if(adminMode&&$('adminProfilePanel').open)refreshPantrySharing();
+});
+$('adminPantryPanel').addEventListener('toggle',()=>{
+ if(!adminMode||!$('adminPantryPanel').open)return;
+ deletePantrySection.hidden=!activePantry;
+ if(activePantry)refreshPantryProtection();
+});
+
 $('adminToggle').onclick=()=>{
  adminMode=!adminMode;recentAdminFoods.clear();showApp(true);
  if(adminMode)renderAdmin();else render();
