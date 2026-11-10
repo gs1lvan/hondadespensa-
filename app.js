@@ -1242,23 +1242,84 @@ let savingPersonalNoteTags=false;
 function renderAdminNoteTags(){
  const list=$('adminNoteTags');
  list.replaceChildren();
- for(const tag of configuredPersonalNoteTags()){
-  const item=document.createElement('span');
-  item.className='admin-note-tag-item';
-  const name=document.createElement('span');name.textContent=tag;
+ const tags=configuredPersonalNoteTags();
+ for(const [index,tag] of tags.entries()){
+  const row=document.createElement('div');
+  row.className='admin-note-tag-row';
+  const name=document.createElement('strong');
+  name.className='admin-note-tag-name';
+  name.textContent=tag;
+  const buttons=document.createElement('div');
+  buttons.className='admin-note-tag-actions';
+  for(const [delta,icon,label] of [[-1,'up','Subir'],[1,'down','Bajar']]){
+   const button=document.createElement('button');
+   button.type='button';
+   setAdminIcon(button,icon,label+' etiqueta '+tag);
+   button.classList.add('secondary');
+   button.disabled=savingPersonalNoteTags||index+delta<0||index+delta>=tags.length;
+   button.onclick=()=>{
+    const next=[...configuredPersonalNoteTags()];
+    const currentIndex=next.indexOf(tag);
+    const targetIndex=currentIndex+delta;
+    if(currentIndex<0||targetIndex<0||targetIndex>=next.length)return;
+    [next[currentIndex],next[targetIndex]]=[next[targetIndex],next[currentIndex]];
+    savePersonalNoteTags(next,'Orden de etiquetas guardado.');
+   };
+   buttons.append(button);
+  }
+  const edit=document.createElement('button');
+  edit.type='button';
+  edit.className='secondary';
+  setAdminIcon(edit,'edit','Editar etiqueta '+tag);
+  edit.disabled=savingPersonalNoteTags;
+  edit.onclick=()=>{
+   if(row.querySelector('.admin-note-tag-edit'))return;
+   const form=document.createElement('form');
+   form.className='admin-note-tag-edit';
+   const input=document.createElement('input');
+   input.type='text';
+   input.maxLength=30;
+   input.required=true;
+   input.value=tag;
+   input.setAttribute('aria-label','Nuevo nombre para '+tag);
+   const save=document.createElement('button');
+   save.type='submit';
+   save.textContent='Guardar';
+   const cancel=document.createElement('button');
+   cancel.type='button';
+   cancel.className='secondary';
+   cancel.textContent='Cancelar';
+   cancel.onclick=()=>{form.remove();edit.focus();};
+   form.onsubmit=event=>{
+    event.preventDefault();
+    const value=input.value.trim().replace(/\\s+/g,' ');
+    if(!value)return;
+    const current=configuredPersonalNoteTags();
+    if(current.some(other=>other!==tag&&folded(other)===folded(value))){
+     $('noteTagsStatus').textContent='Ya existe una etiqueta con ese nombre.';
+     input.focus();
+     return;
+    }
+    if(value===tag){form.remove();edit.focus();return;}
+    savePersonalNoteTags(current.map(other=>other===tag?value:other),'Etiqueta modificada.');
+   };
+   form.append(input,save,cancel);
+   row.append(form);
+   input.focus();
+   input.select();
+  };
   const remove=document.createElement('button');
   remove.type='button';
-  remove.className='admin-note-tag-remove';
-  remove.textContent='×';
-  remove.title='Eliminar etiqueta '+tag;
-  remove.setAttribute('aria-label','Eliminar etiqueta '+tag);
+  remove.className='danger';
+  setAdminIcon(remove,'trash','Eliminar etiqueta '+tag);
   remove.disabled=savingPersonalNoteTags;
   remove.onclick=()=>{
-   if(!confirm('¿Eliminar «'+tag+'» de las opciones? Las notas y sus títulos se conservarán.'))return;
+   if(!confirm('¿Eliminar «'+tag+'» del catálogo de etiquetas? Las notas existentes se conservarán.'))return;
    savePersonalNoteTags(configuredPersonalNoteTags().filter(value=>value!==tag),'Etiqueta eliminada.');
   };
-  item.append(name,remove);
-  list.append(item);
+  buttons.append(edit,remove);
+  row.append(name,buttons);
+  list.append(row);
  }
  $('noteTagAdd').disabled=savingPersonalNoteTags;
  $('noteTagInput').disabled=savingPersonalNoteTags;
