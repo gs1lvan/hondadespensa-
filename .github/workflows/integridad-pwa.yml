@@ -6,6 +6,7 @@ on:
     branches:
       - "auditoria/**"
       - "lite/**"
+      - "desarrollo"
 
 permissions:
   contents: read
