@@ -2665,7 +2665,8 @@ function renderGroupedAdmin(container,rows,type,query){
   if(!foodGroups.has(group)){
    const details=document.createElement('details');details.className='category admin-food-group';
    details.dataset.foodGroup=group;
-   details.open=!!query||adminFoodGroupOpen.get(group)===true;
+   // Las categorías se muestran al entrar; conservar el plegado que haga el usuario.
+   details.open=!!query||(adminFoodGroupOpen.get(group)??true);
    foodGroups.set(group,{details,count:0});
   }
   const foodGroup=foodGroups.get(group);
