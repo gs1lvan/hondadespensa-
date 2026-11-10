@@ -2737,7 +2737,9 @@ function renderGroupedAdmin(container,rows,type,query){
   all.onclick=event=>event.stopPropagation();
   all.onkeydown=event=>event.stopPropagation();
   allCheck.onchange=()=>setBulkFoodAvailability(allItems,allCheck.checked,title.toLowerCase());
-  header.insertBefore(all,eye);
+  // El botón collapse ya es hijo del header; eye todavía no lo es.
+  // Insertar ambos controles delante de collapse evita NotFoundError y la lista vacía.
+  header.insertBefore(all,collapse);
   header.insertBefore(eye,collapse);
   foodGroup.shell.classList.toggle('is-hidden-group',!visible);
   foodGroup.shell.prepend(header);
