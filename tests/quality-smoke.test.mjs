@@ -68,31 +68,32 @@ test('se pueden ocultar secos y frescos de forma independiente sin borrar los al
   assert.match(js, /foodGroup\.details\.classList\.toggle\('is-hidden-group',!visible\)/, 'El grupo oculto debe atenuarse');
 });
 
-test('el primer panel de Administración agrupa compartir, despensa y cuenta activa', () => {
+test('Perfil es el primer panel e incluye Cuenta activa y Compartir despensa', () => {
   const js = read('app.js');
-  const panelPosition = html.indexOf('id="adminPantryPanel"');
-  const orderPosition = html.indexOf('id="foodGroupOrder"');
-  const accountPosition = html.indexOf('class="admin-account"');
-  assert.ok(panelPosition >= 0 && panelPosition < orderPosition, 'El panel de despensa debe ir primero');
-  assert.ok(accountPosition > panelPosition && accountPosition < orderPosition, 'Cuenta activa debe estar dentro del panel');
-  assert.match(html, /id="adminPantryPanelContent"/, 'Falta el contenedor de secciones internas');
-  assert.match(js, /\$\('adminPantryPanelContent'\)\.prepend\(sharingSection\)/, 'Compartir despensa debe entrar en el panel');
-  assert.match(js, /sharingSection\.after\(deletePantrySection\)/, 'Gestión de despensa debe seguir a compartir');
+  const profile=html.indexOf('id="adminProfilePanel"');
+  const pantry=html.indexOf('id="adminPantryPanel"');
+  const alternate=html.indexOf('id="adminAlternateHomePanel"');
+  const account=html.indexOf('class="admin-account"');
+  assert.ok(profile>=0&&profile<account&&account<pantry&&pantry<alternate,'Perfil debe aparecer antes de Despensa actual');
+  assert.match(html,/id="adminProfilePanelContent"/);
+  assert.match(html,/id="adminPantryPanelContent"/);
+  assert.match(js,/\$\('adminProfilePanelContent'\)\.append\(sharingSection\)/,'Compartir despensa en Perfil');
+  assert.match(js,/\$\('adminPantryPanelContent'\)\.append\(deletePantrySection\)/,'Gestión en Despensa actual');
 });
 
 test('Administración distribuye inicio, Estilos y alimentos en paneles padres', () => {
   const js = read('app.js');
   const headings = [
-    'adminPantryPanel', 'adminAlternateHomePanel', 'adminStylesPanel', 'adminFoodsPanel'
+    'adminProfilePanel', 'adminPantryPanel', 'adminAlternateHomePanel', 'adminStylesPanel', 'adminFoodsPanel'
   ].map(id => html.indexOf('id="' + id + '"'));
-  assert.ok(headings.every(i => i >= 0), 'Falta alguno de los cuatro paneles padres');
+  assert.ok(headings.every(i => i >= 0), 'Falta alguno de los cinco paneles padres');
   assert.ok(headings.every((i, n) => n === 0 || headings[n - 1] < i), 'Orden de paneles incorrecto');
-  const alternate = html.slice(headings[1], headings[2]);
+  const alternate = html.slice(headings[2], headings[3]);
   for (const id of [
     'alternateHome', 'startFridgeClosed', 'enableFridgeNotes',
     'enableAutomaticPantryNote', 'calendarIndependent', 'calendarIntegrated'
   ]) assert.ok(alternate.includes('id="' + id + '"'), 'Opción de inicio fuera de su panel: ' + id);
-  const foods = html.slice(headings[3], html.indexOf('id="adminAddMount"'));
+  const foods = html.slice(headings[4], html.indexOf('id="adminAddMount"'));
   assert.match(foods, /id="foodGroupOrder"/, 'Orden de alimentos fuera de su panel');
   assert.match(foods, /id="adminFoodSearch"/, 'Buscador de alimentos fuera de su panel');
   assert.match(foods, /id="adminFoods"/, 'Lista de alimentos fuera de su panel');
@@ -102,6 +103,17 @@ test('Administración distribuye inicio, Estilos y alimentos en paneles padres',
     'Vista de la despensa', 'Tamaño de los iconos de la despensa',
     'mountTypography(panel)', 'mountBackground(panel)', 'mountIconOptions(panel)'
   ]) assert.ok(js.includes(section), 'Falta un ajuste visual: ' + section);
+});
+
+test('los grupos de alimentos tienen una casilla Todos junto al ojito', () => {
+  const js=read('app.js');
+  assert.match(js,/admin-category-all admin-group-all/);
+  assert.match(js,/allCheck\.indeterminate=selected>0&&selected<allItems\.length/);
+  assert.match(js,/header\.insertBefore\(all,eye\)/);
+  assert.match(js,/all\.onclick=event=>event\.stopPropagation\(\)/);
+  assert.match(js,/allCheck\.onchange=\(\)=>setBulkFoodAvailability\(allItems,allCheck\.checked,title\.toLowerCase\(\)\)/);
+  assert.match(js,/\.eq\('despensa_id',pantry\.id\)\.in\('id',ids\)/,'La operación debe limitarse a los alimentos de la despensa');
+  assert.match(js,/check\.onchange=\(\)=>setBulkFoodAvailability\(items,check\.checked,bareCategory\(category\)\)/,'El mismo guardado se utiliza en categorías');
 });
 
 test('no hay IDs literales duplicados en index.html', () => {
