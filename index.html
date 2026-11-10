@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=98">
+  <link rel="stylesheet" href="styles.css?v=99">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -1084,18 +1084,12 @@
         <summary>Estilos</summary>
         <div class="admin-group-content" id="adminStylesPanelContent"></div>
       </details>
-      <details class="admin-group-panel" id="adminFoodsPanel">
-        <summary>Alimentos de vuestra despensa</summary>
-        <div class="admin-group-content">
-          <label class="food-group-order" hidden>Orden de alimentos
-            <select id="foodGroupOrder">
-              <option value="dry">Secos primero</option>
-              <option value="fresh">Frescos primero</option>
-            </select>
-          </label>
-          <p class="hint">Para gestionar categorías y alimentos, utiliza el panel «Administrar categorías» que aparece justo debajo.</p>
-        </div>
-      </details>
+      <!-- Estado del orden: se conserva la preferencia previa por cuenta y despensa.
+           Las flechas para cambiarlo están en las cabeceras de secos y frescos. -->
+      <select id="foodGroupOrder" hidden aria-label="Orden de alimentos" tabindex="-1">
+        <option value="dry">Secos primero</option>
+        <option value="fresh">Frescos primero</option>
+      </select>
       <details class="admin-group-panel" id="adminCategoriesPanel" open>
         <summary>Administrar categorías</summary>
         <div class="admin-group-content">
@@ -1252,7 +1246,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=130"></script>
+  <script type="module" src="app.js?v=131"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
