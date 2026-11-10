@@ -1362,7 +1362,8 @@ function renderFridgeNotes(main,topDoor){
    $('automaticPantryNoteTitle').textContent='Lista de la compra';
    const missing={dry:[],fresh:[]};
    for(const food of data){
-    if(!food.have)missing[isFreshCategory(food.category)?'fresh':'dry'].push(food);
+    if(!food.have&&isFoodGroupVisible(isFreshCategory(food.category)?'fresh':'dry'))
+    missing[isFreshCategory(food.category)?'fresh':'dry'].push(food);
    }
    const list=$('automaticPantryNoteList');
    list.replaceChildren();
@@ -1555,6 +1556,46 @@ function showApp(visible){
  $('status').hidden=visible;
  if(!visible)$('migration').hidden=true;
 }
+const foodGroupVisibilityInputs={dry:$('showDryFoods'),fresh:$('showFreshFoods')};
+const isFoodGroupVisible=group=>foodGroupVisibilityInputs[group].checked;
+function syncFoodGroupVisibility(){
+ for(const [group,input] of Object.entries(foodGroupVisibilityInputs)){
+  input.checked=pantryStylePreference('show_'+group+'_foods')!==false;
+  input.disabled=false;
+ }
+ $('foodGroupVisibilityMessage').textContent='';
+}
+let savingFoodGroupVisibility=false;
+for(const [group,input] of Object.entries(foodGroupVisibilityInputs)){
+ input.onchange=async()=>{
+  if(!session||!activePantry||savingFoodGroupVisibility)return;
+  const current=session,pantry=activePantry,checked=input.checked;
+  const key=pantryStyleKey('show_'+group+'_foods');
+  savingFoodGroupVisibility=true;
+  for(const field of Object.values(foodGroupVisibilityInputs))field.disabled=true;
+  $('foodGroupVisibilityMessage').textContent='Guardando visibilidad…';
+  render();
+  try{
+   const {data:result,error}=await db.auth.updateUser({data:{[key]:checked}});
+   if(error)throw error;
+   if(session===current&&activePantry===pantry){
+    current.user=result.user;
+    $('foodGroupVisibilityMessage').textContent='Visibilidad guardada para esta despensa.';
+   }
+  }catch(error){
+   if(session===current&&activePantry===pantry){
+    input.checked=!checked;
+    render();
+    $('foodGroupVisibilityMessage').textContent='No se pudo guardar: '+error.message;
+   }
+  }finally{
+   savingFoodGroupVisibility=false;
+   if(session===current&&activePantry===pantry){
+    for(const field of Object.values(foodGroupVisibilityInputs))field.disabled=false;
+   }
+  }
+ };
+}
 const foodGroupOrder=$('foodGroupOrder');
 function foodGroupOrderKey(){
  return 'hondadespensa:food-group-order:'+session?.user?.id+':'+activePantry?.id;
@@ -1572,13 +1613,21 @@ function isFreshCategory(category){
 }
 function render(){
  const q=folded($('search').value.trim());
- $('total').textContent=data.length;
- $('have').textContent=data.filter(x=>x.have).length;
- $('missing').textContent=data.filter(x=>!x.have).length;
- const shown=data.filter(x=>folded(x.name).includes(q));
+ const visibleData=data.filter(x=>isFoodGroupVisible(isFreshCategory(x.category)?'fresh':'dry'));
+ $('total').textContent=visibleData.length;
+ $('have').textContent=visibleData.filter(x=>x.have).length;
+ $('missing').textContent=visibleData.filter(x=>!x.have).length;
+ const shown=visibleData.filter(x=>folded(x.name).includes(q));
  const main=$('categoryList');main.replaceChildren();
- if(!shown.length){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';main.append(p);}
- const categories=orderedCategories(pantryCategories());
+ if(!shown.length){
+  const p=document.createElement('p');p.className='empty';
+  p.textContent=!isFoodGroupVisible('dry')&&!isFoodGroupVisible('fresh')
+   ?'Has ocultado ambos grupos. Puedes volver a mostrarlos en Administración.'
+   :'No hay alimentos con este filtro.';
+  main.append(p);
+ }
+ const categories=orderedCategories(pantryCategories())
+  .filter(category=>isFoodGroupVisible(isFreshCategory(category)?'fresh':'dry'));
  const groups={dry:document.createDocumentFragment(),fresh:document.createDocumentFragment()};
  const hasFresh=categories.some(isFreshCategory);
  foodGroupOrder.parentElement.hidden=!hasFresh||categories.every(isFreshCategory);
@@ -1931,6 +1980,7 @@ async function openPantry(pantry){
  visibleFoodGroup=undefined;
  foodGroupOrder.value='dry';
  try{if(localStorage.getItem(foodGroupOrderKey())==='fresh')foodGroupOrder.value='fresh';}catch{}
+ syncFoodGroupVisibility();
  applyPantryPostcard(pantry);
  applyAlternateHome(pantryStylePreference('alternate_home'));
  applyViewStyle(pantryStylePreference('view_style'));
