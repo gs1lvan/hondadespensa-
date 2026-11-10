@@ -116,7 +116,7 @@ test('los grupos de alimentos tienen una casilla Todos junto al ojito', () => {
   const js=read('app.js');
   assert.match(js,/admin-category-all admin-group-all/);
   assert.match(js,/allCheck\.indeterminate=selected>0&&selected<allItems\.length/);
-  assert.match(js,/header\.insertBefore\(all,eye\)/);
+  assert.match(js,/header\.insertBefore\(all,collapse\)/, 'Todos debe insertarse antes de un elemento que ya pertenece a la cabecera');
   assert.match(js,/all\.onclick=event=>event\.stopPropagation\(\)/);
   assert.match(js,/allCheck\.onchange=\(\)=>setBulkFoodAvailability\(allItems,allCheck\.checked,title\.toLowerCase\(\)\)/);
   assert.match(js,/\.eq\('despensa_id',pantry\.id\)\.in\('id',ids\)/,'La operación debe limitarse a los alimentos de la despensa');
@@ -178,6 +178,16 @@ test('Administrar categorías tiene entrada propia visible en Administración', 
  assert.match(panel,/id="adminFoodSearch"/);
  assert.match(panel,/id="dedup"/);
  assert.equal((html.match(/id="adminFoods"/g)||[]).length,1,'No duplicar el listado');
+});
+
+test('El encabezado de grupos inserta sus controles sobre nodos existentes',()=>{
+ const js=read('app.js');
+ const start=js.indexOf('  header.append(collapse);',js.indexOf('function renderGroupedAdmin('));
+ const all=js.indexOf('header.insertBefore(all,collapse)',start);
+ const eye=js.indexOf('header.insertBefore(eye,collapse)',start);
+ assert.ok(start>=0&&all>start&&eye>all,'La flecha debe existir antes de insertar Todos y el ojo');
+ assert.doesNotMatch(js,/header\.insertBefore\(all,eye\)/,'No insertar delante de un ojo todavía no montado');
+ assert.match(js,/container\.append\(foodGroup\.shell\)/,'El grupo debe añadirse al listado');
 });
 test('no hay IDs literales duplicados en index.html', () => {
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
