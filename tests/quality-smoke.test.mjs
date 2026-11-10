@@ -78,6 +78,10 @@ test('Perfil es el primer panel e incluye Cuenta activa y Compartir despensa', (
   assert.match(html,/id="adminProfilePanelContent"/);
   assert.match(html,/id="adminPantryPanelContent"/);
   assert.match(js,/\$\('adminProfilePanelContent'\)\.append\(sharingSection\)/,'Compartir despensa en Perfil');
+  assert.match(js,/sharingSection\.hidden=!adminMode\|\|!pantry;/,'Compartir no debe depender de un ID fijo');
+  assert.doesNotMatch(js,/sharingSection\.hidden=!adminMode\|\|!pantry\|\|/,'El apartado se ocultaría por un ID fijo');
+  assert.match(js,/shareWithGema\.disabled=!!error;/,'El control debe bloquearse si el servidor deniega el permiso');
+  assert.match(js,/\$\('adminProfilePanel'\)\.addEventListener\('toggle'/,'Perfil debe recuperar sus controles al abrirse');
   assert.match(js,/\$\('adminPantryPanelContent'\)\.append\(deletePantrySection\)/,'Gestión en Despensa actual');
 });
 
