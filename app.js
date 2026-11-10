@@ -906,7 +906,7 @@ async function deletePantryCategory(category){
   const count=items.length;
   const name=bareCategory(category);
   const question=count
-   ? '¿Eliminar la categoría «'+name+'» y sus '+count+' alimento'+(count===1?'':'s')+'?\\n\\nSe borrarán de esta despensa y no se podrán recuperar.'
+   ? '¿Eliminar la categoría «'+name+'» y sus '+count+' alimento'+(count===1?'':'s')+'?\n\nSe borrarán de esta despensa y no se podrán recuperar.'
    : '¿Eliminar la categoría vacía «'+name+'»? Esta acción no se puede deshacer.';
   if(!confirm(question))return;
   if(activePantry!==pantry||session!==account)return;
