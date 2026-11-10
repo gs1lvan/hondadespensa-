@@ -1084,7 +1084,7 @@
         <summary>Estilos</summary>
         <div class="admin-group-content" id="adminStylesPanelContent"></div>
       </details>
-      <details class="admin-group-panel" id="adminFoodsPanel">
+      <details class="admin-group-panel" id="adminFoodsPanel" open>
         <summary>Alimentos de vuestra despensa</summary>
         <div class="admin-group-content">
           <label class="food-group-order" hidden>Orden de alimentos
@@ -1098,6 +1098,7 @@
           <input id="adminFoodSearch" placeholder="Buscar alimento…" aria-label="Buscar alimentos en administración">
           <button id="dedup" class="secondary" type="button">Eliminar duplicados</button>
         </div>
+        <h2 class="admin-category-list-title">Administrar categorías</h2>
         <div id="adminFoods" class="admin-list"></div>
       </section>
         </div>
@@ -1246,7 +1247,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=126"></script>
+  <script type="module" src="app.js?v=127"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
