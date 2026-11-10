@@ -2170,9 +2170,13 @@ async function openPantry(pantry){
  $('adminFoodSearch').value='';
  categoryOrder=readCategoryOrder(session.user.user_metadata?.[pantryOrderKey(pantry)]);
  pantryChooser.hidden=true;
+ // Al entrar en una despensa, mostrar Administración directamente.
+ // El usuario siempre puede regresar al listado con «Volver a despensa».
+ adminMode=true;
  showApp(true);
  render();
  await refresh();
+ syncAdminControls();
 }
 function updatePantrySwitchLabel(){
  if(!activePantry)return;
@@ -2357,15 +2361,19 @@ $('adminPantryPanel').addEventListener('toggle',()=>{
  if(activePantry)refreshPantryProtection();
 });
 
-$('adminToggle').onclick=()=>{
- adminMode=!adminMode;recentAdminFoods.clear();showApp(true);
- if(adminMode)renderAdmin();else render();
+// Estado único para los controles administrativos tanto al entrar como al cambiar de vista.
+function syncAdminControls(){
  refreshPantrySharing();
  deletePantrySection.hidden=!adminMode||!activePantry;
  deletePantryButton.hidden=!!pantrySystemKey(activePantry)&&session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
  renamePantryButton.hidden=!!pantrySystemKey(activePantry)&&session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
  deletePantryStatus.textContent='';
  refreshPantryProtection();
+}
+$('adminToggle').onclick=()=>{
+ adminMode=!adminMode;recentAdminFoods.clear();showApp(true);
+ if(adminMode)renderAdmin();else render();
+ syncAdminControls();
  window.scrollTo({top:0,behavior:'smooth'});
 };
 
