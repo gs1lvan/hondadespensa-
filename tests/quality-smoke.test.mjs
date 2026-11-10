@@ -63,9 +63,9 @@ test('se pueden ocultar secos y frescos de forma independiente sin borrar los al
   assert.match(js, /const visibleData=data\.filter/, 'La lista debe respetar los grupos visibles');
   assert.match(js, /const categories=orderedCategories\(pantryCategories\(\)\)/, 'Las categorías deben filtrarse solo al mostrar');
   assert.match(js, /renderGroupedAdmin\(\$\('adminFoods'\),data,'food'/, 'Administración mantiene el inventario completo');
-  assert.match(js, /header\.insertBefore\(eye,header\.querySelector\('\.chevron'\)\)/, 'El ojo debe ir antes de la flecha');
+ assert.match(js,/header\.insertBefore\(eye,collapse\)/, 'El ojo debe ir antes de la flecha del grupo');
   assert.match(js, /event\.preventDefault\(\);\s*event\.stopPropagation\(\)/, 'El ojo no debe plegar el panel');
-  assert.match(js, /foodGroup\.details\.classList\.toggle\('is-hidden-group',!visible\)/, 'El grupo oculto debe atenuarse');
+ assert.match(js,/foodGroup\.shell\.classList\.toggle\('is-hidden-group',!visible\)/, 'El grupo oculto debe atenuarse');
 });
 
 test('Perfil es el primer panel e incluye Cuenta activa y Compartir despensa', () => {
@@ -151,9 +151,18 @@ test('Administrar muestra las categorías de secos y frescos desde la primera ap
  const js=read('app.js');
  assert.match(html,/<details class="admin-group-panel" id="adminFoodsPanel" open>/,'Panel de alimentos debe estar abierto');
  assert.match(html,/<h2 class="admin-category-list-title">Administrar categorías<\/h2>/);
- assert.match(js,/details\.open=!!query\|\|\(adminFoodGroupOpen\.get\(group\)\?\?true\)/,'Los grupos se abren cuando no hay preferencia de plegado');
- assert.match(js,/adminFoodGroupOpen\.set\(group\.dataset\.foodGroup,group\.open\)/,'Se debe recordar el estado que el usuario haya elegido');
+ assert.match(js,/const expanded=!!query\|\|\(adminFoodGroupOpen\.get\(group\)\?\?true\)/,'Los grupos se abren inicialmente');
+ assert.match(js,/adminFoodGroupOpen\.set\(group,next\)/,'El plegado manual debe conservarse');
  assert.match(js,/if\(type==='food'\)for\(const category of pantryCategories\(\)\)/,'Deben conservarse categorías vacías');
+});
+
+test('Administrar categorías vuelve a mostrar tarjetas y acciones completas',()=>{
+ const js=read('app.js');
+ assert.match(js,/shell\.className='admin-food-group-flat'/,'Grupos sin otro details anidado');
+ assert.match(js,/foodGroup\.cards\.append\(section\)/,'Categorías visibles bajo cada grupo');
+ assert.match(js,/open\.add\(categories\[0\]\)/,'Primera categoría expandida como la referencia');
+ assert.match(js,/categoryManagement\(category\),categoryAddFoodForm\(category\)/,'Conservar editar, eliminar, mover, marcar todos y añadir alimento');
+ assert.match(js,/foodGroup\.cards\.hidden=!expanded/,'Conservar posibilidad de plegar grupos');
 });
 test('no hay IDs literales duplicados en index.html', () => {
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
