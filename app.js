@@ -1224,6 +1224,109 @@ const fridgeNotePreview=$('fridgeNotePreview');
 const fridgeNoteRows=$('fridgeNoteRows');
 const fridgeNoteAdd=$('fridgeNoteAdd');
 const fridgeNoteSave=$('fridgeNoteSave');
+const defaultPersonalNoteTags=Object.freeze([
+ 'Lidl','Mercadona','Frutería','Carnicería','Panadería',
+ 'Pescadería','Farmacia','Ferretería','Mercado','Bazar'
+]);
+const noteTagMetadataKey='personal_note_tags';
+function configuredPersonalNoteTags(){
+ const stored=session?.user?.user_metadata?.[noteTagMetadataKey];
+ return Array.isArray(stored)?stored.filter(tag=>typeof tag==='string'&&tag.trim()).slice(0,40):[...defaultPersonalNoteTags];
+}
+function selectedPersonalNoteTags(note){
+ return Array.isArray(note?.tags)
+  ?[...new Set(note.tags.filter(tag=>typeof tag==='string'&&tag.trim()).map(tag=>tag.trim()))]
+  :[];
+}
+let savingPersonalNoteTags=false;
+function renderAdminNoteTags(){
+ const list=$('adminNoteTags');
+ list.replaceChildren();
+ for(const tag of configuredPersonalNoteTags()){
+  const item=document.createElement('span');
+  item.className='admin-note-tag-item';
+  const name=document.createElement('span');name.textContent=tag;
+  const remove=document.createElement('button');
+  remove.type='button';
+  remove.className='admin-note-tag-remove';
+  remove.textContent='×';
+  remove.title='Eliminar etiqueta '+tag;
+  remove.setAttribute('aria-label','Eliminar etiqueta '+tag);
+  remove.disabled=savingPersonalNoteTags;
+  remove.onclick=()=>{
+   if(!confirm('¿Eliminar «'+tag+'» de las opciones? Las notas y sus títulos se conservarán.'))return;
+   savePersonalNoteTags(configuredPersonalNoteTags().filter(value=>value!==tag),'Etiqueta eliminada.');
+  };
+  item.append(name,remove);
+  list.append(item);
+ }
+ $('noteTagAdd').disabled=savingPersonalNoteTags;
+ $('noteTagInput').disabled=savingPersonalNoteTags;
+}
+async function savePersonalNoteTags(tags,message){
+ if(!session||savingPersonalNoteTags)return false;
+ const current=session;
+ savingPersonalNoteTags=true;
+ $('noteTagsStatus').textContent='Guardando etiquetas…';
+ renderAdminNoteTags();
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{[noteTagMetadataKey]:tags}});
+  if(error)throw error;
+  if(session!==current)return false;
+  current.user=result.user;
+  $('noteTagsStatus').textContent=message;
+  $('noteTagInput').value='';
+  return true;
+ }catch(error){
+  if(session===current)$('noteTagsStatus').textContent='No se pudieron guardar las etiquetas: '+error.message;
+  return false;
+ }finally{
+  savingPersonalNoteTags=false;
+  if(session===current)renderAdminNoteTags();
+ }
+}
+$('noteTagForm').onsubmit=event=>{
+ event.preventDefault();
+ const input=$('noteTagInput');
+ const value=input.value.trim().replace(/\s+/g,' ');
+ if(!value||savingPersonalNoteTags)return;
+ const current=configuredPersonalNoteTags();
+ if(current.some(tag=>folded(tag)===folded(value))){
+  $('noteTagsStatus').textContent='Esa etiqueta ya existe.';
+  input.focus();return;
+ }
+ if(current.length>=40){
+  $('noteTagsStatus').textContent='Máximo de 40 etiquetas.';return;
+ }
+ savePersonalNoteTags([...current,value],'Etiqueta añadida.');
+};
+function renderPersonalNoteTagCloud(note,persist){
+ const cloud=$('fridgeNoteTagCloud');
+ cloud.replaceChildren();
+ const selected=selectedPersonalNoteTags(note);
+ const configured=configuredPersonalNoteTags();
+ const all=[...configured,...selected.filter(tag=>!configured.includes(tag))];
+ for(const tag of all){
+  const chip=document.createElement('button');
+  chip.type='button';
+  chip.className='personal-note-tag';
+  const active=selected.includes(tag);
+  if(!configured.includes(tag))chip.classList.add('is-retired-tag');
+  chip.setAttribute('aria-pressed',String(active));
+  chip.setAttribute('aria-label',(active?'Quitar etiqueta ':'Añadir etiqueta ')+tag);
+  chip.title=active?'Quitar etiqueta '+tag:'Añadir etiqueta '+tag;
+  chip.textContent=tag;
+  chip.onclick=()=>{
+   const next=active?selected.filter(value=>value!==tag):[...selected,tag];
+   if(persist(next)){
+    note.tags=next;
+    renderPersonalNoteTagCloud(note,persist);
+   }
+  };
+  cloud.append(chip);
+ }
+}
+
 async function copyFridgeNote(lines){
  try{
   await navigator.clipboard.writeText(lines.join('\n'));
@@ -1409,6 +1512,13 @@ function renderFridgeNotes(main,topDoor){
     row.textContent=[item.name,item.quantity].filter(Boolean).join(' · ');
     rows.append(row);
    }
+   const tags=selectedPersonalNoteTags(note);
+   if(tags.length){
+    const badge=document.createElement('small');
+    badge.className='personal-note-tags-summary';
+    badge.textContent=tags.join(' · ');
+    title.append(badge);
+   }
    list.append(title,rows);
   }
   if(!notes.length)list.textContent='Aún no hay notas personales.';
@@ -1442,6 +1552,9 @@ function renderFridgeNotes(main,topDoor){
     const titleButton=$('fridgeNoteEditTitle');
     const titleInput=$('fridgeNoteTitleInput');
     titleButton.textContent=savedNote.title||'Nota '+note.number;
+    renderPersonalNoteTagCloud(savedNote,next=>
+     save(notes.map(item=>item.number===note.number?{...item,tags:next}:item))
+    );
     titleButton.hidden=false;
     titleInput.value=savedNote.title||'';
     titleInput.placeholder='Nota '+note.number;
@@ -2546,6 +2659,7 @@ function renderGroupedAdmin(container,rows,type,query){
 }
 function renderAdmin(){
  if(!adminMode)return;
+ renderAdminNoteTags();
  renderGroupedAdmin($('adminFoods'),data,'food',folded($('adminFoodSearch').value.trim()));
  renderGroupedAdmin($('adminCatalogRows'),catalogRows,'catalog',folded($('adminCatalogSearch').value.trim()));
  renderCatalog();
