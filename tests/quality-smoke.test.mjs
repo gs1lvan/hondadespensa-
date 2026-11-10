@@ -152,9 +152,9 @@ test('Las etiquetas de Notas se administran con controles por fila',()=>{
 
 test('Administrar muestra las categorías de secos y frescos desde la primera apertura',()=>{
  const js=read('app.js');
- assert.match(html,/<details class="admin-group-panel" id="adminCategoriesPanel" open>/,'Administrar categorías debe ser panel independiente visible');
+ assert.match(html,/<details class="admin-group-panel" id="adminCategoriesPanel">/,'Administrar categorías debe ser panel independiente visible');
  assert.ok(html.indexOf('id="adminCategoriesPanel"')>html.indexOf('id="adminStylesPanel"'),'Administrar categorías debe estar después de Estilos');
- assert.match(js,/const expanded=!!query\|\|\(adminFoodGroupOpen\.get\(group\)\?\?true\)/,'Los grupos se abren inicialmente');
+ assert.match(js,/const expanded=!!query\|\|\(adminFoodGroupOpen\.get\(group\)\?\?false\)/,'Los grupos empiezan plegados');
  assert.match(js,/adminFoodGroupOpen\.set\(group,next\)/,'El plegado manual debe conservarse');
  assert.match(js,/if\(type==='food'\)for\(const category of pantryCategories\(\)\)/,'Deben conservarse categorías vacías');
 });
@@ -163,7 +163,9 @@ test('Administrar categorías vuelve a mostrar tarjetas y acciones completas',()
  const js=read('app.js');
  assert.match(js,/shell\.className='admin-food-group-flat'/,'Grupos sin otro details anidado');
  assert.match(js,/foodGroup\.cards\.append\(section\)/,'Categorías visibles bajo cada grupo');
- assert.match(js,/open\.add\(categories\[0\]\)/,'Primera categoría expandida como la referencia');
+ assert.doesNotMatch(js,/open\.add\(categories\[0\]\)/,'La primera categoría no debe abrirse sola');
+ assert.match(js,/section\.open=open\.has\(category\)\|\|!!query/,'Cada categoría arranca plegada y se abre manualmente o al buscar');
+ assert.match(js,/if\(type==='food'&&container\.dataset\.query\)continue/,'Los resultados de búsqueda no alteran las preferencias del usuario');
  assert.match(js,/categoryManagement\(category\),categoryAddFoodForm\(category\)/,'Conservar editar, eliminar, mover, marcar todos y añadir alimento');
  assert.match(js,/foodGroup\.cards\.hidden=!expanded/,'Conservar posibilidad de plegar grupos');
 });
@@ -207,15 +209,15 @@ test('Las flechas de ordenar sustituyen al panel redundante y conservan el orden
 test('Las herramientas de categoría comparten el estilo plano de los alimentos',()=>{
  const css=read('styles.css');
  const js=read('app.js');
- const scoped='#adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-icon-button';
- assert.ok(css.includes(scoped),'El estilo debe aplicarse solo a herramientas de categoría');
- const block=css.slice(css.lastIndexOf(scoped),css.indexOf('}',css.lastIndexOf(scoped))+1);
- // Los iconos se muestran sin cajas de fondo, pero conservan áreas táctiles.
+ const scoped='#adminFoods .admin-icon-button';
+ assert.ok(css.includes(scoped),'Los iconos de categoría y alimentos comparten una sola regla');
  const base=css.slice(css.indexOf(scoped),css.indexOf('}',css.indexOf(scoped))+1);
  assert.match(base,/background:transparent/,'Los iconos deben ser planos');
  assert.match(base,/box-shadow:none/,'No deben tener sombra');
  assert.match(base,/min-height:44px/,'El área táctil debe conservar 44px');
- assert.match(css,/#adminFoods \.admin-category > \.admin-category-management \.admin-category-toolbar \.admin-category-all/,'Todos también debe ser compacto');
+ assert.match(css,/#adminFoods :is\(\.admin-category-toolbar,\.admin-food-row \.admin-actions\)/,'Las herramientas de categoría y alimentos deben compartir estilos');
+ assert.match(css,/#adminFoods \.admin-category-all/,'Todos debe seguir compacto');
+ assert.doesNotMatch(css,/#adminFoods \.admin-category > \.admin-category-management \.admin-category-toolbar \.admin-icon-button/,'No duplicar reglas de iconos');
  assert.match(js,/setAdminIcon\(edit,'edit','Editar categoría'\)/);
  assert.match(js,/setAdminIcon\(del,'trash','Eliminar categoría'\)/);
  assert.match(js,/setAdminIcon\(button,delta<0\?'up':'down',label\+' categoría'\)/);
