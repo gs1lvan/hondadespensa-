@@ -1292,7 +1292,7 @@ function renderAdminNoteTags(){
    cancel.onclick=()=>{form.remove();edit.focus();};
    form.onsubmit=event=>{
     event.preventDefault();
-    const value=input.value.trim().replace(/\\s+/g,' ');
+    const value=input.value.trim().replace(/\s+/g,' ');
     if(!value)return;
     const current=configuredPersonalNoteTags();
     if(current.some(other=>other!==tag&&folded(other)===folded(value))){
