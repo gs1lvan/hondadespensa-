@@ -1801,8 +1801,8 @@ function render(){
  const categories=orderedCategories(pantryCategories())
   .filter(category=>isFoodGroupVisible(isFreshCategory(category)?'fresh':'dry'));
  const groups={dry:document.createDocumentFragment(),fresh:document.createDocumentFragment()};
- const hasFresh=categories.some(isFreshCategory);
- foodGroupOrder.parentElement.hidden=!hasFresh||categories.every(isFreshCategory);
+ // La preferencia de orden se conserva en el selector oculto; las flechas son el control visible.
+ foodGroupOrder.hidden=true;
  for(const category of categories){
   const rows=shown.filter(x=>x.category===category).sort((a,b)=>esCompare(a.name,b.name));
   if(!rows.length&&(q||filter!=='all'))continue;
@@ -2678,7 +2678,7 @@ function renderGroupedAdmin(container,rows,type,query){
   foodGroup.cards.append(section);
   foodGroup.count+=count;
  }
- for(const group of ['dry','fresh']){
+ for(const group of (foodGroupOrder.value==='fresh'?['fresh','dry']:['dry','fresh'])){
   const foodGroup=foodGroups.get(group);
   if(!foodGroup)continue;
   const title=group==='dry'?'Alimentos secos':'Alimentos frescos';
@@ -2741,6 +2741,23 @@ function renderGroupedAdmin(container,rows,type,query){
   // Insertar ambos controles delante de collapse evita NotFoundError y la lista vacía.
   header.insertBefore(all,collapse);
   header.insertBefore(eye,collapse);
+  const move=document.createElement('button');
+  move.type='button';
+  move.className='admin-food-group-move';
+  const firstGroup=foodGroupOrder.value==='fresh'?'fresh':'dry';
+  const moveDown=group===firstGroup;
+  const direction=moveDown?'abajo':'arriba';
+  setAdminIcon(move,moveDown?'down':'up','Mover '+title.toLowerCase()+' '+direction);
+  move.hidden=foodGroups.size<2;
+  move.onclick=event=>{
+   event.preventDefault();
+   event.stopPropagation();
+   foodGroupOrder.value=foodGroupOrder.value==='fresh'?'dry':'fresh';
+   foodGroupOrder.onchange(); // Guarda en la despensa y reordena la nevera y el administrador.
+   container.querySelector('.admin-food-group-flat[data-food-group="'+group+'"] .admin-food-group-move')
+    ?.focus({preventScroll:true});
+  };
+  header.insertBefore(move,all);
   foodGroup.shell.classList.toggle('is-hidden-group',!visible);
   foodGroup.shell.prepend(header);
   container.append(foodGroup.shell);
