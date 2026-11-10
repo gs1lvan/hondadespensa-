@@ -720,3 +720,44 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
  #adminNotesPanel .admin-note-tag-actions{gap:2px}
  #adminNotesPanel .admin-note-tag-actions .admin-icon-button{flex-basis:34px;width:34px}
 }
+
+/* Tarjetas visibles en Administrar categorías (no anidadas en un segundo acordeón). */
+#adminFoods .admin-food-group-flat{margin:7px 0 17px;min-width:0}
+#adminFoods .admin-food-group-bar{
+ display:flex;align-items:center;gap:6px;min-height:48px;padding:5px 0 8px;
+ border-bottom:1px solid var(--card-edge,#527b9d);color:inherit;
+}
+#adminFoods .admin-food-group-bar .cat-name{
+ flex:1 1 auto;min-width:0;margin:0;font-size:15px;font-weight:750;line-height:1.22;
+}
+#adminFoods .admin-food-group-bar .cat-count{flex:none;font-size:12px}
+#adminFoods .admin-food-group-bar .admin-food-group-collapse{
+ flex:0 0 34px;display:grid;place-items:center;width:34px;min-width:34px;min-height:38px;
+ padding:0;border:0;border-radius:9px;background:transparent;box-shadow:none;
+ color:inherit;font:600 25px/1 system-ui,sans-serif;
+}
+#adminFoods .admin-food-group-bar .admin-food-group-collapse:focus-visible{outline:2px solid currentColor;outline-offset:1px}
+#adminFoods .admin-food-category-cards{padding:2px 0}
+#adminFoods .admin-food-category-cards[hidden]{display:none!important}
+#adminFoods .admin-food-category-cards>.admin-category{
+ margin:8px 0 11px;border:1px solid var(--card-edge,#527b9d);box-shadow:none;
+}
+#adminFoods .admin-food-group-flat.is-hidden-group .admin-food-group-bar .cat-name{opacity:.55}
+#adminFoods .admin-food-group-bar .food-group-eye{
+ display:grid;place-items:center;flex:0 0 36px;width:36px;min-width:36px;min-height:38px;
+ padding:0;border:0;border-radius:9px;background:transparent;box-shadow:none;color:inherit;
+}
+#adminFoods .admin-food-group-bar .food-group-eye svg{width:21px;height:21px;pointer-events:none}
+#adminFoods .admin-food-group-bar .food-group-eye:focus-visible{outline:2px solid currentColor;outline-offset:1px}
+#adminFoods .admin-food-group-bar .food-group-eye:disabled{opacity:.5}
+#adminFoods .admin-food-group-bar .admin-group-all{
+ flex:0 0 38px;min-width:38px;max-width:38px;min-height:38px;gap:1px;
+ padding:1px 0;margin:0;background:transparent;border:0;box-shadow:none;
+ color:inherit;font:500 10px/1.15 system-ui,sans-serif;
+}
+@media(max-width:390px){
+ #adminFoods .admin-food-group-bar{gap:3px}
+ #adminFoods .admin-food-group-bar .cat-name{font-size:14px}
+ #adminFoods .admin-food-group-bar .cat-count{padding-inline:5px}
+ #adminFoods .admin-food-group-bar .admin-group-all{flex-basis:34px;min-width:34px}
+}
