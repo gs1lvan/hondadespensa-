@@ -97,10 +97,13 @@ test('Administración distribuye inicio, Estilos y alimentos en paneles padres',
     'alternateHome', 'startFridgeClosed', 'enableFridgeNotes',
     'enableAutomaticPantryNote', 'calendarIndependent', 'calendarIntegrated'
   ]) assert.ok(alternate.includes('id="' + id + '"'), 'Opción de inicio fuera de su panel: ' + id);
-  const foods = html.slice(headings[4], html.indexOf('id="adminAddMount"'));
+  const categoryPanelPosition=html.indexOf('id="adminCategoriesPanel"');
+  const foods = html.slice(headings[4],categoryPanelPosition);
+  const categories=html.slice(categoryPanelPosition,html.indexOf('id="adminAddMount"'));
   assert.match(foods, /id="foodGroupOrder"/, 'Orden de alimentos fuera de su panel');
-  assert.match(foods, /id="adminFoodSearch"/, 'Buscador de alimentos fuera de su panel');
-  assert.match(foods, /id="adminFoods"/, 'Lista de alimentos fuera de su panel');
+  assert.ok(categoryPanelPosition>headings[4], 'Administrar categorías debe ser independiente y aparecer después de alimentos');
+  assert.match(categories,/id="adminFoodSearch"/, 'El buscador de categorías no está en su panel');
+  assert.match(categories,/id="adminFoods"/, 'Las categorías no están en su panel');
   assert.match(js, /document\.createElement\('section'\);panel\.className='admin-section style-panel'/);
   assert.match(js, /\$\('adminStylesPanelContent'\)\.append\(panel\)/, 'Estilos no se monta en su panel');
   for (const section of [
@@ -149,8 +152,8 @@ test('Las etiquetas de Notas se administran con controles por fila',()=>{
 
 test('Administrar muestra las categorías de secos y frescos desde la primera apertura',()=>{
  const js=read('app.js');
- assert.match(html,/<details class="admin-group-panel" id="adminFoodsPanel" open>/,'Panel de alimentos debe estar abierto');
- assert.match(html,/<h2 class="admin-category-list-title">Administrar categorías<\/h2>/);
+ assert.match(html,/<details class="admin-group-panel" id="adminCategoriesPanel" open>/,'Administrar categorías debe ser panel independiente visible');
+ assert.ok(html.indexOf('id="adminFoodsPanel"')<html.indexOf('id="adminCategoriesPanel"'),'El panel debe estar bajo Alimentos de vuestra despensa');
  assert.match(js,/const expanded=!!query\|\|\(adminFoodGroupOpen\.get\(group\)\?\?true\)/,'Los grupos se abren inicialmente');
  assert.match(js,/adminFoodGroupOpen\.set\(group,next\)/,'El plegado manual debe conservarse');
  assert.match(js,/if\(type==='food'\)for\(const category of pantryCategories\(\)\)/,'Deben conservarse categorías vacías');
@@ -163,6 +166,18 @@ test('Administrar categorías vuelve a mostrar tarjetas y acciones completas',()
  assert.match(js,/open\.add\(categories\[0\]\)/,'Primera categoría expandida como la referencia');
  assert.match(js,/categoryManagement\(category\),categoryAddFoodForm\(category\)/,'Conservar editar, eliminar, mover, marcar todos y añadir alimento');
  assert.match(js,/foodGroup\.cards\.hidden=!expanded/,'Conservar posibilidad de plegar grupos');
+});
+
+test('Administrar categorías tiene entrada propia visible en Administración', () => {
+ const start=html.indexOf('id="adminCategoriesPanel"');
+ const after=html.indexOf('id="adminAddMount"',start);
+ assert.ok(start>0&&after>start,'Panel no encontrado');
+ const panel=html.slice(start,after);
+ assert.match(panel,/<summary>Administrar categorías<\/summary>/);
+ assert.match(panel,/id="adminFoods"/);
+ assert.match(panel,/id="adminFoodSearch"/);
+ assert.match(panel,/id="dedup"/);
+ assert.equal((html.match(/id="adminFoods"/g)||[]).length,1,'No duplicar el listado');
 });
 test('no hay IDs literales duplicados en index.html', () => {
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
