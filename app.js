@@ -208,8 +208,8 @@ async function saveViewStyle(next){
  }finally{savingViewStyle=false;renderStylePanel();}
 }
 function mountStylePanel(){
- const panel=document.createElement('details');panel.className='admin-section admin-catalog style-panel';
- const title=document.createElement('summary');title.textContent='Estilos';
+ // Los ajustes se muestran dentro del tercer panel padre, sin un segundo desplegable "Estilos".
+ const panel=document.createElement('section');panel.className='admin-section style-panel';
  const hint=document.createElement('p');hint.className='hint';hint.textContent='Elige cómo quieres ver la aplicación. Tu elección se guarda automáticamente en tu cuenta.';
  const options=document.createElement('div');options.id='styleOptions';options.className='style-options';options.setAttribute('role','group');options.setAttribute('aria-label','Estilo de visualización');
  for(const style of viewStyles){
@@ -223,7 +223,7 @@ function mountStylePanel(){
  }
  const message=document.createElement('p');message.id='styleMessage';message.className='hint';message.setAttribute('role','status');
  const heading=document.createElement('h2');heading.textContent='Vista de la despensa';
- panel.append(title,heading,hint,options,message);
+ panel.append(heading,hint,options,message);
  const sizeLabel=document.createElement('label');
  sizeLabel.className='icon-size-control';
  sizeLabel.textContent='Tamaño de los iconos de la despensa';
@@ -237,7 +237,7 @@ function mountStylePanel(){
  mountTypography(panel);
  mountBackground(panel);
  mountIconOptions(panel);
- $('adminPanel').insertBefore(panel,$('adminAddMount').parentElement);
+ $('adminStylesPanelContent').append(panel);
  renderStylePanel();
  applyIconFamily();
 }
