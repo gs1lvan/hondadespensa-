@@ -88,7 +88,7 @@ test('Perfil es el primer panel e incluye Cuenta activa y Compartir despensa', (
 test('Administración distribuye inicio, Estilos y alimentos en paneles padres', () => {
   const js = read('app.js');
   const headings = [
-    'adminProfilePanel', 'adminPantryPanel', 'adminAlternateHomePanel', 'adminStylesPanel', 'adminFoodsPanel'
+    'adminProfilePanel', 'adminPantryPanel', 'adminAlternateHomePanel', 'adminStylesPanel', 'adminCategoriesPanel'
   ].map(id => html.indexOf('id="' + id + '"'));
   assert.ok(headings.every(i => i >= 0), 'Falta alguno de los cinco paneles padres');
   assert.ok(headings.every((i, n) => n === 0 || headings[n - 1] < i), 'Orden de paneles incorrecto');
@@ -98,10 +98,10 @@ test('Administración distribuye inicio, Estilos y alimentos en paneles padres',
     'enableAutomaticPantryNote', 'calendarIndependent', 'calendarIntegrated'
   ]) assert.ok(alternate.includes('id="' + id + '"'), 'Opción de inicio fuera de su panel: ' + id);
   const categoryPanelPosition=html.indexOf('id="adminCategoriesPanel"');
-  const foods = html.slice(headings[4],categoryPanelPosition);
   const categories=html.slice(categoryPanelPosition,html.indexOf('id="adminAddMount"'));
-  assert.match(foods, /id="foodGroupOrder"/, 'Orden de alimentos fuera de su panel');
-  assert.ok(categoryPanelPosition>headings[4], 'Administrar categorías debe ser independiente y aparecer después de alimentos');
+  assert.ok(!html.includes('id="adminFoodsPanel"'), 'No debe quedar el panel redundante de orden');
+  assert.ok(html.indexOf('id="foodGroupOrder"')<categoryPanelPosition, 'El estado interno del orden debe seguir disponible');
+  assert.ok(categoryPanelPosition>html.indexOf('id="adminStylesPanel"'),'Administrar categorías debe seguir detrás de Estilos');
   assert.match(categories,/id="adminFoodSearch"/, 'El buscador de categorías no está en su panel');
   assert.match(categories,/id="adminFoods"/, 'Las categorías no están en su panel');
   assert.match(js, /document\.createElement\('section'\);panel\.className='admin-section style-panel'/);
@@ -153,7 +153,7 @@ test('Las etiquetas de Notas se administran con controles por fila',()=>{
 test('Administrar muestra las categorías de secos y frescos desde la primera apertura',()=>{
  const js=read('app.js');
  assert.match(html,/<details class="admin-group-panel" id="adminCategoriesPanel" open>/,'Administrar categorías debe ser panel independiente visible');
- assert.ok(html.indexOf('id="adminFoodsPanel"')<html.indexOf('id="adminCategoriesPanel"'),'El panel debe estar bajo Alimentos de vuestra despensa');
+ assert.ok(html.indexOf('id="adminCategoriesPanel"')>html.indexOf('id="adminStylesPanel"'),'Administrar categorías debe estar después de Estilos');
  assert.match(js,/const expanded=!!query\|\|\(adminFoodGroupOpen\.get\(group\)\?\?true\)/,'Los grupos se abren inicialmente');
  assert.match(js,/adminFoodGroupOpen\.set\(group,next\)/,'El plegado manual debe conservarse');
  assert.match(js,/if\(type==='food'\)for\(const category of pantryCategories\(\)\)/,'Deben conservarse categorías vacías');
@@ -188,6 +188,20 @@ test('El encabezado de grupos inserta sus controles sobre nodos existentes',()=>
  assert.ok(start>=0&&all>start&&eye>all,'La flecha debe existir antes de insertar Todos y el ojo');
  assert.doesNotMatch(js,/header\.insertBefore\(all,eye\)/,'No insertar delante de un ojo todavía no montado');
  assert.match(js,/container\.append\(foodGroup\.shell\)/,'El grupo debe añadirse al listado');
+});
+
+test('Las flechas de ordenar sustituyen al panel redundante y conservan el orden por despensa',()=>{
+ const js=read('app.js');
+ assert.doesNotMatch(html,/id="adminFoodsPanel"/,'El panel de orden debe desaparecer');
+ assert.match(html,/<select id="foodGroupOrder" hidden/,'El estado guardado debe permanecer oculto');
+ assert.match(js,/const firstGroup=foodGroupOrder\.value==='fresh'\?'fresh':'dry'/,'La flecha depende del orden actual');
+ assert.match(js,/for\(const group of \(foodGroupOrder\.value==='fresh'\?\['fresh','dry'\]:\['dry','fresh'\]\)\)/,'Los grupos se dibujan según el orden guardado');
+ assert.match(js,/setAdminIcon\(move,moveDown\?'down':'up'/,'Flechas de subir y bajar');
+ assert.match(js,/move\.hidden=foodGroups\.size<2/,'No mostrar flecha si solo existe un grupo');
+ assert.match(js,/header\.insertBefore\(move,all\)/,'Flecha colocada junto a los controles de la categoría');
+ assert.match(js,/foodGroupOrder\.onchange\(\)/,'Se conserva el guardado existente de la preferencia');
+ assert.match(js,/localStorage\.setItem\(foodGroupOrderKey\(\),foodGroupOrder\.value\)/,'Orden independiente por usuario y despensa');
+ assert.match(js,/foodGroupOrder\.hidden=true/,'No debe ocultarse el padre del selector');
 });
 test('no hay IDs literales duplicados en index.html', () => {
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
