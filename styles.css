@@ -640,8 +640,6 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 #adminStylesPanelContent .style-panel{margin:0;padding-top:9px}
 #adminStylesPanelContent .style-panel h2:first-child{margin-top:0}
 #adminAlternateHomePanel .admin-group-content > .admin-section > h2{font-size:16px;opacity:.88}
-#adminFoodsPanel .food-group-order:not([hidden]){margin:4px 0 12px}
-#adminFoodsPanel .admin-toolbar{margin-top:7px}
 
 /* Casilla compacta de marcado masivo al lado del ojito del grupo. */
 #adminFoods .admin-food-group > .category-header .admin-group-all{
@@ -766,3 +764,19 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 #adminCategoriesPanel .admin-toolbar{margin-top:7px}
 #adminCategoriesPanel .admin-group-content>.admin-section{border-top:0;padding-top:5px}
 #adminCategoriesPanel .admin-list{min-width:0}
+
+/* Flecha plana para ordenar secos/frescos directamente en Administrar categorías. */
+#adminFoods .admin-food-group-bar .admin-food-group-move{
+ display:grid;place-items:center;flex:0 0 30px;width:30px;min-width:30px;
+ height:36px;min-height:36px;padding:0;margin:0;border:0;border-radius:8px;
+ background:transparent;box-shadow:none;color:inherit;cursor:pointer;
+}
+#adminFoods .admin-food-group-bar .admin-food-group-move svg{width:19px;height:19px;pointer-events:none}
+#adminFoods .admin-food-group-bar .admin-food-group-move:hover{background:color-mix(in srgb,currentColor 10%,transparent)}
+#adminFoods .admin-food-group-bar .admin-food-group-move:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+#adminFoods .admin-food-group-bar .admin-food-group-move[hidden]{display:none!important}
+@media(max-width:390px){
+ #adminFoods .admin-food-group-bar{flex-wrap:wrap;row-gap:2px}
+ #adminFoods .admin-food-group-bar .cat-name{flex:1 1 calc(100% - 54px);min-width:0}
+ #adminFoods .admin-food-group-bar .admin-food-group-move{margin-inline-start:auto}
+}
