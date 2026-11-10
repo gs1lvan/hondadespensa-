@@ -146,6 +146,15 @@ test('Las etiquetas de Notas se administran con controles por fila',()=>{
  assert.ok(js.includes("note.tags=next"),'No debe sustituirse el título por una etiqueta');
  assert.ok(html.includes('id="noteTagAdd" type="submit" aria-label="Añadir etiqueta"'),'El botón de alta debe ser accesible');
 });
+
+test('Administrar muestra las categorías de secos y frescos desde la primera apertura',()=>{
+ const js=read('app.js');
+ assert.match(html,/<details class="admin-group-panel" id="adminFoodsPanel" open>/,'Panel de alimentos debe estar abierto');
+ assert.match(html,/<h2 class="admin-category-list-title">Administrar categorías<\/h2>/);
+ assert.match(js,/details\.open=!!query\|\|\(adminFoodGroupOpen\.get\(group\)\?\?true\)/,'Los grupos se abren cuando no hay preferencia de plegado');
+ assert.match(js,/adminFoodGroupOpen\.set\(group\.dataset\.foodGroup,group\.open\)/,'Se debe recordar el estado que el usuario haya elegido');
+ assert.match(js,/if\(type==='food'\)for\(const category of pantryCategories\(\)\)/,'Deben conservarse categorías vacías');
+});
 test('no hay IDs literales duplicados en index.html', () => {
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
   assert.equal(new Set(ids).size, ids.length, 'Hay atributos id duplicados');
