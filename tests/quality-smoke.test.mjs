@@ -68,6 +68,18 @@ test('se pueden ocultar secos y frescos de forma independiente sin borrar los al
   assert.match(js, /foodGroup\.details\.classList\.toggle\('is-hidden-group',!visible\)/, 'El grupo oculto debe atenuarse');
 });
 
+test('el primer panel de Administración agrupa compartir, despensa y cuenta activa', () => {
+  const js = read('app.js');
+  const panelPosition = html.indexOf('id="adminPantryPanel"');
+  const orderPosition = html.indexOf('id="foodGroupOrder"');
+  const accountPosition = html.indexOf('class="admin-account"');
+  assert.ok(panelPosition >= 0 && panelPosition < orderPosition, 'El panel de despensa debe ir primero');
+  assert.ok(accountPosition > panelPosition && accountPosition < orderPosition, 'Cuenta activa debe estar dentro del panel');
+  assert.match(html, /id="adminPantryPanelContent"/, 'Falta el contenedor de secciones internas');
+  assert.match(js, /\$\('adminPantryPanelContent'\)\.prepend\(sharingSection\)/, 'Compartir despensa debe entrar en el panel');
+  assert.match(js, /sharingSection\.after\(deletePantrySection\)/, 'Gestión de despensa debe seguir a compartir');
+});
+
 test('no hay IDs literales duplicados en index.html', () => {
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
   assert.equal(new Set(ids).size, ids.length, 'Hay atributos id duplicados');
