@@ -110,6 +110,7 @@ let data=[],session=null,channel=null,catalogChannel=null,busy=false,catalogRows
 const openCategories=new Set(),catalogOpen=new Set();
 const adminOpenCategories={food:new Set(),catalog:new Set()};
 const adminFoodGroupOpen=new Map();
+let adminFirstCategoryInitialized=false;
 const recentAdminFoods=new Map();
 let recentAdminFoodSequence=0;
 const adminFoodKey=item=>JSON.stringify([item.category,folded(item.name)]);
@@ -2163,6 +2164,7 @@ async function openPantry(pantry){
  openCategories.clear();
  adminOpenCategories.food.clear();
  adminFoodGroupOpen.clear();
+ adminFirstCategoryInitialized=false;
  $('adminFoods').replaceChildren();
  categoryFoodDrafts.clear();
  recentAdminFoods.clear();
@@ -2631,11 +2633,7 @@ function renderGroupedAdmin(container,rows,type,query){
  for(const section of container.querySelectorAll('details.admin-category')){
   if(section.open)open.add(section.dataset.category);else open.delete(section.dataset.category);
  }
- if(type==='food'&&!container.dataset.query){
-  for(const group of container.querySelectorAll(':scope > details[data-food-group]')){
-   adminFoodGroupOpen.set(group.dataset.foodGroup,group.open);
-  }
- }
+ // El estado de los grupos se guarda cuando el usuario toca su flecha.
  if(type==='food')container.dataset.query=query;
  container.replaceChildren();const groups=new Map();
  if(type==='food')for(const category of pantryCategories())if(!query||folded(category).includes(query))groups.set(category,[]);
@@ -2647,7 +2645,12 @@ function renderGroupedAdmin(container,rows,type,query){
   groups.get(category).push(item);
  }
  const foodGroups=new Map();
- for(const category of (type==='food'?orderedCategories(groups.keys()):[...groups.keys()].sort(esCompare))){
+ const categories=type==='food'?orderedCategories(groups.keys()):[...groups.keys()].sort(esCompare);
+ if(type==='food'&&!adminFirstCategoryInitialized&&categories.length&&!query){
+  open.add(categories[0]); // Primera tarjeta abierta, como en Administrar categorías original.
+  adminFirstCategoryInitialized=true;
+ }
+ for(const category of categories){
   const section=document.createElement('details');section.className='category admin-category';
   const count=groups.get(category).length;
   const header=categoryHeader(category,type==='food'?String(count):count+' alimentos',type==='food'?pantryCategoryByName.get(category)?.icono:undefined);
@@ -2663,23 +2666,46 @@ function renderGroupedAdmin(container,rows,type,query){
   }
   const group=isFreshCategory(category)?'fresh':'dry';
   if(!foodGroups.has(group)){
-   const details=document.createElement('details');details.className='category admin-food-group';
-   details.dataset.foodGroup=group;
-   // Las categorías se muestran al entrar; conservar el plegado que haga el usuario.
-   details.open=!!query||(adminFoodGroupOpen.get(group)??true);
-   foodGroups.set(group,{details,count:0});
+   const shell=document.createElement('section');
+   shell.className='admin-food-group-flat';
+   shell.dataset.foodGroup=group;
+   const cards=document.createElement('div');
+   cards.className='admin-food-category-cards';
+   shell.append(cards);
+   foodGroups.set(group,{shell,cards,count:0});
   }
   const foodGroup=foodGroups.get(group);
-  foodGroup.details.append(section);
+  foodGroup.cards.append(section);
   foodGroup.count+=count;
  }
  for(const group of ['dry','fresh']){
   const foodGroup=foodGroups.get(group);
   if(!foodGroup)continue;
   const title=group==='dry'?'Alimentos secos':'Alimentos frescos';
-  const header=categoryHeader(title,String(foodGroup.count));
-  header.querySelector('.cat-icon')?.remove();
+  const original=categoryHeader(title,String(foodGroup.count));
+  original.querySelector('.cat-icon')?.remove();
+  original.querySelector('.chevron')?.remove();
+  const header=document.createElement('div');
+  header.className='category-header admin-food-group-bar';
+  header.append(...original.childNodes);
   header.querySelector('.cat-count').setAttribute('aria-label',foodGroup.count+' alimentos');
+  const expanded=!!query||(adminFoodGroupOpen.get(group)??true);
+  foodGroup.cards.hidden=!expanded;
+  const collapse=document.createElement('button');
+  collapse.type='button';
+  collapse.className='admin-food-group-collapse';
+  collapse.textContent=expanded?'⌃':'⌄';
+  collapse.setAttribute('aria-label',(expanded?'Plegar ':'Desplegar ')+title.toLowerCase());
+  collapse.setAttribute('aria-expanded',String(expanded));
+  collapse.onclick=()=>{
+   const next=foodGroup.cards.hidden;
+   foodGroup.cards.hidden=!next;
+   adminFoodGroupOpen.set(group,next);
+   collapse.textContent=next?'⌃':'⌄';
+   collapse.setAttribute('aria-label',(next?'Plegar ':'Desplegar ')+title.toLowerCase());
+   collapse.setAttribute('aria-expanded',String(next));
+  };
+  header.append(collapse);
   const visible=isFoodGroupVisible(group);
   const eye=document.createElement('button');
   eye.type='button';
@@ -2712,10 +2738,10 @@ function renderGroupedAdmin(container,rows,type,query){
   all.onkeydown=event=>event.stopPropagation();
   allCheck.onchange=()=>setBulkFoodAvailability(allItems,allCheck.checked,title.toLowerCase());
   header.insertBefore(all,eye);
-  header.insertBefore(eye,header.querySelector('.chevron'));
-  foodGroup.details.classList.toggle('is-hidden-group',!visible);
-  foodGroup.details.prepend(header);
-  container.append(foodGroup.details);
+  header.insertBefore(eye,collapse);
+  foodGroup.shell.classList.toggle('is-hidden-group',!visible);
+  foodGroup.shell.prepend(header);
+  container.append(foodGroup.shell);
  }
  if(!groups.size){const p=document.createElement('p');p.className='empty';p.textContent='No hay alimentos con este filtro.';container.append(p);}
 }
