@@ -20,6 +20,20 @@ test('JavaScript principal y service worker tienen sintaxis válida', () => {
   }
 });
 
+test('la despensa abre Administración directamente y permite volver al listado', () => {
+ const js = read('app.js');
+ const start=js.indexOf('async function openPantry(pantry){');
+ const end=js.indexOf('function updatePantrySwitchLabel()',start);
+ assert.ok(start>=0&&end>start,'No se ha encontrado la apertura de despensa');
+ const open=js.slice(start,end);
+ assert.match(open,/adminMode=true;\s*showApp\(true\);\s*render\(\);\s*await refresh\(\);\s*syncAdminControls\(\)/,
+  'La primera vista de cada despensa debe ser Administración con los controles inicializados');
+ assert.match(js,/\$\('adminToggle'\)\.onclick=\(\)=>\{\s*adminMode=!adminMode/,
+  'Se debe poder cambiar de Administración a la despensa y viceversa');
+ assert.match(js,/adminToggle\.innerHTML=adminMode\?'← Volver a despensa'/,
+  'El botón para regresar debe permanecer visible en Administración');
+});
+
 test('el manifiesto PWA es válido y sus iconos existen', () => {
   assert.equal(manifest.name, 'HondaDespensa');
   assert.equal(manifest.display, 'standalone');
