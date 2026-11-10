@@ -919,6 +919,32 @@ function setAdminIcon(button,icon,label){
  button.innerHTML='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="'+adminIconPaths[icon]+'"/></svg>';
 }
 let pendingCategoryAvailability=null;
+async function setBulkFoodAvailability(items,available,scope){
+ if(pendingCategoryAvailability||busy||!activePantry)return;
+ const pantry=activePantry;
+ const ids=items.filter(item=>item.have!==available).map(item=>item.id);
+ if(!ids.length)return;
+ const changedIds=new Set(ids);
+ pendingCategoryAvailability={pantryId:pantry.id,ids:changedIds,available};
+ data=data.map(item=>changedIds.has(item.id)?{...item,have:available}:item);
+ render(); // Actualizar contadores y casillas antes de esperar a la red.
+ try{
+  const {error}=await db.from('alimentos').update({disponible:available}).eq('despensa_id',pantry.id).in('id',ids);
+  if(error)throw error;
+  if(activePantry?.id===pantry.id)adminMessage('Disponibilidad actualizada en '+scope+'.');
+ }catch(error){
+  if(activePantry?.id===pantry.id){
+   data=data.map(item=>changedIds.has(item.id)?{...item,have:!available}:item);
+   adminMessage('No se pudo actualizar la disponibilidad: '+error.message);
+  }
+ }finally{
+  pendingCategoryAvailability=null;
+  if(activePantry?.id===pantry.id){
+   render();
+   await refresh();
+  }
+ }
+}
 function categoryAvailabilityActions(category){
  const label=document.createElement('label');label.className='admin-category-all';
  const check=document.createElement('input');check.type='checkbox';
@@ -929,31 +955,7 @@ function categoryAvailabilityActions(category){
  check.disabled=!!pendingCategoryAvailability||busy||!items.length;
  check.setAttribute('aria-label','Todos los alimentos de '+bareCategory(category));
  label.append(check,'Todos');
- check.onchange=async()=>{
-   if(pendingCategoryAvailability||!activePantry)return;
-   const pantry=activePantry;
-   const available=check.checked;
-   const ids=items.filter(item=>item.have!==available).map(item=>item.id);
-   if(!ids.length)return;
-   const changedIds=new Set(ids);
-   pendingCategoryAvailability={pantryId:pantry.id,ids:changedIds,available};
-   data=data.map(item=>changedIds.has(item.id)?{...item,have:available}:item);
-   render();
-   try{
-    const {error}=await db.from('alimentos').update({disponible:available}).eq('despensa_id',pantry.id).in('id',ids);
-    if(error)throw error;
-    if(activePantry?.id===pantry.id)adminMessage('Disponibilidad actualizada en '+bareCategory(category)+'.');
-   }catch(error){
-    if(activePantry?.id===pantry.id){
-     data=data.map(item=>changedIds.has(item.id)?{...item,have:!available}:item);
-     adminMessage('No se pudo actualizar la disponibilidad: '+error.message);
-    }
-   }finally{
-    pendingCategoryAvailability=null;
-    render();
-    if(activePantry?.id===pantry.id)await refresh();
-   }
- };
+ check.onchange=()=>setBulkFoodAvailability(items,check.checked,bareCategory(category));
  return label;
 }
 function categoryManagement(category){
@@ -2011,7 +2013,7 @@ const sharingSection=document.createElement('section');
 sharingSection.hidden=true;
 sharingSection.className='admin-section';
 sharingSection.innerHTML='<h2>Compartir despensa</h2><label class="alternate-home-setting"><input type="checkbox"> Compartir con Gema</label><p class="hint" role="status"></p>';
-$('adminPantryPanelContent').prepend(sharingSection);
+$('adminProfilePanelContent').append(sharingSection);
 const shareWithGema=sharingSection.querySelector('input');
 const sharingStatus=sharingSection.querySelector('[role="status"]');
 let sharingRequest=0;
@@ -2042,8 +2044,8 @@ shareWithGema.onchange=()=>refreshPantrySharing(shareWithGema.checked);
 const deletePantrySection=document.createElement('section');
 deletePantrySection.className='admin-section';
 deletePantrySection.hidden=true;
-deletePantrySection.innerHTML='<h2>Despensa actual</h2><label class="alternate-home-setting"><input type="checkbox" data-protect> Protección contra borrado</label><button type="button" data-rename>Editar nombre</button> <button type="button" class="danger" data-delete>Eliminar despensa</button><p class="hint" role="status"></p>';
-sharingSection.after(deletePantrySection);
+deletePantrySection.innerHTML='<h2>Gestión de la despensa</h2><label class="alternate-home-setting"><input type="checkbox" data-protect> Protección contra borrado</label><button type="button" data-rename>Editar nombre</button> <button type="button" class="danger" data-delete>Eliminar despensa</button><p class="hint" role="status"></p>';
+$('adminPantryPanelContent').append(deletePantrySection);
 const deletePantryButton=deletePantrySection.querySelector('[data-delete]');
 const renamePantryButton=deletePantrySection.querySelector('[data-rename]');
 const protectPantry=deletePantrySection.querySelector('[data-protect]');
@@ -2506,6 +2508,24 @@ function renderGroupedAdmin(container,rows,type,query){
    event.stopPropagation(); // No activar el desplegable <summary>.
    saveFoodGroupVisibility(group,!visible);
   };
+  const all=document.createElement('label');
+  all.className='admin-category-all admin-group-all';
+  const allCheck=document.createElement('input');
+  allCheck.type='checkbox';
+  // "Todos" modifica el grupo completo, incluso si hay un filtro de búsqueda.
+  const allItems=data.filter(item=>(isFreshCategory(item.category)?'fresh':'dry')===group);
+  const selected=allItems.filter(item=>item.have).length;
+  allCheck.checked=allItems.length>0&&selected===allItems.length;
+  allCheck.indeterminate=selected>0&&selected<allItems.length;
+  allCheck.disabled=!!pendingCategoryAvailability||busy||!allItems.length;
+  allCheck.setAttribute('aria-label','Marcar o desmarcar todos los '+title.toLowerCase());
+  all.title=allCheck.getAttribute('aria-label');
+  all.append(allCheck,document.createTextNode('Todos'));
+  // El clic del control masivo nunca abre ni cierra el grupo.
+  all.onclick=event=>event.stopPropagation();
+  all.onkeydown=event=>event.stopPropagation();
+  allCheck.onchange=()=>setBulkFoodAvailability(allItems,allCheck.checked,title.toLowerCase());
+  header.insertBefore(all,eye);
   header.insertBefore(eye,header.querySelector('.chevron'));
   foodGroup.details.classList.toggle('is-hidden-group',!visible);
   foodGroup.details.prepend(header);
