@@ -1253,18 +1253,27 @@ const fridgeNoteRows=$('fridgeNoteRows');
 const fridgeNoteAdd=$('fridgeNoteAdd');
 const fridgeNoteSave=$('fridgeNoteSave');
 const defaultPersonalNoteTags=Object.freeze([
- 'Lidl','Mercadona','Frutería','Carnicería','Panadería',
+ 'Supermercado 1','Supermercado 2','Frutería','Carnicería','Panadería',
  'Pescadería','Farmacia','Ferretería','Mercado','Bazar'
 ]);
 const noteTagMetadataKey='personal_note_tags';
+// Sustituir los nombres antiguos incluso en cuentas y notas que ya los guardaron.
+const renamedPersonalNoteTags=Object.freeze({'Lidl':'Supermercado 1','Mercadona':'Supermercado 2'});
+const normalizePersonalNoteTag=tag=>renamedPersonalNoteTags[tag.trim()]??tag.trim();
 function configuredPersonalNoteTags(){
  const stored=session?.user?.user_metadata?.[noteTagMetadataKey];
- return Array.isArray(stored)?stored.filter(tag=>typeof tag==='string'&&tag.trim()).slice(0,40):[...defaultPersonalNoteTags];
+ const tags=Array.isArray(stored)?stored:defaultPersonalNoteTags;
+ return [...new Set(tags.filter(tag=>typeof tag==='string'&&tag.trim()).map(normalizePersonalNoteTag))].slice(0,40);
 }
 function selectedPersonalNoteTags(note){
  return Array.isArray(note?.tags)
-  ?[...new Set(note.tags.filter(tag=>typeof tag==='string'&&tag.trim()).map(tag=>tag.trim()))]
+  ?[...new Set(note.tags.filter(tag=>typeof tag==='string'&&tag.trim()).map(normalizePersonalNoteTag))]
   :[];
+}
+// El primer TAG es un título de reserva: un título escrito por el usuario tiene prioridad.
+function personalNoteDisplayTitle(note){
+ const title=typeof note?.title==='string'?note.title.trim():'';
+ return title||selectedPersonalNoteTags(note)[0]||'Nota '+note.number;
 }
 let savingPersonalNoteTags=false;
 function renderAdminNoteTags(){
@@ -1592,7 +1601,7 @@ function renderFridgeNotes(main,topDoor){
   list.replaceChildren();
   for(const note of notes){
    const title=document.createElement('h3');
-   title.textContent=note.title||'Nota '+note.number;
+   title.textContent=personalNoteDisplayTitle(note);
    const rows=document.createElement('ul');
    const items=note.items??(note.message??'').split(/\r?\n/).filter(line=>line.trim()).map(name=>({name}));
    for(const item of items){
@@ -1640,13 +1649,19 @@ function renderFridgeNotes(main,topDoor){
     const savedNote=notes.find(item=>item.number===note.number);
     const titleButton=$('fridgeNoteEditTitle');
     const titleInput=$('fridgeNoteTitleInput');
-    titleButton.textContent=savedNote.title||'Nota '+note.number;
-    renderPersonalNoteTagCloud(savedNote,next=>
-     save(notes.map(item=>item.number===note.number?{...item,tags:next}:item))
-    );
+    titleButton.textContent=personalNoteDisplayTitle(savedNote);
+    renderPersonalNoteTagCloud(savedNote,next=>{
+     const saved=save(notes.map(item=>item.number===note.number?{...item,tags:next}:item));
+     if(saved){
+      savedNote.tags=next;
+      titleButton.textContent=personalNoteDisplayTitle(savedNote);
+      titleInput.placeholder=personalNoteDisplayTitle(savedNote);
+     }
+     return saved;
+    });
     titleButton.hidden=false;
     titleInput.value=savedNote.title||'';
-    titleInput.placeholder='Nota '+note.number;
+    titleInput.placeholder=personalNoteDisplayTitle(savedNote);
     titleInput.hidden=true;
     titleButton.onclick=()=>{
      titleButton.hidden=true;
