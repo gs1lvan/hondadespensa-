@@ -203,6 +203,24 @@ test('Las flechas de ordenar sustituyen al panel redundante y conservan el orden
  assert.match(js,/localStorage\.setItem\(foodGroupOrderKey\(\),foodGroupOrder\.value\)/,'Orden independiente por usuario y despensa');
  assert.match(js,/foodGroupOrder\.hidden=true/,'No debe ocultarse el padre del selector');
 });
+
+test('Las herramientas de categoría comparten el estilo plano de los alimentos',()=>{
+ const css=read('styles.css');
+ const js=read('app.js');
+ const scoped='#adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-icon-button';
+ assert.ok(css.includes(scoped),'El estilo debe aplicarse solo a herramientas de categoría');
+ const block=css.slice(css.lastIndexOf(scoped),css.indexOf('}',css.lastIndexOf(scoped))+1);
+ // Los iconos se muestran sin cajas de fondo, pero conservan áreas táctiles.
+ const base=css.slice(css.indexOf(scoped),css.indexOf('}',css.indexOf(scoped))+1);
+ assert.match(base,/background:transparent/,'Los iconos deben ser planos');
+ assert.match(base,/box-shadow:none/,'No deben tener sombra');
+ assert.match(base,/min-height:44px/,'El área táctil debe conservar 44px');
+ assert.match(css,/#adminFoods \.admin-category > \.admin-category-management \.admin-category-toolbar \.admin-category-all/,'Todos también debe ser compacto');
+ assert.match(js,/setAdminIcon\(edit,'edit','Editar categoría'\)/);
+ assert.match(js,/setAdminIcon\(del,'trash','Eliminar categoría'\)/);
+ assert.match(js,/setAdminIcon\(button,delta<0\?'up':'down',label\+' categoría'\)/);
+ assert.match(js,/categoryAvailabilityActions\(category\)/,'Marcar Todos debe seguir conectado');
+});
 test('no hay IDs literales duplicados en index.html', () => {
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
   assert.equal(new Set(ids).size, ids.length, 'Hay atributos id duplicados');
