@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=90">
+  <link rel="stylesheet" href="styles.css?v=91">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -891,10 +891,6 @@
     :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .pantry-quick-add :is(input,button):focus-visible {
       outline:2px solid #254b57; outline-offset:3px;
     }
-    .food-group-visibility { border:0; padding:0; margin:0 0 12px; min-width:0; }
-    .food-group-visibility legend { font-size:1rem; font-weight:700; padding:0 0 5px; }
-    .food-group-visibility .hint { margin:4px 0 0; font-size:.8rem; }
-    .food-group-visibility .admin-msg { margin:4px 0 0; }
     .food-group-order:not([hidden]) { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-block:.75rem; }
     .food-group-title { position:relative; scroll-margin-top:1rem; }
     .food-group-title .food-group-switch {
@@ -1000,19 +996,6 @@
     </section>
 
     <section id="adminPanel" class="admin-panel" hidden aria-label="Panel de administración">
-      <fieldset class="food-group-visibility" aria-label="Grupos de alimentos visibles">
-        <legend>Mostrar en esta despensa</legend>
-        <label class="alternate-home-setting">
-          <input id="showDryFoods" type="checkbox" checked>
-          Alimentos secos
-        </label>
-        <label class="alternate-home-setting">
-          <input id="showFreshFoods" type="checkbox" checked>
-          Alimentos frescos
-        </label>
-        <p class="hint">Ocultar un grupo no borra sus alimentos.</p>
-        <p class="admin-msg" id="foodGroupVisibilityMessage" role="status"></p>
-      </fieldset>
       <label class="food-group-order" hidden>Orden de alimentos
         <select id="foodGroupOrder">
           <option value="dry">Secos primero</option>
@@ -1203,7 +1186,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=119"></script>
+  <script type="module" src="app.js?v=120"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
