@@ -1,6 +1,6 @@
 // HondaDespensa · recurso offline y actualización preferente de red.
-const CACHE='hondadespensa-pwa-v151';
-const ASSETS=['./index.html','./styles.css?v=99','./app.js?v=131','./manifest.webmanifest','./icon-192.png','./icon-512.png','./textura-azul.svg?v=40','./assets/polaroid-vintage-faro.webp','./assets/logotipo-marfil-v2.webp','./assets/iconos-ilustrados.webp','./assets/iconos-sencillos.webp','./assets/iconos-estencil.webp','./assets/iconos-estencil-sin-envases-v2.webp'];
+const CACHE='hondadespensa-pwa-v152';
+const ASSETS=['./index.html','./styles.css?v=100','./app.js?v=131','./manifest.webmanifest','./icon-192.png','./icon-512.png','./textura-azul.svg?v=40','./assets/polaroid-vintage-faro.webp','./assets/logotipo-marfil-v2.webp','./assets/iconos-ilustrados.webp','./assets/iconos-sencillos.webp','./assets/iconos-estencil.webp','./assets/iconos-estencil-sin-envases-v2.webp'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>(k.startsWith('hondadespensa-pwa-')||k.startsWith('mi-despensa-pwa-'))&&k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim();})());});
 self.addEventListener('fetch',event=>{
