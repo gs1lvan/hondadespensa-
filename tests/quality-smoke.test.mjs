@@ -222,9 +222,33 @@ test('Notas dispone de panel de tags y nube independiente del título libre',()=
  assert.match(js,/title:titleInput\.value\.trim\(\)/,'El título debe seguir siendo libre');
  assert.match(js,/\[noteTagMetadataKey\]:tags/,'Las opciones se guardan en cuenta');
  assert.match(js,/const key='hondadespensa:notes:'\+session\.user\.id\+':'\+activePantry\.id/,'Las notas siguen siendo por despensa');
- for(const tag of ['Lidl','Mercadona','Frutería','Carnicería','Panadería','Pescadería','Farmacia','Ferretería','Mercado','Bazar'])
+ for(const tag of ['Supermercado 1','Supermercado 2','Frutería','Carnicería','Panadería','Pescadería','Farmacia','Ferretería','Mercado','Bazar'])
   assert.ok(js.includes("'"+tag+"'"),'Falta '+tag);
 });
+test('Los títulos de notas sin título se derivan del primer TAG y se respetan títulos escritos',()=>{
+ const js=read('app.js');
+ const start=js.indexOf('const defaultPersonalNoteTags=Object.freeze([');
+ const end=js.indexOf('let savingPersonalNoteTags=false;',start);
+ assert.ok(start>=0&&end>start,'No se encontraron las funciones de etiquetas y títulos');
+ const helpers=new Function('session',js.slice(start,end)+';return {configuredPersonalNoteTags,selectedPersonalNoteTags,personalNoteDisplayTitle};')
+  ({user:{user_metadata:{personal_note_tags:['Lidl','Mercadona','Frutería']}}});
+ assert.deepEqual(helpers.configuredPersonalNoteTags(),['Supermercado 1','Supermercado 2','Frutería'],
+  'Las etiquetas antiguas guardadas en la cuenta se renombran en la interfaz');
+ assert.equal(helpers.personalNoteDisplayTitle({number:2,tags:['Mercadona'],title:''}),'Supermercado 2');
+ assert.equal(helpers.personalNoteDisplayTitle({number:2,tags:['Frutería','Lidl'],title:''}),'Frutería',
+  'Con varios TAG prevalece el primero');
+ assert.equal(helpers.personalNoteDisplayTitle({number:2,tags:['Frutería'],title:' Compra jueves '}),'Compra jueves',
+  'Un título escrito debe prevalecer sobre los TAG');
+ assert.equal(helpers.personalNoteDisplayTitle({number:2,tags:[],title:''}),'Nota 2',
+  'Sin título ni TAG se mantiene la numeración');
+ assert.match(js,/titleButton\.textContent=personalNoteDisplayTitle\(savedNote\)/);
+ assert.match(js,/titleInput\.placeholder=personalNoteDisplayTitle\(savedNote\)/);
+ assert.match(js,/title\.textContent=personalNoteDisplayTitle\(note\)/);
+ assert.match(js,/title:titleInput\.value\.trim\(\)/,
+  'Los títulos escritos no deben sustituirse ni guardarse a partir de los TAG');
+ assert.match(html,/Si no escribes un título, se utilizará la primera etiqueta seleccionada/);
+});
+
 test('Las etiquetas de Notas se administran con controles por fila',()=>{
  const js=read('app.js');
  assert.ok(js.includes("row.className='admin-note-tag-row'"),'Faltan filas individuales');
