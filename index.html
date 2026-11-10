@@ -1106,17 +1106,21 @@
         <summary>➕ Añadir alimento</summary>
         <div id="adminAddMount"></div>
       </details>
-      <details class="admin-section admin-catalog">
-        <summary>📚 Añadir catálogo de alimentos secos</summary>
-        <p class="hint">Te presento una lista más o menos estructurada con los alimentos de larga duración que puedes usar, recuerda que puedes borrarlas todas y generar tus propias categorías, pero siempre tendrás está base para volver a empezar.</p>
-        <input id="catalogSearch" placeholder="Buscar en el catálogo…" aria-label="Buscar en catálogo">
-        <div id="catalogItems"></div>
-      </details>
-      <details class="admin-section admin-catalog" id="freshCatalog" hidden>
-        <summary>🥬 Añadir desde el catálogo de alimentos frescos</summary>
-        <p class="hint">Añade alimentos frescos y refrigerados a la despensa actual.</p>
-        <input id="freshCatalogSearch" placeholder="Buscar alimentos frescos…" aria-label="Buscar alimentos frescos">
-        <div id="freshCatalogItems"></div>
+      <details class="admin-group-panel" id="adminDefaultCategoriesPanel">
+        <summary>Añadir categorías por defecto</summary>
+        <div class="admin-group-content">
+          <p class="hint admin-default-categories-hint">Si quieres empezar tu despensa y no tienes claro qué categorías añadir, aquí te proponemos unas básicas. Eres libre de añadir, eliminar o editar las que quieras.</p>
+          <details class="admin-section admin-catalog">
+            <summary>📚 Añadir catálogo de alimentos secos</summary>
+            <input id="catalogSearch" placeholder="Buscar en el catálogo…" aria-label="Buscar en catálogo">
+            <div id="catalogItems"></div>
+          </details>
+          <details class="admin-section admin-catalog" id="freshCatalog" hidden>
+            <summary>🥬 Añadir desde el catálogo de alimentos frescos</summary>
+            <input id="freshCatalogSearch" placeholder="Buscar alimentos frescos…" aria-label="Buscar alimentos frescos">
+            <div id="freshCatalogItems"></div>
+          </details>
+        </div>
       </details>
       <details class="admin-section admin-catalog" hidden>
         <summary>✏️ Administrar catálogo</summary>
