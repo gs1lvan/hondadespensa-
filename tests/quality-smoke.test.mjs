@@ -120,6 +120,22 @@ test('los grupos de alimentos tienen una casilla Todos junto al ojito', () => {
   assert.match(js,/check\.onchange=\(\)=>setBulkFoodAvailability\(items,check\.checked,bareCategory\(category\)\)/,'El mismo guardado se utiliza en categorías');
 });
 
+
+test('Notas dispone de panel de tags y nube independiente del título libre',()=>{
+ const js=read('app.js');
+ const notes=html.indexOf('id="adminNotesPanel"');
+ assert.ok(notes>html.indexOf('id="adminAlternateHomePanel"')&&notes<html.indexOf('id="adminStylesPanel"'));
+ for(const id of ['noteTagForm','noteTagInput','noteTagAdd','adminNoteTags','noteTagsStatus','fridgeNoteTagCloud']){
+  assert.ok(html.includes('id="'+id+'"'),'Falta '+id);
+ }
+ assert.match(js,/renderPersonalNoteTagCloud\(savedNote,next=>/);
+ assert.match(js,/note\.tags=next/,'Las etiquetas deben ser independientes');
+ assert.match(js,/title:titleInput\.value\.trim\(\)/,'El título debe seguir siendo libre');
+ assert.match(js,/\[noteTagMetadataKey\]:tags/,'Las opciones se guardan en cuenta');
+ assert.match(js,/const key='hondadespensa:notes:'\+session\.user\.id\+':'\+activePantry\.id/,'Las notas siguen siendo por despensa');
+ for(const tag of ['Lidl','Mercadona','Frutería','Carnicería','Panadería','Pescadería','Farmacia','Ferretería','Mercado','Bazar'])
+  assert.ok(js.includes("'"+tag+"'"),'Falta '+tag);
+});
 test('no hay IDs literales duplicados en index.html', () => {
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
   assert.equal(new Set(ids).size, ids.length, 'Hay atributos id duplicados');
