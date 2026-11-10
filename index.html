@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=94">
+  <link rel="stylesheet" href="styles.css?v=95">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -806,6 +806,26 @@
     .fridge-note-dialog .note-body {
       min-height:0; overflow-y:auto; padding:0 20px 20px;
     }
+    #fridgeNoteDialog > form { grid-template-rows:auto auto minmax(0,1fr); }
+    #fridgeNoteTagCloud {
+      display:flex;flex-wrap:wrap;align-content:flex-start;gap:5px;
+      padding:0 19px 11px;max-height:min(150px,24dvh);overflow-y:auto;
+    }
+    #fridgeNoteTagCloud .personal-note-tag {
+      display:inline-flex;align-items:center;justify-content:center;
+      box-sizing:border-box;min-height:28px;max-width:100%;padding:3px 8px;
+      border:1px solid #9b85554d;border-radius:999px;background:#f5e7b48a;
+      color:#263e70;box-shadow:none;font:600 10px/1.2 system-ui,sans-serif;
+      letter-spacing:.01em;overflow-wrap:anywhere;white-space:normal;text-align:center;
+    }
+    #fridgeNoteTagCloud .personal-note-tag[aria-pressed="true"] {
+      background:#314d75;color:#fff5d2;border-color:#253e65;
+    }
+    #fridgeNoteTagCloud .personal-note-tag:focus-visible{outline:2px solid #263e70;outline-offset:2px}
+    #fridgeNoteTagCloud .personal-note-tag.is-retired-tag:not([aria-pressed="true"]){display:none}
+    #automaticPantryNoteList .personal-note-tags-summary{
+      display:block;font:500 10px/1.4 system-ui,sans-serif;opacity:.8;margin-top:3px;
+    }
     .fridge-note-dialog .note-header {
       display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center;
       gap:4px; margin:0 0 12px; padding:12px 12px 12px 20px;
@@ -1044,6 +1064,22 @@
       </section>
         </div>
       </details>
+      <details class="admin-group-panel" id="adminNotesPanel">
+        <summary>Notas</summary>
+        <div class="admin-group-content">
+          <section class="admin-section admin-note-tags">
+            <h2>Etiquetas de las notas personales</h2>
+            <p class="hint">Elige las etiquetas disponibles en las notas. Los títulos se pueden escribir libremente.</p>
+            <form id="noteTagForm" class="admin-note-tag-form">
+              <input id="noteTagInput" type="text" maxlength="30" autocomplete="off" placeholder="Nueva etiqueta" aria-label="Nueva etiqueta de notas" required>
+              <button id="noteTagAdd" type="submit">Añadir</button>
+            </form>
+            <div id="adminNoteTags" class="admin-note-tag-list" aria-label="Etiquetas disponibles"></div>
+            <p id="noteTagsStatus" class="admin-msg" role="status"></p>
+            <p class="hint">Eliminar una etiqueta del catálogo no borra las notas ni cambia sus títulos.</p>
+          </section>
+        </div>
+      </details>
       <details class="admin-group-panel" id="adminStylesPanel">
         <summary>Estilos</summary>
         <div class="admin-group-content" id="adminStylesPanelContent"></div>
@@ -1198,6 +1234,7 @@
         <button type="button" class="note-copy" id="copyPersonalFridgeNote" aria-label="Copiar nota" title="Copiar nota"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 5V4H4v12h1"/></svg></button>
         <button class="note-close" aria-label="Cerrar" value="cancel" autofocus>×</button>
       </header>
+      <div id="fridgeNoteTagCloud" class="personal-note-tag-cloud" role="group" aria-label="Etiquetas de la nota"></div>
       <div class="note-body">
         <div id="fridgeNotePreview"></div>
         <div id="fridgeNoteRows" hidden></div>
@@ -1209,7 +1246,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=124"></script>
+  <script type="module" src="app.js?v=125"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
