@@ -1556,45 +1556,40 @@ function showApp(visible){
  $('status').hidden=visible;
  if(!visible)$('migration').hidden=true;
 }
-const foodGroupVisibilityInputs={dry:$('showDryFoods'),fresh:$('showFreshFoods')};
-const isFoodGroupVisible=group=>foodGroupVisibilityInputs[group].checked;
+// Preferencias visuales independientes por cuenta y despensa; no se borran datos.
+const foodGroupVisibility={dry:true,fresh:true};
+const isFoodGroupVisible=group=>foodGroupVisibility[group]!==false;
 function syncFoodGroupVisibility(){
- for(const [group,input] of Object.entries(foodGroupVisibilityInputs)){
-  input.checked=pantryStylePreference('show_'+group+'_foods')!==false;
-  input.disabled=false;
+ for(const group of ['dry','fresh']){
+  foodGroupVisibility[group]=pantryStylePreference('show_'+group+'_foods')!==false;
  }
- $('foodGroupVisibilityMessage').textContent='';
 }
 let savingFoodGroupVisibility=false;
-for(const [group,input] of Object.entries(foodGroupVisibilityInputs)){
- input.onchange=async()=>{
-  if(!session||!activePantry||savingFoodGroupVisibility)return;
-  const current=session,pantry=activePantry,checked=input.checked;
-  const key=pantryStyleKey('show_'+group+'_foods');
-  savingFoodGroupVisibility=true;
-  for(const field of Object.values(foodGroupVisibilityInputs))field.disabled=true;
-  $('foodGroupVisibilityMessage').textContent='Guardando visibilidad…';
-  render();
-  try{
-   const {data:result,error}=await db.auth.updateUser({data:{[key]:checked}});
-   if(error)throw error;
-   if(session===current&&activePantry===pantry){
-    current.user=result.user;
-    $('foodGroupVisibilityMessage').textContent='Visibilidad guardada para esta despensa.';
-   }
-  }catch(error){
-   if(session===current&&activePantry===pantry){
-    input.checked=!checked;
-    render();
-    $('foodGroupVisibilityMessage').textContent='No se pudo guardar: '+error.message;
-   }
-  }finally{
-   savingFoodGroupVisibility=false;
-   if(session===current&&activePantry===pantry){
-    for(const field of Object.values(foodGroupVisibilityInputs))field.disabled=false;
-   }
+async function saveFoodGroupVisibility(group,visible){
+ if(!session||!activePantry||savingFoodGroupVisibility||!['dry','fresh'].includes(group))return;
+ const current=session,pantry=activePantry,previous=isFoodGroupVisible(group);
+ if(previous===visible)return;
+ savingFoodGroupVisibility=true;
+ foodGroupVisibility[group]=visible;
+ render();
+ try{
+  const {data:result,error}=await db.auth.updateUser({
+   data:{[pantryStyleKey('show_'+group+'_foods')]:visible}
+  });
+  if(error)throw error;
+  if(session===current&&activePantry===pantry){
+   current.user=result.user;
+   adminMessage((visible?'Mostrando ':'Ocultando ')+(group==='dry'?'alimentos secos.':'alimentos frescos.'));
   }
- };
+ }catch(error){
+  if(session===current&&activePantry===pantry){
+   foodGroupVisibility[group]=previous;
+   adminMessage('No se pudo guardar la visibilidad: '+error.message);
+  }
+ }finally{
+  savingFoodGroupVisibility=false;
+  if(session===current&&activePantry===pantry)render();
+ }
 }
 const foodGroupOrder=$('foodGroupOrder');
 function foodGroupOrderKey(){
@@ -2423,6 +2418,26 @@ function categoryAddFoodForm(category,inAdmin=true){
  return form;
 }
 
+function foodGroupEyeIcon(visible){
+ const ns='http://www.w3.org/2000/svg';
+ const svg=document.createElementNS(ns,'svg');
+ for(const [name,value] of Object.entries({
+  viewBox:'0 0 24 24',width:'21',height:'21',fill:'none',stroke:'currentColor',
+  'stroke-width':'1.8','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'
+ }))svg.setAttribute(name,value);
+ const eye=document.createElementNS(ns,'path');
+ eye.setAttribute('d','M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z');
+ svg.append(eye);
+ const pupil=document.createElementNS(ns,'circle');
+ pupil.setAttribute('cx','12');pupil.setAttribute('cy','12');pupil.setAttribute('r','3');
+ svg.append(pupil);
+ if(!visible){
+  const slash=document.createElementNS(ns,'path');
+  slash.setAttribute('d','M3 3l18 18');
+  svg.append(slash);
+ }
+ return svg;
+}
 function renderGroupedAdmin(container,rows,type,query){
  const open=adminOpenCategories[type];
  // Leer el estado actual antes de reconstruir la lista, sin esperar al evento toggle.
@@ -2477,6 +2492,22 @@ function renderGroupedAdmin(container,rows,type,query){
   const header=categoryHeader(title,String(foodGroup.count));
   header.querySelector('.cat-icon')?.remove();
   header.querySelector('.cat-count').setAttribute('aria-label',foodGroup.count+' alimentos');
+  const visible=isFoodGroupVisible(group);
+  const eye=document.createElement('button');
+  eye.type='button';
+  eye.className='food-group-eye';
+  eye.setAttribute('aria-label',(visible?'Ocultar ':'Mostrar ')+title.toLowerCase()+' en la despensa');
+  eye.setAttribute('aria-pressed',String(visible));
+  eye.title=eye.getAttribute('aria-label');
+  eye.disabled=savingFoodGroupVisibility;
+  eye.append(foodGroupEyeIcon(visible));
+  eye.onclick=event=>{
+   event.preventDefault();
+   event.stopPropagation(); // No activar el desplegable <summary>.
+   saveFoodGroupVisibility(group,!visible);
+  };
+  header.insertBefore(eye,header.querySelector('.chevron'));
+  foodGroup.details.classList.toggle('is-hidden-group',!visible);
   foodGroup.details.prepend(header);
   container.append(foodGroup.details);
  }
