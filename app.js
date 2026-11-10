@@ -893,17 +893,45 @@ async function renamePantryCategory(category,name,icon){
 }
 async function deletePantryCategory(category){
  const current=pantryCategoryByName.get(category);
- if(!current||!session||categoryMutation)return;
- if(data.some(x=>x.category===category)){const message='La categoría aún contiene alimentos. Para borrarla, primero debes eliminar todos sus alimentos.';adminMessage(message);alert(message);return;}
- if(!confirm('¿Eliminar la categoría «'+bareCategory(category)+'»?'))return;
+ if(!current||!session||!activePantry||categoryMutation)return;
+ const pantry=activePantry,account=session;
  categoryMutation=true;
+ let deletedFoods=0;
  try{
-  const {error}=await db.from('categorias_despensa').delete().eq('id',current.id).eq('despensa_id',activePantry.id);
-  if(error)throw error;
+  // Consultar los IDs reales, no solo el listado local (puede estar desactualizado).
+  const {data:items,error:lookupError}=await db.from('alimentos')
+   .select('id').eq('despensa_id',pantry.id).eq('categoria_id',current.id);
+  if(lookupError)throw lookupError;
+  if(activePantry!==pantry||session!==account)return;
+  const count=items.length;
+  const name=bareCategory(category);
+  const question=count
+   ? '¿Eliminar la categoría «'+name+'» y sus '+count+' alimento'+(count===1?'':'s')+'?\\n\\nSe borrarán de esta despensa y no se podrán recuperar.'
+   : '¿Eliminar la categoría vacía «'+name+'»? Esta acción no se puede deshacer.';
+  if(!confirm(question))return;
+  if(activePantry!==pantry||session!==account)return;
+  if(count){
+   // Limitar el borrado a los alimentos que se contaron al pedir confirmación.
+   const ids=items.map(item=>item.id);
+   const {data:removed,error:foodError}=await db.from('alimentos').delete()
+    .eq('despensa_id',pantry.id).eq('categoria_id',current.id).in('id',ids).select('id');
+   if(foodError)throw foodError;
+   deletedFoods=removed?.length??0;
+   if(deletedFoods!==ids.length)throw new Error('Solo se pudieron borrar '+deletedFoods+' de '+ids.length+' alimentos. Revisa los permisos y vuelve a intentarlo.');
+  }
+  const {data:removedCategory,error:categoryError}=await db.from('categorias_despensa').delete()
+   .eq('id',current.id).eq('despensa_id',pantry.id).select('id');
+  if(categoryError)throw categoryError;
+  if(removedCategory?.length!==1)throw new Error('No se confirmó el borrado de la categoría. Comprueba los permisos.');
   adminOpenCategories.food.delete(category);openCategories.delete(category);categoryFoodDrafts.delete(category);
-  await refresh();adminMessage('Categoría eliminada.');
- }catch(error){adminMessage('No se pudo eliminar la categoría: '+error.message);}
- finally{categoryMutation=false;}
+  await refresh();
+  adminMessage('Categoría «'+name+'» eliminada'+(count?' junto con '+count+' alimento'+(count===1?'':'s'):'')+'.');
+ }catch(error){
+  if(activePantry===pantry){
+   await refresh();
+   adminMessage((deletedFoods?'Se borraron '+deletedFoods+' alimentos, pero no se completó el borrado de la categoría. ':'No se pudo eliminar la categoría. ')+error.message);
+  }
+ }finally{categoryMutation=false;}
 }
 const adminIconPaths={
  up:'M12 20V4m-6 6 6-6 6 6',
