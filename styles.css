@@ -602,3 +602,32 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 #adminFoods .admin-food-group.is-hidden-group > .category-header .food-group-eye{
  opacity:.73;
 }
+
+/* Primera agrupación del Administrador: Despensa actual. */
+.admin-group-panel{
+ border:1px solid var(--card-edge,#527ba1);
+ border-radius:17px;
+ background:linear-gradient(140deg,var(--card-light,#173d5d),var(--card-dark,#0b2844));
+ overflow:visible;
+ margin:4px 0 16px;
+}
+.admin-group-panel > summary{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;
+ list-style:none;cursor:pointer;padding:15px 17px;min-height:53px;
+ font-size:19px;font-weight:750;line-height:1.25;
+}
+.admin-group-panel > summary::-webkit-details-marker{display:none}
+.admin-group-panel > summary::after{
+ content:"";width:11px;height:11px;flex:0 0 11px;
+ border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+ transform:rotate(45deg);transition:transform .16s ease; margin-right:4px;margin-top:-4px;
+}
+.admin-group-panel[open] > summary::after{transform:rotate(225deg);margin-top:5px}
+.admin-group-panel > summary:focus-visible{outline:2px solid currentColor;outline-offset:-4px;border-radius:14px}
+.admin-group-content{padding:0 16px 16px}
+.admin-group-content > .admin-section{margin-top:0;padding:15px 0}
+.admin-group-content > .admin-account{margin:15px 0 0}
+[data-view-style=compactado] .admin-group-panel{border-radius:12px;margin-bottom:11px}
+[data-view-style=compactado] .admin-group-panel > summary{font-size:17px;min-height:45px;padding:11px 13px}
+[data-view-style=compactado] .admin-group-content{padding:0 11px 12px}
+@media(prefers-reduced-motion:reduce){.admin-group-panel > summary::after{transition:none}}
