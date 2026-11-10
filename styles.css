@@ -780,3 +780,95 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
  #adminFoods .admin-food-group-bar .cat-name{flex:1 1 calc(100% - 54px);min-width:0}
  #adminFoods .admin-food-group-bar .admin-food-group-move{margin-inline-start:auto}
 }
+
+/* Administrar categorías: las mismas herramientas planas que en las filas de alimentos.
+   Solo apariencia: conservar orden, editar, borrar, "Todos" y sus manejadores. */
+#adminFoods .admin-category > .admin-category-management .admin-category-toolbar{
+ display:flex;
+ align-items:center;
+ justify-content:flex-end;
+ flex-wrap:wrap;
+ gap:0;
+ padding:3px 8px;
+}
+#adminFoods .admin-category > .admin-category-management .category-order-actions{
+ display:flex;
+ align-items:center;
+ flex:0 0 auto;
+ gap:0;
+}
+#adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-icon-button{
+ display:grid;
+ place-items:center;
+ flex:0 0 44px;
+ width:44px;
+ min-width:44px;
+ height:44px;
+ min-height:44px;
+ padding:0;
+ margin:0;
+ appearance:none;
+ border:1px solid transparent;
+ border-radius:9px;
+ background:transparent;
+ color:inherit;
+ box-shadow:none;
+ text-shadow:none;
+ cursor:pointer;
+}
+#adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-icon-button svg{
+ display:block;
+ width:20px;
+ height:20px;
+ pointer-events:none;
+}
+#adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-icon-button.danger{
+ color:#ff9189;
+}
+:root[data-bg-color$="-claro"] #adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-icon-button.danger{
+ color:#9f353a;
+}
+#adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-icon-button:where(:hover,:active){
+ background:color-mix(in srgb,currentColor 9%,transparent);
+}
+#adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-icon-button:focus-visible{
+ outline:2px solid currentColor;
+ outline-offset:1px;
+}
+#adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-icon-button:disabled{
+ opacity:.32;
+ cursor:default;
+}
+#adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-category-all{
+ flex:0 0 46px;
+ display:grid;
+ justify-items:center;
+ align-content:center;
+ gap:2px;
+ min-width:46px;
+ min-height:44px;
+ padding:2px 0;
+ margin:0;
+ background:transparent;
+ border:0;
+ box-shadow:none;
+ font:500 10px/1.1 system-ui,sans-serif;
+ color:inherit;
+}
+#adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-category-all input[type=checkbox]{
+ width:19px;
+ height:19px;
+ min-height:0;
+ padding:0;
+ margin:0;
+}
+#adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-category-all:focus-within{
+ outline:2px solid currentColor;
+ outline-offset:1px;
+ border-radius:8px;
+}
+@media(max-width:360px){
+ #adminFoods .admin-category > .admin-category-management .admin-category-toolbar{padding-inline:4px}
+ #adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-icon-button{flex-basis:42px;width:42px;min-width:42px}
+ #adminFoods .admin-category > .admin-category-management .admin-category-toolbar .admin-category-all{flex-basis:42px;min-width:42px}
+}
