@@ -2264,9 +2264,7 @@ async function openPantry(pantry){
  $('adminFoodSearch').value='';
  categoryOrder=readCategoryOrder(session.user.user_metadata?.[pantryOrderKey(pantry)]);
  pantryChooser.hidden=true;
- // Al entrar en una despensa, mostrar Administración directamente.
- // El usuario siempre puede regresar al listado con «Volver a despensa».
- adminMode=true;
+ adminMode=false;
  showApp(true);
  render();
  await refresh();
@@ -3249,10 +3247,14 @@ async function finishBasicSetup(includeInventory){
   syncFoodGroupVisibility();
   syncWeatherStation();
   syncAdminControls();
-  $('adminAlternateHomePanel').open=true;
-  $('basicSetupEnabled').focus();
-  $('basicSetupSettingStatus').textContent='Configuración guardada.';
   render();
+  if(adminMode){
+   $('adminAlternateHomePanel').open=true;
+   $('basicSetupEnabled').focus();
+   $('basicSetupSettingStatus').textContent='Configuración guardada.';
+  }else{
+   $('adminToggle').focus({preventScroll:true});
+  }
   if(includeInventory)await refresh();
  }catch(error){
   if(basicSetup===setup)status.textContent='No se pudo guardar todo. Puedes volver a intentarlo. '+error.message;
