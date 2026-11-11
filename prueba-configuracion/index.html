@@ -5,32 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#071c32">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="description" content="HondaDespensa: inventario compartido de alimentos">
+  <meta name="description" content="Prueba del formulario de configuración de HondaDespensa">
+  <meta name="robots" content="noindex">
   <title>HondaDespensa · Prueba de configuración</title>
   <link rel="icon" href="../icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="../icon-192.png">
-  <script>
-    (() => {
-      try {
-        const user=JSON.parse(localStorage.getItem('sb-yqumpnoxmzkmnxnjrkjl-auth-token'))?.user;
-        if(!user?.id)return;
-        const cached=JSON.parse(localStorage.getItem('hondadespensa:fondo:'+user.id));
-        const pantryId=sessionStorage.getItem('hondadespensa:recarga:'+user.id);
-        const preferences=user.user_metadata;
-        const preference=cached?.preference??preferences?.['app_background_'+pantryId]
-          ??preferences?.chooser_background??preferences?.app_background;
-        if(!preference)return;
-        const root=document.documentElement;
-        if(preference.color)root.dataset.bgColor=preference.color;
-        if(preference.texture)root.dataset.bgTexture=preference.texture;
-        for(const key of ['customBackground','textColor','borderColor']){
-          if(/^#[0-9a-f]{6}$/i.test(preference[key]))root.style.setProperty('--'+key,preference[key]);
-        }
-        const metaColor=cached?.metaColor??preference.customBackground;
-        if(/^#[0-9a-f]{6}$/i.test(metaColor))document.querySelector('meta[name="theme-color"]').content=metaColor;
-      }catch{}
-    })();
-  </script>
   <link rel="stylesheet" href="styles.css?v=1">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
