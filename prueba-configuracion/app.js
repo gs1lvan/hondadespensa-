@@ -95,12 +95,14 @@ function categoryIcon(category,emoji=suggestedCategoryIcon(category)) {
  else box.append(iconSprite(slot));
  return box;
 }
-function categoryHeader(category,countText,emoji) {
+function categoryHeader(category,countText,emoji,empty=false) {
  const summary=document.createElement('summary');summary.className='category-header';
  const label=document.createElement('span');label.className='cat-name';label.textContent=bareCategory(category);
  const count=document.createElement('small');count.className='cat-count';count.textContent=countText;
  const arrow=document.createElement('span');arrow.className='chevron';arrow.setAttribute('aria-hidden','true');
- summary.append(categoryIcon(category,emoji),label,count,arrow);
+ const icon=categoryIcon(category,emoji);
+ icon.classList.toggle('empty-category-icon',empty);
+ summary.append(icon,label,count,arrow);
  return summary;
 }
 
@@ -1872,6 +1874,7 @@ function render(){
  $('have').textContent=visibleData.filter(x=>x.have).length;
  $('missing').textContent=visibleData.filter(x=>!x.have).length;
  const shown=visibleData.filter(x=>folded(x.name).includes(q));
+ const populatedCategories=new Set(visibleData.map(item=>item.category));
  const main=$('categoryList');main.replaceChildren();
  if(!shown.length){
   const p=document.createElement('p');p.className='empty';
@@ -1893,7 +1896,8 @@ function render(){
    if(details.open)openCategories.add(category);
    else openCategories.delete(category);
   });
-  details.append(categoryHeader(category,`${rows.filter(x=>x.have).length}/${rows.length}`,pantryCategoryByName.get(category)?.icono));
+  details.append(categoryHeader(category,`${rows.filter(x=>x.have).length}/${rows.length}`,
+   pantryCategoryByName.get(category)?.icono,!populatedCategories.has(category)));
   details.append(categoryAddFoodForm(category,false));
   for(const x of rows){
    const row=document.createElement('div');row.className='item'+(x.have?' done':'');
@@ -2744,6 +2748,7 @@ function renderGroupedAdmin(container,rows,type,query){
  // El estado de los grupos se guarda cuando el usuario toca su flecha.
  if(type==='food')container.dataset.query=query;
  container.replaceChildren();const groups=new Map();
+ const populatedCategories=type==='food'?new Set(rows.map(item=>item.category)):null;
  if(type==='food')for(const category of pantryCategories())if(!query||folded(category).includes(query))groups.set(category,[]);
  for(const item of rows){
   const category=type==='food'?item.category:item.categoria;
@@ -2757,7 +2762,9 @@ function renderGroupedAdmin(container,rows,type,query){
  for(const category of categories){
   const section=document.createElement('details');section.className='category admin-category';
   const count=groups.get(category).length;
-  const header=categoryHeader(category,type==='food'?String(count):count+' alimentos',type==='food'?pantryCategoryByName.get(category)?.icono:undefined);
+  const header=categoryHeader(category,type==='food'?String(count):count+' alimentos',
+   type==='food'?pantryCategoryByName.get(category)?.icono:undefined,
+   type==='food'&&!populatedCategories.has(category));
   if(type==='food')header.querySelector('.cat-count').setAttribute('aria-label',count+' alimentos');
   section.append(header);
   if(type==='food')section.append(categoryManagement(category),categoryAddFoodForm(category));

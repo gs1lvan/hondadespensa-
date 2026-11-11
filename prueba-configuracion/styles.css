@@ -25,6 +25,7 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
 .category>summary{position:relative;font-size:clamp(16px,2.7vw,20px);font-weight:760;display:flex;align-items:center;gap:clamp(10px,2vw,18px);min-height:91px;padding:14px clamp(12px,2.5vw,23px);list-style:none;cursor:pointer}
 .category>summary::-webkit-details-marker,.admin-catalog>summary::-webkit-details-marker,.admin-add-collapsible>summary::-webkit-details-marker{display:none}
 .cat-icon{display:grid;place-items:center;width:clamp(46px,8vw,65px);height:clamp(46px,8vw,65px);flex:none;font-size:clamp(31px,5.8vw,46px);line-height:1}
+.cat-icon.empty-category-icon{opacity:.5}
 .cat-icon img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 2px #0006)}
 .cat-name{flex:1;min-width:0;overflow-wrap:anywhere}
 .cat-count{flex:none;font-weight:430;font-size:clamp(15px,2.7vw,20px);color:#b8cde1;white-space:nowrap}
