@@ -10,7 +10,7 @@
   <title>HondaDespensa · Prueba de configuración</title>
   <link rel="icon" href="../icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="../icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=2">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -1018,8 +1018,12 @@
       <section class="admin-section">
         <h2>Opciones de la página de inicio</h2>
         <label class="alternate-home-setting">
-          <input id="basicSetupEnabled" type="checkbox">
+          <input id="basicSetupEnabled" type="checkbox" aria-controls="basicSetupVintageOption">
           Formulario de configuración de opciones básicas
+        </label>
+        <label id="basicSetupVintageOption" class="alternate-home-setting basic-setup-vintage-option" hidden>
+          <input id="basicSetupVintage" type="checkbox" aria-describedby="basicSetupVintageHint" disabled>
+          <span>Inicio vintage <small id="basicSetupVintageHint">Estilo del formulario</small></span>
         </label>
         <p id="basicSetupSettingStatus" class="hint" role="status"></p>
         <label class="alternate-home-setting">
@@ -1293,7 +1297,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=1"></script>
+  <script type="module" src="app.js?v=2"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

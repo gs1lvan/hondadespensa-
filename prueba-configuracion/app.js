@@ -2463,6 +2463,7 @@ $('adminPantryPanel').addEventListener('toggle',()=>{
 // Estado único para los controles administrativos tanto al entrar como al cambiar de vista.
 function syncAdminControls(){
  $('basicSetupEnabled').checked=pantryStylePreference('basic_setup_enabled')===true;
+ syncBasicSetupVintageControl();
  $('basicSetupSettingStatus').textContent='';
  refreshPantrySharing();
  deletePantrySection.hidden=!adminMode||!activePantry;
@@ -2908,6 +2909,14 @@ const basicSetupDialog=$('basicSetupDialog');
 const basicSetupSections=[...basicSetupDialog.querySelectorAll('[data-setup-step]')];
 let basicSetup=null;
 
+function syncBasicSetupVintageControl(){
+ const enabled=$('basicSetupEnabled');
+ const vintage=$('basicSetupVintage');
+ $('basicSetupVintageOption').hidden=!enabled.checked;
+ vintage.disabled=!enabled.checked||enabled.disabled;
+ vintage.checked=pantryStylePreference('basic_setup_vintage')===true;
+}
+
 $('basicSetupEnabled').onchange=async event=>{
  const checkbox=event.currentTarget;
  const current=session,pantry=activePantry;
@@ -2915,6 +2924,7 @@ $('basicSetupEnabled').onchange=async event=>{
  const enabled=checkbox.checked;
  const status=$('basicSetupSettingStatus');
  checkbox.disabled=true;
+ syncBasicSetupVintageControl();
  status.textContent='Guardando…';
  try{
   const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('basic_setup_enabled')]:enabled}});
@@ -2927,7 +2937,33 @@ $('basicSetupEnabled').onchange=async event=>{
  }catch(error){
   checkbox.checked=!enabled;
   status.textContent='No se pudo guardar el ajuste: '+error.message;
- }finally{checkbox.disabled=false;}
+ }finally{
+  checkbox.disabled=false;
+  syncBasicSetupVintageControl();
+ }
+};
+
+$('basicSetupVintage').onchange=async event=>{
+ const enabled=$('basicSetupEnabled');
+ const vintage=event.currentTarget;
+ const current=session;
+ if(!current||!activePantry||!enabled.checked||enabled.disabled)return;
+ const value=vintage.checked;
+ const status=$('basicSetupSettingStatus');
+ enabled.disabled=vintage.disabled=true;
+ status.textContent='Guardando estilo…';
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('basic_setup_vintage')]:value}});
+  if(error)throw error;
+  if(session!==current)return;
+  current.user=result.user;
+  status.textContent='Estilo guardado. Recarga para ver el formulario.';
+ }catch(error){
+  if(session===current)status.textContent='No se pudo guardar el estilo: '+error.message;
+ }finally{
+  enabled.disabled=false;
+  syncBasicSetupVintageControl();
+ }
 };
 
 function openBasicSetup(){
@@ -2947,6 +2983,7 @@ function openBasicSetup(){
  $('basicSetupMarket').value='';
  renderBasicSetupMarkets();
  $('basicSetupEmail').value=basicSetup.email;
+ basicSetupDialog.dataset.style=pantryStylePreference('basic_setup_vintage')===true?'vintage':'marino';
  basicSetupDialog.showModal();
  showBasicSetupStep();
 }
