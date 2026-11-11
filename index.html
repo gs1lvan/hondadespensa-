@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=102">
+  <link rel="stylesheet" href="styles.css?v=105">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -1036,6 +1036,15 @@
       <section class="admin-section">
         <h2>Opciones de la página de inicio</h2>
         <label class="alternate-home-setting">
+          <input id="basicSetupEnabled" type="checkbox" aria-controls="basicSetupVintageOption">
+          Formulario de configuración de opciones básicas
+        </label>
+        <label id="basicSetupVintageOption" class="alternate-home-setting basic-setup-vintage-option" hidden>
+          <input id="basicSetupVintage" type="checkbox" aria-describedby="basicSetupVintageHint" disabled>
+          <span>Inicio vintage <small id="basicSetupVintageHint">Estilo del formulario</small></span>
+        </label>
+        <p id="basicSetupSettingStatus" class="hint" role="status"></p>
+        <label class="alternate-home-setting">
           <input id="alternateHome" type="checkbox">
           Activar página de inicio alternativa
         </label>
@@ -1190,7 +1199,7 @@
             <strong>— %</strong>
           </div>
         </div>
-        <div class="weather-credit"><a href="https://open-meteo.com/">Open-Meteo</a> · <span id="weatherStatus">Cargando…</span></div>
+        <div class="weather-credit"><span id="weatherCity" hidden></span><a href="https://open-meteo.com/">Open-Meteo</a> · <span id="weatherStatus">Cargando…</span></div>
     </section>
     </div>
     <main id="items" hidden aria-label="Categorías y alimentos">
@@ -1208,6 +1217,62 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
+  <dialog id="basicSetupDialog" class="basic-setup" aria-labelledby="basicSetupTitle">
+    <form id="basicSetupForm" novalidate>
+      <header class="basic-setup-header">
+        <div>
+          <h2 id="basicSetupTitle">Configuración de opciones básicas</h2>
+          <p id="basicSetupProgress" aria-live="polite"></p>
+        </div>
+        <button id="basicSetupClose" class="secondary" type="button" aria-label="Cerrar configuración">×</button>
+      </header>
+      <div class="basic-setup-body">
+        <section data-setup-step>
+          <h3 tabindex="-1">¿Qué tipo de alimentos tienes?</h3>
+          <p>Puedes marcar una opción o las dos.</p>
+          <label class="basic-setup-choice"><input id="basicSetupDry" type="checkbox"> Alimentos secos</label>
+          <label class="basic-setup-choice"><input id="basicSetupFresh" type="checkbox"> Alimentos frescos</label>
+        </section>
+        <section data-setup-step hidden>
+          <h3 tabindex="-1">¿Cuál es tu ciudad de referencia?</h3>
+          <p>La estación mostrará la temperatura y la humedad de la ciudad que elijas.</p>
+          <div class="basic-setup-inline">
+            <input id="basicSetupCity" type="search" placeholder="Ej. Cartagena" aria-label="Ciudad de referencia" autocomplete="off">
+            <button id="basicSetupSearch" type="button" class="secondary">Buscar</button>
+          </div>
+          <p id="basicSetupSelectedCity"></p>
+          <div id="basicSetupCityResults" class="basic-setup-list"></div>
+        </section>
+        <section data-setup-step hidden>
+          <h3 tabindex="-1">¿Cuáles son tus supermercados de referencia?</h3>
+          <p>Los nombres que añadas aparecerán como etiquetas en tus notas.</p>
+          <div class="basic-setup-inline">
+            <input id="basicSetupMarket" placeholder="Ej. Mercadona, Lidl o Condis" aria-label="Nombre del supermercado" autocomplete="off">
+            <button id="basicSetupAddMarket" type="button" class="secondary">Añadir</button>
+          </div>
+          <ul id="basicSetupMarkets" class="basic-setup-markets" aria-label="Supermercados añadidos"></ul>
+        </section>
+        <section data-setup-step hidden>
+          <h3 tabindex="-1">¿Te gustaría compartir tu despensa?</h3>
+          <p>El correo quedará como pendiente en Perfil. Puedes omitir este paso.</p>
+          <label for="basicSetupEmail">Correo de la otra persona</label>
+          <input id="basicSetupEmail" type="email" autocomplete="off" placeholder="nombre@ejemplo.es">
+        </section>
+        <section data-setup-step hidden>
+          <h3 tabindex="-1">¿Quieres empezar a inventariar tu despensa?</h3>
+          <p>Abre una categoría y marca los alimentos que tienes.</p>
+          <p id="basicSetupInventoryCount" aria-live="polite"></p>
+          <div id="basicSetupInventory" class="basic-setup-list"></div>
+        </section>
+        <p id="basicSetupStatus" class="basic-setup-status" role="status"></p>
+      </div>
+      <footer class="basic-setup-actions">
+        <button id="basicSetupBack" class="secondary" type="button" hidden>Atrás</button>
+        <button id="basicSetupSkip" class="secondary" type="button" hidden>Omitir</button>
+        <button id="basicSetupNext" type="submit">Continuar</button>
+      </footer>
+    </form>
+  </dialog>
   <template id="fridgeNoteControlsTemplate">
     <div class="fridge-note-controls">
       <button type="button" class="fridge-add-note">Añadir<br>nota</button>
@@ -1250,7 +1315,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=136"></script>
+  <script type="module" src="app.js?v=138"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
