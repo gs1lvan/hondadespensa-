@@ -1034,8 +1034,16 @@ function localItems(){
  return Object.entries(initial).flatMap(([category,names])=>names.map(name=>({id:crypto.randomUUID(),category,name,have:false})));
 }
 const weatherRefreshMs=15*60*1000;
-const playaHondaWeather='https://api.open-meteo.com/v1/forecast?latitude=37.63237&longitude=-0.73530&current=temperature_2m,relative_humidity_2m&timezone=Europe%2FMadrid';
-const weatherReadingKey='hondadespensa.weather.playa-honda';
+const defaultWeatherCity={name:'Playa Honda',label:'Playa Honda, Murcia',latitude:37.63237,longitude:-0.73530};
+let weatherLocationKey='';
+function pantryWeatherCity(){
+ const city=pantryStylePreference('weather_city');
+ return city?.name&&Number.isFinite(city.latitude)&&Number.isFinite(city.longitude)?city:defaultWeatherCity;
+}
+function weatherCityKey(city){
+ return city.latitude===defaultWeatherCity.latitude&&city.longitude===defaultWeatherCity.longitude?
+  'playa-honda':city.latitude+','+city.longitude;
+}
 let weatherPending=false,lastWeatherAttempt=0,lastWeatherTime='';
 function displayWeatherReading({temperature,humidity,time},stale=false){
  if(!Number.isFinite(temperature)||!Number.isFinite(humidity)||humidity<0||humidity>100||
@@ -1073,6 +1081,14 @@ async function refreshWeather(){
  if(!$('weatherStation').hidden&&!document.hidden)updateWeatherCalendar();
  if($('weatherStation').hidden||document.hidden||weatherPending||
     Date.now()-lastWeatherAttempt<weatherRefreshMs)return;
+ const city=pantryWeatherCity();
+ const locationKey=weatherLocationKey;
+ const weatherReadingKey='hondadespensa.weather.'+locationKey;
+ const url=new URL('https://api.open-meteo.com/v1/forecast');
+ url.search=new URLSearchParams({
+  latitude:city.latitude,longitude:city.longitude,
+  current:'temperature_2m,relative_humidity_2m',timezone:'auto'
+ });
  weatherPending=true;lastWeatherAttempt=Date.now();
  if(!lastWeatherTime){
   try{
@@ -1081,20 +1097,41 @@ async function refreshWeather(){
   }catch{}
  }
  try{
-  const response=await fetch(playaHondaWeather,{signal:AbortSignal.timeout(15000),cache:'no-store'});
+  const response=await fetch(url,{signal:AbortSignal.timeout(15000),cache:'no-store'});
   if(!response.ok)throw new Error('Open-Meteo '+response.status);
   const {current}=await response.json();
+  if(locationKey!==weatherLocationKey)return;
   const reading={temperature:current?.temperature_2m,humidity:current?.relative_humidity_2m,time:current?.time};
   displayWeatherReading(reading);
   try{localStorage.setItem(weatherReadingKey,JSON.stringify(reading));}catch{}
  }catch{
+  if(locationKey!==weatherLocationKey)return;
   $('weatherStatus').textContent=lastWeatherTime?'Sin actualizar · '+$('weatherStatus').textContent.replace(/^Sin actualizar · /,''):'Sin datos · reintentando';
   lastWeatherAttempt=Date.now()-weatherRefreshMs+15000;
   setTimeout(refreshWeather,15000);
- }finally{weatherPending=false;}
+ }finally{
+  weatherPending=false;
+  if(locationKey!==weatherLocationKey)refreshWeather();
+ }
 }
 function syncWeatherStation(){
  const items=$('items');
+ const city=pantryWeatherCity();
+ const locationKey=weatherCityKey(city);
+ if(locationKey!==weatherLocationKey){
+  weatherLocationKey=locationKey;
+  lastWeatherTime='';
+  lastWeatherAttempt=0;
+  for(const [id,unit] of [['weatherTemperature','°C'],['weatherHumidity','%']]){
+   const gauge=$(id);
+   delete gauge.dataset.reading;
+   gauge.style.removeProperty('--needle');
+   gauge.querySelector('strong').textContent='— '+unit;
+  }
+  $('weatherStatus').textContent='Cargando…';
+ }
+ $('weatherCity').textContent=city.name;
+ $('weatherCity').hidden=locationKey==='playa-honda';
  $('weatherStation').hidden=items.hidden||items.dataset.home!=='nevera-vintage';
  syncCalendarStyle();
  if(!$('weatherStation').hidden)refreshWeather();
@@ -1260,14 +1297,18 @@ const noteTagMetadataKey='personal_note_tags';
 // Sustituir los nombres antiguos incluso en cuentas y notas que ya los guardaron.
 const renamedPersonalNoteTags=Object.freeze({'Lidl':'Supermercado 1','Mercadona':'Supermercado 2'});
 const normalizePersonalNoteTag=tag=>renamedPersonalNoteTags[tag.trim()]??tag.trim();
-function configuredPersonalNoteTags(){
- const stored=session?.user?.user_metadata?.[noteTagMetadataKey];
+function configuredPersonalNoteTags(pantryId=typeof activePantry==='undefined'?null:activePantry?.id){
+ const preferences=session?.user?.user_metadata;
+ const pantryTags=pantryId&&preferences?.[noteTagMetadataKey+'_'+pantryId];
+ const stored=pantryTags??preferences?.[noteTagMetadataKey];
  const tags=Array.isArray(stored)?stored:defaultPersonalNoteTags;
- return [...new Set(tags.filter(tag=>typeof tag==='string'&&tag.trim()).map(normalizePersonalNoteTag))].slice(0,40);
+ const literal=Array.isArray(pantryTags)||preferences?.personal_note_tags_literal===true;
+ return [...new Set(tags.filter(tag=>typeof tag==='string'&&tag.trim())
+  .map(tag=>literal?tag.trim():normalizePersonalNoteTag(tag)))];
 }
 function selectedPersonalNoteTags(note){
  return Array.isArray(note?.tags)
-  ?[...new Set(note.tags.filter(tag=>typeof tag==='string'&&tag.trim()).map(normalizePersonalNoteTag))]
+  ?[...new Set(note.tags.filter(tag=>typeof tag==='string'&&tag.trim()).map(tag=>note.tagsLiteral?tag.trim():normalizePersonalNoteTag(tag)))]
   :[];
 }
 // El primer TAG es un título de reserva: un título escrito por el usuario tiene prioridad.
@@ -1368,7 +1409,10 @@ async function savePersonalNoteTags(tags,message){
  $('noteTagsStatus').textContent='Guardando etiquetas…';
  renderAdminNoteTags();
  try{
-  const {data:result,error}=await db.auth.updateUser({data:{[noteTagMetadataKey]:tags}});
+  const scopedKey=pantryStyleKey(noteTagMetadataKey);
+  const updates=Array.isArray(current.user.user_metadata?.[scopedKey])?
+   {[scopedKey]:tags}:{[noteTagMetadataKey]:tags,personal_note_tags_literal:true};
+  const {data:result,error}=await db.auth.updateUser({data:updates});
   if(error)throw error;
   if(session!==current)return false;
   current.user=result.user;
@@ -1392,9 +1436,6 @@ $('noteTagForm').onsubmit=event=>{
  if(current.some(tag=>folded(tag)===folded(value))){
   $('noteTagsStatus').textContent='Esa etiqueta ya existe.';
   input.focus();return;
- }
- if(current.length>=40){
-  $('noteTagsStatus').textContent='Máximo de 40 etiquetas.';return;
  }
  savePersonalNoteTags([...current,value],'Etiqueta añadida.');
 };
@@ -1651,9 +1692,10 @@ function renderFridgeNotes(main,topDoor){
     const titleInput=$('fridgeNoteTitleInput');
     titleButton.textContent=personalNoteDisplayTitle(savedNote);
     renderPersonalNoteTagCloud(savedNote,next=>{
-     const saved=save(notes.map(item=>item.number===note.number?{...item,tags:next}:item));
+     const saved=save(notes.map(item=>item.number===note.number?{...item,tags:next,tagsLiteral:true}:item));
      if(saved){
       savedNote.tags=next;
+      savedNote.tagsLiteral=true;
       titleButton.textContent=personalNoteDisplayTitle(savedNote);
       titleInput.placeholder=personalNoteDisplayTitle(savedNote);
      }
@@ -2076,6 +2118,15 @@ function applyPantryPostcard(pantry){
 function pantryOrderKey(pantry){
  return pantrySystemKey(pantry)==='playa'?'category_order':'category_order_'+pantry.id;
 }
+function pantryBasicSetupSelection(pantryId){
+ const key='hondadespensa:configuracion-basica:'+session?.user?.id;
+ try{
+  if(pantryId===undefined)return localStorage.getItem(key);
+  if(pantryId===null)localStorage.removeItem(key);
+  else localStorage.setItem(key,pantryId);
+ }catch{}
+ return null;
+}
 function pantryReloadSelection(pantryId){
  const userId=session?.user?.id;
  if(!userId)return null;
@@ -2090,7 +2141,7 @@ function pantryReloadSelection(pantryId){
  return null;
 }
 function choosePantry(keepBackground=false){
- if(activePantry&&(savingViewStyle||savingIconFamily||$('alternateHome').disabled))return;
+ if(activePantry&&(savingViewStyle||savingIconFamily||$('alternateHome').disabled||$('basicSetupEnabled').disabled))return;
  if(!activePantry&&keepBackground!==true){
   const preferences=session?.user?.user_metadata;
   const savedBackground=preferences?.chooser_background??preferences?.app_background
@@ -2220,6 +2271,7 @@ async function openPantry(pantry){
  render();
  await refresh();
  syncAdminControls();
+ if(activePantry===pantry&&pantryStylePreference('basic_setup_enabled')===true)openBasicSetup();
 }
 function updatePantrySwitchLabel(){
  if(!activePantry)return;
@@ -2233,7 +2285,7 @@ switchPantry.onclick=choosePantry;
 const sharingSection=document.createElement('section');
 sharingSection.hidden=true;
 sharingSection.className='admin-section';
-sharingSection.innerHTML='<h2>Compartir despensa</h2><label class="alternate-home-setting"><input type="checkbox"> Compartir con Gema</label><p class="hint" role="status"></p>';
+sharingSection.innerHTML='<h2>Compartir despensa</h2><p class="hint" id="basicSetupPendingShare" hidden></p><label class="alternate-home-setting"><input type="checkbox"> Compartir con Gema</label><p class="hint" role="status"></p>';
 $('adminProfilePanelContent').append(sharingSection);
 const shareWithGema=sharingSection.querySelector('input');
 const sharingStatus=sharingSection.querySelector('[role="status"]');
@@ -2246,6 +2298,9 @@ async function refreshPantrySharing(enabled=null){
  // Mostrar siempre el apartado; Supabase decide si la cuenta puede compartir.
  sharingSection.hidden=!adminMode||!pantry;
  if(sharingSection.hidden)return;
+ const pendingEmail=pantryStylePreference('basic_setup_pending_email');
+ $('basicSetupPendingShare').hidden=!pendingEmail;
+ $('basicSetupPendingShare').textContent=pendingEmail?'Correo pendiente de invitación · '+pendingEmail:'';
  shareWithGema.checked=!!pantry.compartida;
  shareWithGema.disabled=true;
  sharingStatus.textContent=enabled===null?'Comprobando acceso…':'Guardando acceso…';
@@ -2326,6 +2381,7 @@ deletePantryButton.onclick=async()=>{
 };
 
 async function signedIn(currentSession,restorePantry=false){
+ if($('basicSetupDialog').open)$('basicSetupDialog').close();
  session=currentSession;
  activePantry=null;
  applyPantryPostcard(null);
@@ -2371,7 +2427,9 @@ async function signedIn(currentSession,restorePantry=false){
  }
  availablePantries=pantries;
  const selectedId=restorePantry?pantryReloadSelection():null;
- const selected=pantries.find(pantry=>pantry.id===selectedId);
+ const setupId=pantryBasicSetupSelection();
+ const setupPantry=pantries.find(pantry=>pantry.id===setupId&&preferences?.['basic_setup_enabled_'+setupId]===true);
+ const selected=pantries.find(pantry=>pantry.id===selectedId)??setupPantry;
  if(selected||pantries.length===1)await openPantry(selected??pantries[0]);
  else choosePantry(Boolean(lastBackground));
  await loadCatalog();
@@ -2406,6 +2464,8 @@ $('adminPantryPanel').addEventListener('toggle',()=>{
 
 // Estado único para los controles administrativos tanto al entrar como al cambiar de vista.
 function syncAdminControls(){
+ $('basicSetupEnabled').checked=pantryStylePreference('basic_setup_enabled')===true;
+ $('basicSetupSettingStatus').textContent='';
  refreshPantrySharing();
  deletePantrySection.hidden=!adminMode||!activePantry;
  deletePantryButton.hidden=!!pantrySystemKey(activePantry)&&session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
@@ -2845,6 +2905,371 @@ mountCategoryCreator();
 const emptyCategoryHint=document.createElement('p');emptyCategoryHint.className='hint';
 emptyCategoryHint.textContent='Las categorías vacías se conservan hasta que las elimines desde aquí.';
 $('adminFoods').before(emptyCategoryHint);
+
+const basicSetupDialog=$('basicSetupDialog');
+const basicSetupSections=[...basicSetupDialog.querySelectorAll('[data-setup-step]')];
+let basicSetup=null;
+
+$('basicSetupEnabled').onchange=async event=>{
+ const checkbox=event.currentTarget;
+ const current=session,pantry=activePantry;
+ if(!current||!pantry)return;
+ const enabled=checkbox.checked;
+ const status=$('basicSetupSettingStatus');
+ checkbox.disabled=true;
+ status.textContent='Guardando…';
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('basic_setup_enabled')]:enabled}});
+  if(error)throw error;
+  if(session!==current)return;
+  current.user=result.user;
+  if(enabled)pantryBasicSetupSelection(pantry.id);
+  else if(pantryBasicSetupSelection()===pantry.id)pantryBasicSetupSelection(null);
+  status.textContent=enabled?'El formulario se abrirá al reiniciar o recargar.':'Formulario desactivado.';
+ }catch(error){
+  checkbox.checked=!enabled;
+  status.textContent='No se pudo guardar el ajuste: '+error.message;
+ }finally{checkbox.disabled=false;}
+};
+
+function openBasicSetup(){
+ if(basicSetupDialog.open)return;
+ const markets=pantryStylePreference('reference_supermarkets');
+ basicSetup={
+  step:0,city:pantryWeatherCity(),markets:Array.isArray(markets)?[...markets]:[],
+  inventory:new Map(),email:pantryStylePreference('basic_setup_pending_email')||'',
+  pantryId:activePantry.id,session,saving:false,search:null
+ };
+ $('basicSetupDry').checked=isFoodGroupVisible('dry');
+ $('basicSetupFresh').checked=isFoodGroupVisible('fresh');
+ if(!$('basicSetupDry').checked&&!$('basicSetupFresh').checked)$('basicSetupDry').checked=true;
+ $('basicSetupCity').value='';
+ $('basicSetupCityResults').replaceChildren();
+ showBasicSetupCity();
+ $('basicSetupMarket').value='';
+ renderBasicSetupMarkets();
+ $('basicSetupEmail').value=basicSetup.email;
+ basicSetupDialog.showModal();
+ showBasicSetupStep();
+}
+
+function showBasicSetupStep(){
+ const {step}=basicSetup;
+ basicSetup.search?.abort();
+ basicSetup.search=null;
+ $('basicSetupSearch').disabled=false;
+ basicSetupSections.forEach((section,index)=>{section.hidden=index!==step;});
+ $('basicSetupProgress').textContent='Paso '+(step+1)+' de '+basicSetupSections.length;
+ $('basicSetupBack').hidden=step===0;
+ $('basicSetupSkip').hidden=step<3;
+ $('basicSetupNext').textContent=step===4?'Guardar configuración':'Continuar';
+ $('basicSetupStatus').textContent='';
+ if(step===4)renderBasicSetupInventory();
+ basicSetupSections[step].querySelector('h3').focus();
+}
+
+function showBasicSetupCity(){
+ const city=basicSetup.city;
+ $('basicSetupSelectedCity').textContent=city?'Ciudad elegida · '+city.label:'Elige una ciudad de los resultados.';
+}
+
+$('basicSetupCity').oninput=()=>{
+ basicSetup.search?.abort();
+ basicSetup.search=null;
+ $('basicSetupSearch').disabled=false;
+ basicSetup.city=null;
+ $('basicSetupCityResults').replaceChildren();
+ $('basicSetupStatus').textContent='';
+ showBasicSetupCity();
+};
+$('basicSetupSearch').onclick=async ()=>{
+ const setup=basicSetup;
+ const name=$('basicSetupCity').value.trim();
+ const status=$('basicSetupStatus');
+ if(name.length<2){status.textContent='Escribe al menos dos caracteres para buscar.';return;}
+ const search=new AbortController();
+ setup.search=search;
+ const button=$('basicSetupSearch');
+ const results=$('basicSetupCityResults');
+ results.replaceChildren();
+ button.disabled=true;
+ status.textContent='Buscando ciudades…';
+ try{
+  const url=new URL('https://geocoding-api.open-meteo.com/v1/search');
+  url.search=new URLSearchParams({name,count:'8',language:'es'});
+  const response=await fetch(url,{signal:AbortSignal.any([search.signal,AbortSignal.timeout(12000)])});
+  if(!response.ok)throw new Error('Error de búsqueda');
+  const {results:matches=[]}=await response.json();
+  if(basicSetup!==setup||setup.search!==search)return;
+  for(const {name,admin1,country,latitude,longitude} of matches){
+   if(!name||!Number.isFinite(latitude)||!Number.isFinite(longitude))continue;
+   const label=[...new Set([name,admin1,country].filter(Boolean))].join(', ');
+   const option=document.createElement('button');
+   option.type='button';
+   option.className='secondary';
+   option.textContent=label;
+   option.onclick=()=>{
+    setup.city={name,label,latitude,longitude};
+    $('basicSetupCity').value=name;
+    results.replaceChildren();
+    status.textContent='';
+    showBasicSetupCity();
+    $('basicSetupNext').focus();
+   };
+   results.append(option);
+  }
+  status.textContent=results.childElementCount?'':'No se encontraron ciudades. Prueba con otro nombre.';
+ }catch{
+  if(basicSetup===setup&&setup.search===search)status.textContent='No se pudo buscar la ciudad. Vuelve a intentarlo.';
+ }finally{
+  if(basicSetup===setup&&setup.search===search){
+   setup.search=null;
+   button.disabled=false;
+  }
+ }
+};
+
+function renderBasicSetupMarkets(){
+ const list=$('basicSetupMarkets');
+ list.replaceChildren();
+ for(const market of basicSetup.markets){
+  const item=document.createElement('li');
+  const remove=document.createElement('button');
+  remove.type='button';
+  remove.className='secondary';
+  remove.textContent=market+' ×';
+  remove.setAttribute('aria-label','Quitar '+market);
+  remove.onclick=()=>{
+   basicSetup.markets=basicSetup.markets.filter(name=>name!==market);
+   renderBasicSetupMarkets();
+   $('basicSetupMarket').focus();
+  };
+  item.append(remove);
+  list.append(item);
+ }
+}
+function addBasicSetupMarket(){
+ const input=$('basicSetupMarket');
+ const market=input.value.trim().replace(/\s+/g,' ');
+ if(!market)return true;
+ if(basicSetup.markets.some(name=>folded(name)===folded(market))){
+  $('basicSetupStatus').textContent='Ya has añadido ese supermercado.';
+  input.focus();
+  return false;
+ }
+ basicSetup.markets.push(market);
+ input.value='';
+ $('basicSetupStatus').textContent='';
+ renderBasicSetupMarkets();
+ return true;
+}
+$('basicSetupAddMarket').onclick=()=>{
+ addBasicSetupMarket();
+ $('basicSetupMarket').focus();
+};
+for(const [id,button] of [['basicSetupCity','basicSetupSearch'],['basicSetupMarket','basicSetupAddMarket']]){
+ $(id).onkeydown=event=>{
+  if(event.key!=='Enter'||event.isComposing)return;
+  event.preventDefault();
+  $(button).click();
+ };
+}
+
+function renderBasicSetupInventory(){
+ const list=$('basicSetupInventory');
+ const inventory=basicSetup.inventory;
+ const groups=new Map();
+ const categoryNames=new Map(pantryCategories().map(name=>[categoryIdentity(name),name]));
+ const selectedGroups=[$('basicSetupDry').checked?'dry':null,$('basicSetupFresh').checked?'fresh':null];
+ const updateCount=()=>{
+  const count=[...inventory.values()].reduce((total,names)=>total+names.size,0);
+  $('basicSetupInventoryCount').textContent=count+(count===1?' alimento marcado':' alimentos marcados');
+ };
+ const add=(category,name)=>{
+  const identity=categoryIdentity(category);
+  const actual=findPantryCategory(category)?.nombre??categoryNames.get(identity)??category;
+  categoryNames.set(identity,actual);
+  if(!selectedGroups.includes(isFreshCategory(actual)?'fresh':'dry'))return;
+  if(!groups.has(actual))groups.set(actual,new Map());
+  if(!groups.get(actual).has(folded(name)))groups.get(actual).set(folded(name),name);
+ };
+ for(const item of data)add(item.category,item.name);
+ for(const [category,names] of Object.entries(freshCatalogGroups)){
+  for(const name of names)add(category,name);
+ }
+ if(catalogRows.length){
+  for(const row of catalogRows)add(row.categoria,row.nombre);
+ }else{
+  for(const [category,names] of Object.entries(initial)){
+   for(const name of names)add(category,name);
+  }
+ }
+ for(const [category,selected] of inventory){
+  for(const name of selected){
+   if(groups.get(category)?.get(folded(name))!==name)selected.delete(name);
+  }
+  if(!selected.size)inventory.delete(category);
+ }
+ list.replaceChildren();
+ for(const [category,names] of [...groups].sort(([a],[b])=>esCompare(bareCategory(a),bareCategory(b)))){
+  const group=document.createElement('details');
+  const summary=document.createElement('summary');
+  summary.textContent=bareCategory(category);
+  group.append(summary);
+  // Montar los alimentos al desplegar su categoría.
+  group.ontoggle=()=>{
+   if(!group.open||group.childElementCount>1)return;
+   for(const name of [...names.values()].sort(esCompare)){
+    const label=document.createElement('label');
+    const check=document.createElement('input');
+    check.type='checkbox';
+    check.checked=inventory.get(category)?.has(name)??false;
+    check.onchange=()=>{
+     if(!inventory.has(category))inventory.set(category,new Set());
+     const selected=inventory.get(category);
+     if(check.checked)selected.add(name);
+     else selected.delete(name);
+     if(!selected.size)inventory.delete(category);
+     updateCount();
+    };
+    label.append(check,name);
+    group.append(label);
+   }
+  };
+  list.append(group);
+ }
+ updateCount();
+}
+
+async function saveBasicSetupInventory(setup){
+ for(const [category,names] of setup.inventory){
+  if(session!==setup.session||activePantry?.id!==setup.pantryId)return;
+  const pantryId=setup.pantryId;
+  await ensurePantryCategory(category,pantryId);
+  const {data:target,error:categoryError}=await db.from('categorias_despensa')
+   .select('id,nombre').eq('despensa_id',pantryId).eq('nombre',category).single();
+  if(categoryError)throw categoryError;
+  const {data:foods,error:foodError}=await db.from('alimentos')
+   .select('id,nombre,disponible').eq('despensa_id',pantryId).eq('categoria_id',target.id);
+  if(foodError)throw foodError;
+  const existing=new Map(foods.map(food=>[folded(food.nombre),food]));
+  const ids=[],rows=[];
+  for(const name of names){
+   const food=existing.get(folded(name));
+   if(!food){
+    // Usar el mismo ID para dos guardados simultáneos de la misma selección.
+    const key=JSON.stringify([pantryId,target.id,folded(name)]);
+    const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(key));
+    const hex=Array.from(new Uint8Array(digest).slice(0,16),byte=>byte.toString(16).padStart(2,'0')).join('');
+    const sharedId=hex.slice(0,8)+'-'+hex.slice(8,12)+'-8'+hex.slice(13,16)+'-a'+hex.slice(17,20)+'-'+hex.slice(20);
+    const id=foods.some(food=>food.id===sharedId)?crypto.randomUUID():sharedId;
+    rows.push({id,nombre:name,categoria:target.nombre,categoria_id:target.id,disponible:true,despensa_id:pantryId});
+   }else if(!food.disponible)ids.push(food.id);
+  }
+  if(session!==setup.session||activePantry?.id!==pantryId)return;
+  if(rows.length){
+   const {error}=await db.from('alimentos').upsert(rows,{onConflict:'id',ignoreDuplicates:true});
+   if(error)throw error;
+  }
+  if(ids.length){
+   const {error}=await db.from('alimentos').update({disponible:true}).eq('despensa_id',pantryId).in('id',ids);
+   if(error)throw error;
+  }
+ }
+}
+async function finishBasicSetup(includeInventory){
+ const setup=basicSetup;
+ if(setup.saving)return;
+ setup.saving=true;
+ const status=$('basicSetupStatus');
+ status.textContent='Guardando la configuración…';
+ basicSetupDialog.setAttribute('aria-busy','true');
+ for(const control of basicSetupDialog.querySelectorAll('button,input'))control.disabled=true;
+ try{
+  if(includeInventory)await saveBasicSetupInventory(setup);
+  if(session!==setup.session||activePantry?.id!==setup.pantryId||basicSetup!==setup)return;
+  const previous=pantryStylePreference('reference_supermarkets');
+  const tagsToReplace=new Set(['Supermercado 1','Supermercado 2',...(Array.isArray(previous)?previous:[])].map(folded));
+  const tags=[...setup.markets];
+  const usedTags=new Set(tags.map(folded));
+  for(const tag of configuredPersonalNoteTags()){
+   if(!tagsToReplace.has(folded(tag))&&!usedTags.has(folded(tag)))tags.push(tag);
+  }
+  const {data:result,error}=await db.auth.updateUser({data:{
+   [pantryStyleKey('basic_setup_enabled')]:false,
+   [pantryStyleKey('show_dry_foods')]:$('basicSetupDry').checked,
+   [pantryStyleKey('show_fresh_foods')]:$('basicSetupFresh').checked,
+   [pantryStyleKey('weather_city')]:setup.city,
+   [pantryStyleKey('reference_supermarkets')]:setup.markets,
+   [pantryStyleKey('basic_setup_pending_email')]:setup.email||null,
+   [pantryStyleKey(noteTagMetadataKey)]:tags
+  }});
+  if(error)throw error;
+  if(session!==setup.session||activePantry?.id!==setup.pantryId||basicSetup!==setup)return;
+  session.user=result.user;
+  if(pantryBasicSetupSelection()===setup.pantryId)pantryBasicSetupSelection(null);
+  basicSetupDialog.close();
+  syncFoodGroupVisibility();
+  syncWeatherStation();
+  syncAdminControls();
+  $('adminAlternateHomePanel').open=true;
+  $('basicSetupEnabled').focus();
+  $('basicSetupSettingStatus').textContent='Configuración guardada.';
+  render();
+  if(includeInventory)await refresh();
+ }catch(error){
+  if(basicSetup===setup)status.textContent='No se pudo guardar todo. Puedes volver a intentarlo. '+error.message;
+ }finally{
+  setup.saving=false;
+  basicSetupDialog.removeAttribute('aria-busy');
+  for(const control of basicSetupDialog.querySelectorAll('button,input'))control.disabled=false;
+ }
+}
+
+$('basicSetupForm').onsubmit=event=>{
+ event.preventDefault();
+ const setup=basicSetup;
+ if(!setup||setup.saving)return;
+ const status=$('basicSetupStatus');
+ if(setup.step===0&&!$('basicSetupDry').checked&&!$('basicSetupFresh').checked){
+  status.textContent='Marca alimentos secos, frescos o ambos.';
+  $('basicSetupDry').focus();
+  return;
+ }
+ if(setup.step===1&&!setup.city){
+  status.textContent='Busca y elige tu ciudad de referencia.';
+  $('basicSetupCity').focus();
+  return;
+ }
+ if(setup.step===2&&!addBasicSetupMarket())return;
+ if(setup.step===3){
+  const input=$('basicSetupEmail');
+  input.value=input.value.trim();
+  if(!input.reportValidity())return;
+  setup.email=input.value;
+ }
+ if(setup.step===4){finishBasicSetup(true);return;}
+ setup.step++;
+ showBasicSetupStep();
+};
+$('basicSetupBack').onclick=()=>{
+ basicSetup.step--;
+ showBasicSetupStep();
+};
+$('basicSetupSkip').onclick=()=>{
+ if(basicSetup.step===4){finishBasicSetup(false);return;}
+ $('basicSetupEmail').value=basicSetup.email;
+ basicSetup.step++;
+ showBasicSetupStep();
+};
+$('basicSetupClose').onclick=()=>basicSetupDialog.close();
+basicSetupDialog.oncancel=event=>{
+ if(basicSetup?.saving)event.preventDefault();
+};
+basicSetupDialog.onclose=()=>{
+ basicSetup?.search?.abort();
+ basicSetup=null;
+};
 
 const {data:authData,error:authError}=await db.auth.getSession();
 if(authError)setStatus('Error de sesión: '+authError.message);
