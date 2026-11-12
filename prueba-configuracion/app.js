@@ -2381,7 +2381,7 @@ shareWithGema.onchange=()=>refreshPantrySharing(shareWithGema.checked);
 const deletePantrySection=document.createElement('section');
 deletePantrySection.className='admin-section';
 deletePantrySection.hidden=true;
-deletePantrySection.innerHTML='<h2>Gestión de la despensa</h2><label class="alternate-home-setting"><input type="checkbox" data-protect> Protección contra borrado</label><button type="button" data-rename>Editar nombre</button> <button type="button" class="danger" data-delete>Eliminar despensa</button><p class="hint" role="status"></p>';
+deletePantrySection.innerHTML='<h2>Gestión de la despensa</h2><label class="alternate-home-setting"><input type="checkbox" data-protect> Protección contra borrado</label><div class="pantry-management-actions"><button type="button" data-rename>Editar nombre</button><button type="button" class="danger" data-delete>Eliminar despensa</button></div><p class="hint" role="status"></p>';
 $('adminPantryPanelContent').append(deletePantrySection);
 const deletePantryButton=deletePantrySection.querySelector('[data-delete]');
 const renamePantryButton=deletePantrySection.querySelector('[data-rename]');

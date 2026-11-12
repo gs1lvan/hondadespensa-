@@ -642,6 +642,11 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 .admin-group-content{padding:0 16px 16px}
 .admin-group-content > .admin-section{margin-top:0;padding:15px 0}
 .admin-group-content > .admin-account{margin:15px 0 0}
+.pantry-management-actions{
+ display:flex;
+ flex-wrap:wrap;
+ gap:10px;
+}
 [data-view-style=compactado] .admin-group-panel{border-radius:12px;margin-bottom:11px}
 [data-view-style=compactado] .admin-group-panel > summary{font-size:17px;min-height:45px;padding:11px 13px}
 [data-view-style=compactado] .admin-group-content{padding:0 11px 12px}
