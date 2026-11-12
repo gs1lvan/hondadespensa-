@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=111">
+  <link rel="stylesheet" href="styles.css?v=112">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -1237,9 +1237,8 @@
       <div class="basic-setup-body">
         <section data-setup-step>
           <h3 tabindex="-1">¿Qué tipo de alimentos tienes?</h3>
-          <p>Puedes marcar una opción o las dos.</p>
-          <label class="basic-setup-choice"><input id="basicSetupDry" type="checkbox"> Alimentos secos</label>
-          <label class="basic-setup-choice"><input id="basicSetupFresh" type="checkbox"> Alimentos frescos</label>
+          <p>Marca todas las categorías de un grupo o despliega el grupo para elegirlas. Dentro de cada categoría puedes marcar los alimentos que ya tienes.</p>
+          <div id="basicSetupFoodGroups"></div>
         </section>
         <section data-setup-step hidden>
           <h3 tabindex="-1">¿Cuál es tu ciudad de referencia?</h3>
@@ -1265,12 +1264,6 @@
           <p>El correo quedará como pendiente en Perfil. Puedes omitir este paso.</p>
           <label for="basicSetupEmail">Correo de la otra persona</label>
           <input id="basicSetupEmail" type="email" autocomplete="off" placeholder="nombre@ejemplo.es">
-        </section>
-        <section data-setup-step hidden>
-          <h3 tabindex="-1">¿Quieres empezar a inventariar tu despensa?</h3>
-          <p>Marca los alimentos que tienes. Las categorías se guardan aunque queden vacías.</p>
-          <p id="basicSetupInventoryCount" aria-live="polite"></p>
-          <div id="basicSetupInventory" class="basic-setup-list"></div>
         </section>
         <p id="basicSetupStatus" class="basic-setup-status" role="status"></p>
       </div>
@@ -1323,7 +1316,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=153"></script>
+  <script type="module" src="app.js?v=154"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

@@ -2972,12 +2972,10 @@ function openBasicSetup(){
  const markets=pantryStylePreference('reference_supermarkets');
  basicSetup={
   step:0,city:pantryWeatherCity(),markets:Array.isArray(markets)?[...markets]:[],
-  inventory:new Map(),categories:[],email:pantryStylePreference('basic_setup_pending_email')||'',
+  inventory:new Map(),categories:new Set(),email:pantryStylePreference('basic_setup_pending_email')||'',
   pantryId:activePantry.id,session,saving:false,search:null
  };
- $('basicSetupDry').checked=isFoodGroupVisible('dry');
- $('basicSetupFresh').checked=isFoodGroupVisible('fresh');
- if(!$('basicSetupDry').checked&&!$('basicSetupFresh').checked)$('basicSetupDry').checked=true;
+ renderBasicSetupFoodChoices();
  $('basicSetupCity').value='';
  $('basicSetupCityResults').replaceChildren();
  showBasicSetupCity();
@@ -2996,10 +2994,10 @@ function showBasicSetupStep(){
  basicSetupSections.forEach((section,index)=>{section.hidden=index!==step;});
  $('basicSetupProgress').textContent='Paso '+(step+1)+' de '+basicSetupSections.length;
  $('basicSetupBack').hidden=step===0;
- $('basicSetupSkip').hidden=step<3;
- $('basicSetupNext').textContent=step===4?'Guardar configuración':'Continuar';
+ const lastStep=step===basicSetupSections.length-1;
+ $('basicSetupSkip').hidden=!lastStep;
+ $('basicSetupNext').textContent=lastStep?'Guardar configuración':'Continuar';
  $('basicSetupStatus').textContent='';
- if(step===4)renderBasicSetupInventory();
  basicSetupSections[step].querySelector('h3').focus();
 }
 
@@ -3110,23 +3108,51 @@ for(const [id,button] of [['basicSetupCity','basicSetupSearch'],['basicSetupMark
  };
 }
 
-function renderBasicSetupInventory(){
- const list=$('basicSetupInventory');
- const inventory=basicSetup.inventory;
- const groups=new Map();
- const categoryNames=new Map(pantryCategories().map(name=>[categoryIdentity(name),name]));
- const selectedGroups=[$('basicSetupDry').checked?'dry':null,$('basicSetupFresh').checked?'fresh':null];
- const updateCount=()=>{
-  const count=[...inventory.values()].reduce((total,names)=>total+names.size,0);
-  $('basicSetupInventoryCount').textContent=count+(count===1?' alimento marcado':' alimentos marcados');
- };
+function basicSetupFoodOption(name,id,expandable=true){
+ const row=document.createElement('div');
+ row.className='basic-setup-food-option';
+ const heading=document.createElement('div');
+ heading.className='basic-setup-food-heading';
+ const label=document.createElement('label');
+ const check=document.createElement('input');
+ check.type='checkbox';
+ label.append(check,name);
+ heading.append(label);
+ row.append(heading);
+ const children=document.createElement('div');
+ children.className='basic-setup-food-children';
+ children.id=id;
+ children.hidden=true;
+ if(expandable){
+  const toggle=document.createElement('button');
+  toggle.type='button';
+  toggle.className='basic-setup-food-toggle';
+  toggle.setAttribute('aria-controls',id);
+  toggle.setAttribute('aria-expanded','false');
+  toggle.setAttribute('aria-label','Desplegar '+name);
+  toggle.onclick=()=>{
+   children.hidden=!children.hidden;
+   toggle.setAttribute('aria-expanded',String(!children.hidden));
+   toggle.setAttribute('aria-label',(children.hidden?'Desplegar ':'Plegar ')+name);
+  };
+  heading.append(toggle);
+  row.append(children);
+ }
+ return {row,check,children};
+}
+
+function renderBasicSetupFoodChoices(){
+ const {inventory,categories}=basicSetup;
+ const list=$('basicSetupFoodGroups');
+ const foodsByCategory=new Map(pantryCategories().map(name=>[name,new Map()]));
+ const categoryNames=new Map([...foodsByCategory.keys()].map(name=>[categoryIdentity(name),name]));
  const add=(category,name)=>{
   const identity=categoryIdentity(category);
   const actual=findPantryCategory(category)?.nombre??categoryNames.get(identity)??category;
   categoryNames.set(identity,actual);
-  if(!selectedGroups.includes(isFreshCategory(actual)?'fresh':'dry'))return;
-  if(!groups.has(actual))groups.set(actual,new Map());
-  if(!groups.get(actual).has(folded(name)))groups.get(actual).set(folded(name),name);
+  if(!foodsByCategory.has(actual))foodsByCategory.set(actual,new Map());
+  const foods=foodsByCategory.get(actual);
+  if(!foods.has(folded(name)))foods.set(folded(name),name);
  };
  for(const item of data)add(item.category,item.name);
  for(const [category,names] of Object.entries(freshCatalogGroups)){
@@ -3139,50 +3165,77 @@ function renderBasicSetupInventory(){
    for(const name of names)add(category,name);
   }
  }
- basicSetup.categories=[...groups.keys()];
- for(const [category,selected] of inventory){
-  for(const name of selected){
-   if(groups.get(category)?.get(folded(name))!==name)selected.delete(name);
-  }
-  if(!selected.size)inventory.delete(category);
- }
+ const sorted=[...foodsByCategory].sort(([a],[b])=>esCompare(bareCategory(a),bareCategory(b)));
+ const dryVisible=isFoodGroupVisible('dry'),freshVisible=isFoodGroupVisible('fresh');
  list.replaceChildren();
- for(const [category,names] of [...groups].sort(([a],[b])=>esCompare(bareCategory(a),bareCategory(b)))){
-  const group=document.createElement('details');
-  const summary=document.createElement('summary');
-  summary.textContent=bareCategory(category);
-  group.append(summary);
-  // Montar los alimentos al desplegar su categoría.
-  group.ontoggle=()=>{
-   if(!group.open||group.childElementCount>1)return;
-   for(const name of [...names.values()].sort(esCompare)){
+ for(const [key,title,selected] of [
+  ['dry','Alimentos secos',dryVisible||!freshVisible],
+  ['fresh','Alimentos frescos',freshVisible]
+ ]){
+  const master=basicSetupFoodOption(title,'basic-setup-'+key+'-categories');
+  master.check.setAttribute('aria-label','Todas las categorías de '+title.toLowerCase());
+  const group=sorted.filter(([category])=>isFreshCategory(category)===(key==='fresh'));
+  const updateMaster=()=>{
+   const count=group.filter(([category])=>categories.has(category)).length;
+   master.check.checked=count>0&&count===group.length;
+   master.check.indeterminate=count>0&&count<group.length;
+  };
+  const categoryControls=group.map(([category,foods],index)=>{
+   const option=basicSetupFoodOption(bareCategory(category),'basic-setup-'+key+'-foods-'+index,foods.size>0);
+   const foodChecks=[];
+   const selectCategory=checked=>{
+    option.check.checked=checked;
+    if(checked)categories.add(category);
+    else{
+     categories.delete(category);
+     inventory.delete(category);
+     for(const check of foodChecks)check.checked=false;
+    }
+   };
+   selectCategory(selected);
+   option.check.onchange=()=>{
+    selectCategory(option.check.checked);
+    updateMaster();
+   };
+   for(const name of [...foods.values()].sort(esCompare)){
     const label=document.createElement('label');
+    label.className='basic-setup-food-leaf';
     const check=document.createElement('input');
     check.type='checkbox';
-    check.checked=inventory.get(category)?.has(name)??false;
     check.onchange=()=>{
-     if(!inventory.has(category))inventory.set(category,new Set());
-     const selected=inventory.get(category);
-     if(check.checked)selected.add(name);
-     else selected.delete(name);
-     if(!selected.size)inventory.delete(category);
-     updateCount();
+     if(check.checked){
+      selectCategory(true);
+      if(!inventory.has(category))inventory.set(category,new Set());
+      inventory.get(category).add(name);
+     }else{
+      const names=inventory.get(category);
+      names?.delete(name);
+      if(!names?.size)inventory.delete(category);
+     }
+     updateMaster();
     };
+    foodChecks.push(check);
     label.append(check,name);
-    group.append(label);
+    option.children.append(label);
    }
+   master.children.append(option.row);
+   return selectCategory;
+  });
+  master.check.onchange=()=>{
+   for(const selectCategory of categoryControls)selectCategory(master.check.checked);
+   updateMaster();
   };
-  list.append(group);
+  updateMaster();
+  list.append(master.row);
  }
- updateCount();
 }
 
-async function saveBasicSetupInventory(setup,includeInventory){
+async function saveBasicSetupInventory(setup){
  for(const category of setup.categories){
   if(session!==setup.session||activePantry?.id!==setup.pantryId)return;
   const pantryId=setup.pantryId;
   await ensurePantryCategory(category,pantryId);
-  const names=includeInventory?setup.inventory.get(category):undefined;
+  const names=setup.inventory.get(category);
   if(!names?.size)continue;
   const {data:target,error:categoryError}=await db.from('categorias_despensa')
    .select('id,nombre').eq('despensa_id',pantryId).eq('nombre',category).single();
@@ -3215,16 +3268,16 @@ async function saveBasicSetupInventory(setup,includeInventory){
   }
  }
 }
-async function finishBasicSetup(includeInventory){
+async function finishBasicSetup(email){
  const setup=basicSetup;
- if(setup.saving)return;
+ if(!setup||setup.saving)return;
  setup.saving=true;
  const status=$('basicSetupStatus');
  status.textContent='Guardando la configuración…';
  basicSetupDialog.setAttribute('aria-busy','true');
  for(const control of basicSetupDialog.querySelectorAll('button,input'))control.disabled=true;
  try{
-  await saveBasicSetupInventory(setup,includeInventory);
+  await saveBasicSetupInventory(setup);
   if(session!==setup.session||activePantry?.id!==setup.pantryId||basicSetup!==setup)return;
   const previous=pantryStylePreference('reference_supermarkets');
   const tagsToReplace=new Set(['Supermercado 1','Supermercado 2',...(Array.isArray(previous)?previous:[])].map(folded));
@@ -3233,12 +3286,13 @@ async function finishBasicSetup(includeInventory){
   for(const tag of configuredPersonalNoteTags()){
    if(!tagsToReplace.has(folded(tag))&&!usedTags.has(folded(tag)))tags.push(tag);
   }
+  const categories=[...setup.categories];
   const {data:result,error}=await db.auth.updateUser({data:{
-   [pantryStyleKey('show_dry_foods')]:$('basicSetupDry').checked,
-   [pantryStyleKey('show_fresh_foods')]:$('basicSetupFresh').checked,
+   [pantryStyleKey('show_dry_foods')]:categories.some(category=>!isFreshCategory(category)),
+   [pantryStyleKey('show_fresh_foods')]:categories.some(isFreshCategory),
    [pantryStyleKey('weather_city')]:setup.city,
    [pantryStyleKey('reference_supermarkets')]:setup.markets,
-   [pantryStyleKey('basic_setup_pending_email')]:setup.email||null,
+   [pantryStyleKey('basic_setup_pending_email')]:email||null,
    [pantryStyleKey(noteTagMetadataKey)]:tags
   }});
   if(error)throw error;
@@ -3265,9 +3319,9 @@ $('basicSetupForm').onsubmit=event=>{
  const setup=basicSetup;
  if(!setup||setup.saving)return;
  const status=$('basicSetupStatus');
- if(setup.step===0&&!$('basicSetupDry').checked&&!$('basicSetupFresh').checked){
-  status.textContent='Marca alimentos secos, frescos o ambos.';
-  $('basicSetupDry').focus();
+ if(setup.step===0&&!setup.categories.size){
+  status.textContent='Marca al menos una categoría de alimentos.';
+  $('basicSetupFoodGroups').querySelector('input').focus();
   return;
  }
  if(setup.step===1&&!setup.city){
@@ -3276,13 +3330,12 @@ $('basicSetupForm').onsubmit=event=>{
   return;
  }
  if(setup.step===2&&!addBasicSetupMarket())return;
- if(setup.step===3){
+ if(setup.step===basicSetupSections.length-1){
   const input=$('basicSetupEmail');
   input.value=input.value.trim();
-  if(!input.reportValidity())return;
-  setup.email=input.value;
+  if(input.reportValidity())finishBasicSetup(input.value);
+  return;
  }
- if(setup.step===4){finishBasicSetup(true);return;}
  setup.step++;
  showBasicSetupStep();
 };
@@ -3290,12 +3343,7 @@ $('basicSetupBack').onclick=()=>{
  basicSetup.step--;
  showBasicSetupStep();
 };
-$('basicSetupSkip').onclick=()=>{
- if(basicSetup.step===4){finishBasicSetup(false);return;}
- $('basicSetupEmail').value=basicSetup.email;
- basicSetup.step++;
- showBasicSetupStep();
-};
+$('basicSetupSkip').onclick=()=>finishBasicSetup(basicSetup?.email);
 $('basicSetupClose').onclick=()=>basicSetupDialog.close();
 basicSetupDialog.oncancel=event=>{
  if(basicSetup?.saving)event.preventDefault();
