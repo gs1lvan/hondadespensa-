@@ -3203,14 +3203,15 @@ function renderBasicSetupFoodChoices(){
    const foodChecks=[];
    const selectCategory=checked=>{
     option.check.checked=checked;
-    if(checked)categories.add(category);
-    else{
+    if(checked){
+     categories.add(category);
+     if(foods.size)inventory.set(category,new Set(foods.values()));
+    }else{
      categories.delete(category);
      inventory.delete(category);
-     for(const check of foodChecks)check.checked=false;
     }
+    for(const check of foodChecks)check.checked=checked;
    };
-   selectCategory(selected);
    option.check.onchange=()=>{
     selectCategory(option.check.checked);
     updateMaster();
@@ -3222,7 +3223,8 @@ function renderBasicSetupFoodChoices(){
     check.type='checkbox';
     check.onchange=()=>{
      if(check.checked){
-      selectCategory(true);
+      option.check.checked=true;
+      categories.add(category);
       if(!inventory.has(category))inventory.set(category,new Set());
       inventory.get(category).add(name);
      }else{
@@ -3236,6 +3238,7 @@ function renderBasicSetupFoodChoices(){
     label.append(check,name);
     option.children.append(label);
    }
+   selectCategory(selected);
    master.children.append(option.row);
    return selectCategory;
   });
