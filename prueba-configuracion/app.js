@@ -1926,10 +1926,11 @@ function render(){
  $('total').textContent=visibleData.length;
  $('have').textContent=visibleData.filter(x=>x.have).length;
  $('missing').textContent=visibleData.filter(x=>!x.have).length;
- const shown=visibleData.filter(x=>folded(x.name).includes(q));
- const categoriesWithStock=new Set(visibleData.filter(item=>item.have).map(item=>item.category));
+ const vintage=usesVintageHome();
+ const shown=(vintage?visibleData:data).filter(x=>folded(x.name).includes(q));
+ const categoriesWithStock=new Set(data.filter(item=>item.have).map(item=>item.category));
  const main=$('categoryList');main.replaceChildren();
- if(!shown.length){
+ if(vintage&&!shown.length){
   const p=document.createElement('p');p.className='empty';
   p.textContent=!isFoodGroupVisible('dry')&&!isFoodGroupVisible('fresh')
    ?'Has ocultado ambos grupos. Puedes volver a mostrarlos en Administración.'
@@ -1937,15 +1938,18 @@ function render(){
   main.append(p);
  }
  const categories=orderedCategories(pantryCategories())
-  .filter(category=>isFoodGroupVisible(isFreshCategory(category)?'fresh':'dry'))
+  .filter(category=>!vintage||isFoodGroupVisible(isFreshCategory(category)?'fresh':'dry'))
   .sort((a,b)=>Number(categoriesWithStock.has(b))-Number(categoriesWithStock.has(a)));
  const groups={dry:document.createDocumentFragment(),fresh:document.createDocumentFragment()};
  // La preferencia de orden se conserva en el selector oculto; las flechas son el control visible.
  foodGroupOrder.hidden=true;
  for(const category of categories){
+  const group=isFreshCategory(category)?'fresh':'dry';
+  const inactive=!isFoodGroupVisible(group);
   const rows=shown.filter(x=>x.category===category).sort((a,b)=>esCompare(a.name,b.name));
   if(q&&!rows.length)continue;
   const details=document.createElement('details');details.className='category';details.open=openCategories.has(category)||!!q;
+  details.classList.toggle('inactive-food-category',inactive);
   if(!q)details.addEventListener('toggle',()=>{
    if(details.open)openCategories.add(category);
    else openCategories.delete(category);
@@ -1958,11 +1962,17 @@ function render(){
    const check=foodAvailabilityCheckbox(x);
    const name=document.createElement('span');name.textContent=x.name;row.append(check,name);details.append(row);
   }
-  groups[isFreshCategory(category)?'fresh':'dry'].append(details);
+  groups[group].append(details);
  }
  const groupOrder=(foodGroupOrder.value==='fresh'?['fresh','dry']:['dry','fresh'])
-  .filter(group=>groups[group].childElementCount);
- const vintage=usesVintageHome();
+  .filter(group=>vintage?groups[group].childElementCount:
+   !isFoodGroupVisible(group)||categories.some(category=>isFreshCategory(category)===(group==='fresh')));
+ if(!vintage)groupOrder.sort((a,b)=>Number(isFoodGroupVisible(b))-Number(isFoodGroupVisible(a)));
+ if(!vintage&&!groupOrder.length){
+  const empty=document.createElement('p');empty.className='empty';
+  empty.textContent='No hay alimentos con este filtro.';
+  main.append(empty);
+ }
  const useDoors=vintage&&pantryStylePreference('start_fridge_closed')===true&&!q;
  main.classList.toggle('fridge-with-doors',useDoors&&groupOrder.length>0);
  const allDoorsClosed=groupOrder.every(group=>!openedFridgeDoors.has(group));
@@ -1971,7 +1981,11 @@ function render(){
  for(const [index,group] of displayedGroups.entries()){
   const title=document.createElement('h2');
   title.className='food-group-title';
-  title.textContent=group==='fresh'?'Alimentos frescos':'Alimentos secos';
+  const groupName=group==='fresh'?'Alimentos frescos':'Alimentos secos';
+  const groupLabel=document.createElement('span');
+  groupLabel.textContent=groupName;
+  groupLabel.classList.toggle('inactive-food-label',!isFoodGroupVisible(group));
+  title.append(groupLabel);
   title.id='food-group-'+group;
   title.tabIndex=-1;
   if(useDoors){
@@ -1982,7 +1996,7 @@ function render(){
    if(!openedFridgeDoors.has(group)){
     door.className='fridge-door'+(groupOrder.length===1?' fridge-door-single':'');
     const plate=document.createElement('span');
-    plate.textContent=title.textContent;
+    plate.textContent=groupName;
     door.append(plate);
     door.onclick=()=>{
      openedFridgeDoors.add(group);
@@ -1994,7 +2008,7 @@ function render(){
    }
    door.className='fridge-close-door';
    door.textContent='×';
-   door.setAttribute('aria-label','Cerrar puerta de '+title.textContent.toLowerCase());
+   door.setAttribute('aria-label','Cerrar puerta de '+groupName.toLowerCase());
    door.onclick=()=>{
     openedFridgeDoors.delete(group);
     render();
@@ -2020,7 +2034,8 @@ function render(){
     const targetName=target==='fresh'?'frescos':'secos';
     jump.className='food-group-switch';
     jump.textContent=targetName;
-    jump.title='Mostrar alimentos '+targetName;
+    jump.classList.toggle('inactive-food-switch',!isFoodGroupVisible(target));
+    jump.title='Consultar alimentos '+targetName;
     jump.setAttribute('aria-label',jump.title);
     jump.onclick=()=>{
      visibleFoodGroup=target;
@@ -2037,6 +2052,11 @@ function render(){
    compartment.append(title,groups[group]);
    main.append(compartment);
   }else{
+   if(!vintage&&!groups[group].childElementCount){
+    const empty=document.createElement('p');empty.className='empty';
+    empty.textContent=q?'No hay alimentos con este filtro.':'Este grupo todavía no tiene categorías.';
+    groups[group].append(empty);
+   }
    main.append(title,groups[group]);
   }
  }
