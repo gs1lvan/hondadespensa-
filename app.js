@@ -1962,7 +1962,7 @@ function render(){
  foodGroupOrder.hidden=true;
  for(const category of categories){
   const group=isFreshCategory(category)?'fresh':'dry';
-  const inactive=!isFoodGroupVisible(group);
+  const inactive=!isFoodGroupVisible(group)&&!categoriesWithStock.has(category);
   const rows=shown.filter(x=>x.category===category);
   if(!categoriesWithFoods.has(category)){
    const catalog=catalogByCategory.get(categoryIdentity(category));
