@@ -95,7 +95,7 @@ test('se pueden ocultar secos y frescos de forma independiente sin borrar los al
   assert.match(js, /const visibleData=data\.filter/, 'La lista debe respetar los grupos visibles');
   assert.match(js, /const categories=orderedCategories\(pantryCategories\(\)\)/, 'Las categorías deben filtrarse solo al mostrar');
   assert.match(js, /renderGroupedAdmin\(\$\('adminFoods'\),data,'food'/, 'Administración mantiene el inventario completo');
- assert.match(js,/header\.insertBefore\(eye,collapse\)/, 'El ojo debe ir antes de la flecha del grupo');
+ assert.match(js,/actions\.append\(all,eye,move\)/, 'El ojo debe ir entre Todos y la flecha de ordenar');
   assert.match(js, /event\.preventDefault\(\);\s*event\.stopPropagation\(\)/, 'El ojo no debe plegar el panel');
  assert.match(js,/foodGroup\.shell\.classList\.toggle\('is-hidden-group',!visible\)/, 'El grupo oculto debe atenuarse');
 });
@@ -220,7 +220,6 @@ test('los grupos de alimentos tienen una casilla Todos junto al ojito', () => {
   const js=read('app.js');
   assert.match(js,/admin-category-all admin-group-all/);
   assert.match(js,/allCheck\.indeterminate=selected>0&&selected<allItems\.length/);
-  assert.match(js,/header\.insertBefore\(all,collapse\)/, 'Todos debe insertarse antes de un elemento que ya pertenece a la cabecera');
   assert.match(js,/all\.onclick=event=>event\.stopPropagation\(\)/);
   assert.match(js,/allCheck\.onchange=\(\)=>setBulkFoodAvailability\(allItems,allCheck\.checked,title\.toLowerCase\(\)\)/);
   assert.match(js,/\.eq\('despensa_id',pantry\.id\)\.in\('id',ids\)/,'La operación debe limitarse a los alimentos de la despensa');
@@ -310,14 +309,16 @@ test('Administrar categorías tiene entrada propia visible en Administración', 
  assert.equal((html.match(/id="adminFoods"/g)||[]).length,1,'No duplicar el listado');
 });
 
-test('El encabezado de grupos inserta sus controles sobre nodos existentes',()=>{
+test('Las cabeceras de grupos comparten dos filas y el chevrón de Administración',()=>{
  const js=read('app.js');
- const start=js.indexOf('  header.append(collapse);',js.indexOf('function renderGroupedAdmin('));
- const all=js.indexOf('header.insertBefore(all,collapse)',start);
- const eye=js.indexOf('header.insertBefore(eye,collapse)',start);
- assert.ok(start>=0&&all>start&&eye>all,'La flecha debe existir antes de insertar Todos y el ojo');
- assert.doesNotMatch(js,/header\.insertBefore\(all,eye\)/,'No insertar delante de un ojo todavía no montado');
+ const css=read('styles.css');
+ assert.match(js,/header\.append\(collapse\);[\s\S]*actions\.append\(all,eye,move\);\s*header\.append\(actions\);/,
+  'El desplegable pertenece a la primera fila y las tres acciones a la segunda');
+ assert.match(js,/collapse\.setAttribute\('aria-controls',foodGroup\.cards\.id\)/);
  assert.match(js,/container\.append\(foodGroup\.shell\)/,'El grupo debe añadirse al listado');
+ assert.match(css,/#adminFoods \.admin-food-group-actions\{[^}]*grid-column:1\/-1;[^}]*justify-content:start/);
+ assert.match(css,/\.admin-group-panel > summary::after,\s*#adminFoods \.admin-food-group-collapse::after\{/);
+ assert.match(css,/\.admin-food-group-collapse\[aria-expanded="true"\]::after\{\s*transform:rotate\(225deg\)/);
 });
 
 test('Las flechas de ordenar sustituyen al panel redundante y conservan el orden por despensa',()=>{
@@ -328,7 +329,6 @@ test('Las flechas de ordenar sustituyen al panel redundante y conservan el orden
  assert.match(js,/for\(const group of \(foodGroupOrder\.value==='fresh'\?\['fresh','dry'\]:\['dry','fresh'\]\)\)/,'Los grupos se dibujan según el orden guardado');
  assert.match(js,/setAdminIcon\(move,moveDown\?'down':'up'/,'Flechas de subir y bajar');
  assert.match(js,/move\.hidden=foodGroups\.size<2/,'No mostrar flecha si solo existe un grupo');
- assert.match(js,/header\.insertBefore\(move,all\)/,'Flecha colocada junto a los controles de la categoría');
  assert.match(js,/foodGroupOrder\.onchange\(\)/,'Se conserva el guardado existente de la preferencia');
  assert.match(js,/localStorage\.setItem\(foodGroupOrderKey\(\),foodGroupOrder\.value\)/,'Orden independiente por usuario y despensa');
  assert.match(js,/foodGroupOrder\.hidden=true/,'No debe ocultarse el padre del selector');
