@@ -1530,7 +1530,7 @@ function appendFridgeNoteRow({name='',quantity=''}={}){
 }
 fridgeNoteAdd.onclick=()=>appendFridgeNoteRow().focus();
 
-function renderFridgeNotes(main,topDoor){
+function renderFridgeNotes(main,groupOrder,allDoorsClosed){
  const key='hondadespensa:notes:'+session.user.id+':'+activePantry.id;
  let notes=[];
  try{notes=JSON.parse(localStorage.getItem(key))??[];}catch{}
@@ -1540,13 +1540,44 @@ function renderFridgeNotes(main,topDoor){
  }
  const layer=document.createElement('div');
  layer.className='fridge-notes';
- main.append(layer);
+ layer.classList.toggle('fridge-notes-tray',!allDoorsClosed);
+ if(allDoorsClosed)main.append(layer);
+ else main.prepend(layer);
  const doors=[...main.querySelectorAll(':scope > .fridge-door')];
  const size=52;
- const dimensions=()=>[Math.max(1,layer.clientWidth-size),Math.max(1,layer.clientHeight-size)];
+ const surfaceWidth=()=>allDoorsClosed?layer.clientWidth:main.clientWidth-4;
+ function doorLayout(){
+  if(allDoorsClosed){
+   const origin=layer.getBoundingClientRect().top;
+   return doors.map(door=>{
+    const {top,bottom}=door.getBoundingClientRect();
+    return {top:top-origin,bottom:bottom-origin};
+   });
+  }
+  // Al añadir desde la bandeja, busca un hueco en la superficie de las puertas cerradas.
+  const style=getComputedStyle(main);
+  const gap=parseFloat(style.getPropertyValue('--fridge-door-gap'));
+  let top=0;
+  return groupOrder.map(group=>{
+   const shape=groupOrder.length===1?'single':group;
+   const [w,h]=style.getPropertyValue('--fridge-door-'+shape+'-ratio').split('/').map(Number);
+   const bottom=top+surfaceWidth()*h/w;
+   const bounds={top,bottom};
+   top=bottom+gap;
+   return bounds;
+  });
+ }
+ const dimensions=(layout)=>[
+  Math.max(1,surfaceWidth()-size),
+  Math.max(1,(allDoorsClosed?layer.clientHeight:(layout??doorLayout()).at(-1).bottom)-size)
+ ];
  let blue;
  let controls;
- function attachDrag(button,note,commit,open){
+ function attachNote(button,note,commit,open){
+  if(!allDoorsClosed){
+   button.onclick=open;
+   return;
+  }
   function position(x,y){
    button.style.left='calc('+100*x+'% - '+size*x+'px)';
    button.style.top='calc('+100*y+'% - '+size*y+'px)';
@@ -1600,7 +1631,7 @@ function renderFridgeNotes(main,topDoor){
   const [width,height]=dimensions();
   blue={number:0,x:12/width,y:9/height};
   try{Object.assign(blue,JSON.parse(localStorage.getItem(key+':blue')));}catch{}
-  attachDrag(button,blue,(x,y)=>{
+  attachNote(button,blue,(x,y)=>{
    try{localStorage.setItem(key+':blue',JSON.stringify({x,y}));return true;}
    catch{return false;}
   },()=>{
@@ -1688,7 +1719,7 @@ function renderFridgeNotes(main,topDoor){
     date.textContent=new Date(note.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'});
     button.append(date);
    }
-   attachDrag(button,note,(x,y)=>save(notes.map(item=>item.number===note.number?{...item,x,y}:item)),()=>{
+   attachNote(button,note,(x,y)=>save(notes.map(item=>item.number===note.number?{...item,x,y}:item)),()=>{
     const savedNote=notes.find(item=>item.number===note.number);
     const titleButton=$('fridgeNoteEditTitle');
     const titleInput=$('fridgeNoteTitleInput');
@@ -1768,26 +1799,29 @@ function renderFridgeNotes(main,topDoor){
    layer.append(button);
   }
  }
- function free(x,y,number){
-  const [width,height]=dimensions();
+ function free(x,y,number,layout=doorLayout()){
+  const [width,height]=dimensions(layout);
   const left=x*width,top=y*height;
-  const origin=layer.getBoundingClientRect();
-  if(!doors.some(door=>{
-   const rect=door.getBoundingClientRect();
-   return top+origin.top>=rect.top&&top+origin.top+size<=rect.bottom;
-  }))return false;
-  if(controls&&left+size>controls.offsetLeft&&top<controls.offsetTop+controls.offsetHeight)return false;
+  if(!layout.some(door=>top>=door.top&&top+size<=door.bottom))return false;
+  if(controls){
+   const buttons=[...controls.querySelectorAll('button:not([hidden])')];
+   const controlLeft=allDoorsClosed?controls.offsetLeft:width+size-8-Math.max(...buttons.map(button=>button.offsetWidth));
+   const controlBottom=allDoorsClosed?controls.offsetTop+controls.offsetHeight
+    :5+buttons.reduce((height,button)=>height+button.offsetHeight,0)+2*(buttons.length-1);
+   if(left+size>controlLeft&&top<controlBottom)return false;
+  }
   const maxOverlap=number===undefined?5:22;
   return [...notes,...(blue?[blue]:[])].every(note=>note.number===number||
    Math.abs(note.x-x)*width>=size-maxOverlap||Math.abs(note.y-y)*height>=size-maxOverlap);
  }
  add.onclick=()=>{
   const number=Math.max(0,...notes.map(note=>note.number))+1;
-  const [width,height]=dimensions();
-  const area=Math.min(height,topDoor.clientHeight-size);
+  const layout=doorLayout();
+  const [width,height]=dimensions(layout);
+  const area=Math.min(height,Math.max(0,layout[0].bottom-size));
   for(let y=Math.round(area*.49);y<=height;y+=size-5){
    for(let x=Math.round(width*.25);x<=width*.86;x+=size-5){
-    if(!free(x/width,y/height))continue;
+    if(!free(x/width,y/height,undefined,layout))continue;
     if(save([...notes,{number,message:'',createdAt:new Date().toISOString(),x:x/width,y:y/height}])){
      draw();
      const newNoteButton=layer.lastElementChild;
@@ -1914,7 +1948,8 @@ function render(){
  const vintage=usesVintageHome();
  const useDoors=vintage&&pantryStylePreference('start_fridge_closed')===true&&!q;
  main.classList.toggle('fridge-with-doors',useDoors&&groupOrder.length>0);
- main.classList.toggle('fridge-all-doors-closed',useDoors&&groupOrder.length>0&&groupOrder.every(group=>!openedFridgeDoors.has(group)));
+ const allDoorsClosed=groupOrder.every(group=>!openedFridgeDoors.has(group));
+ main.classList.toggle('fridge-all-doors-closed',useDoors&&groupOrder.length>0&&allDoorsClosed);
  const displayedGroups=vintage?groupOrder:[groupOrder.find(group=>group===visibleFoodGroup)??groupOrder[0]].filter(Boolean);
  for(const [index,group] of displayedGroups.entries()){
   const title=document.createElement('h2');
@@ -1988,9 +2023,8 @@ function render(){
    main.append(title,groups[group]);
   }
  }
- const topDoor=main.firstElementChild?.matches('.empty')?main.children[1]:main.firstElementChild;
- if(useDoors&&topDoor?.matches('.fridge-door')&&(pantryStylePreference('fridge_notes_enabled')===true||pantryStylePreference('automatic_pantry_note_enabled')===true)){
-  renderFridgeNotes(main,topDoor);
+ if(useDoors&&groupOrder.length&&(pantryStylePreference('fridge_notes_enabled')===true||pantryStylePreference('automatic_pantry_note_enabled')===true)){
+  renderFridgeNotes(main,groupOrder,allDoorsClosed);
  }
  if(adminMode)renderAdmin();
 }
