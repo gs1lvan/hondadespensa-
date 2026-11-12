@@ -36,7 +36,11 @@ test('la despensa abre en la vista normal y permite entrar en Administración', 
  assert.match(create,/p_cargar_catalogo:setupMode==='basic'/,'El catálogo seco solo se carga al elegir la despensa básica');
  assert.match(create,/type="radio" name="pantrySetup" value="guided" required checked/,
   'El formulario guiado se selecciona por defecto');
- assert.match(create,/create\.onclick=\(\)=>\{\s*form\.elements\.pantrySetup\.value='guided';\s*dialog\.showModal\(\)/,
+ assert.match(create,/<div role="radiogroup" aria-label="Configuración inicial" aria-required="true" hidden>/,
+  'Las opciones de configuración se ocultan al principio');
+ assert.match(create,/iconOptions\.onchange=\(\)=>\{\s*setupOptions\.hidden=!form\.elements\.pantryIcon\.value;/,
+  'Las opciones aparecen al seleccionar el tipo de despensa');
+ assert.match(create,/create\.onclick=\(\)=>\{\s*form\.reset\(\);\s*setupOptions\.hidden=true;\s*dialog\.showModal\(\)/,
   'Al abrir de nuevo el diálogo se recupera la selección inicial');
  assert.doesNotMatch(create,/basicSetupVintage|Inicio vintage/,'El alta solo ofrece los dos modos de configuración');
  assert.match(create,/type="radio" name="pantrySetup" value="basic" required/);

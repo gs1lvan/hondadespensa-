@@ -2212,7 +2212,7 @@ function choosePantry(keepBackground=false){
  form.innerHTML=`
   <h2 id="pantry-create-title">Crear despensa</h2>
   <fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset>
-  <div role="radiogroup" aria-label="Configuración inicial" aria-required="true">
+  <div role="radiogroup" aria-label="Configuración inicial" aria-required="true" hidden>
    <label class="alternate-home-setting pantry-create-setup">
     <input id="basicSetupEnabled" type="radio" name="pantrySetup" value="guided" required checked>
     Formulario de configuración de opciones básicas
@@ -2247,9 +2247,14 @@ function choosePantry(keepBackground=false){
  const submit=form.querySelector('[type="submit"]');
  const cancel=form.querySelector('[data-cancel]');
  const status=form.querySelector('[role="status"]');
+ const setupOptions=form.querySelector('[role="radiogroup"]');
+ iconOptions.onchange=()=>{
+  setupOptions.hidden=!form.elements.pantryIcon.value;
+ };
  dialog.append(form);
  create.onclick=()=>{
-  form.elements.pantrySetup.value='guided';
+  form.reset();
+  setupOptions.hidden=true;
   dialog.showModal();
  };
  cancel.onclick=()=>{if(!submit.disabled)dialog.close();};
