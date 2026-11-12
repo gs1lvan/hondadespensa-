@@ -1427,6 +1427,7 @@ async function savePersonalNoteTags(tags,message){
   if(session===current)renderAdminNoteTags();
  }
 }
+setAdminIcon($('noteTagAdd'),'add','Añadir etiqueta');
 $('noteTagForm').onsubmit=event=>{
  event.preventDefault();
  const input=$('noteTagInput');

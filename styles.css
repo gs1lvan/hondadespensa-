@@ -542,19 +542,26 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
  justify-content:flex-end;flex-wrap:wrap;padding:3px 8px;
 }
 #adminFoods .category-order-actions {display:flex;align-items:center;gap:0}
-#adminFoods .admin-icon-button {
+#adminFoods .admin-icon-button,
+#adminNotesPanel .admin-icon-button {
  display:grid;place-items:center;flex:0 0 44px;
  width:44px;min-width:44px;height:44px;min-height:44px;
  padding:0;margin:0;appearance:none;border:1px solid transparent;
  border-radius:9px;background:transparent;box-shadow:none;
  text-shadow:none;color:inherit;cursor:pointer;
 }
-#adminFoods .admin-icon-button svg {display:block;width:20px;height:20px;pointer-events:none}
-#adminFoods .admin-icon-button.danger {color:#ff9189}
-:root[data-bg-color$="-claro"] #adminFoods .admin-icon-button.danger {color:#9f353a}
-#adminFoods .admin-icon-button:where(:hover,:active) {background:color-mix(in srgb,currentColor 9%,transparent)}
-#adminFoods .admin-icon-button:focus-visible {outline:2px solid currentColor;outline-offset:1px}
-#adminFoods .admin-icon-button:disabled {opacity:.32;cursor:default}
+#adminFoods .admin-icon-button svg,
+#adminNotesPanel .admin-icon-button svg {display:block;width:20px;height:20px;pointer-events:none}
+#adminFoods .admin-icon-button.danger,
+#adminNotesPanel .admin-icon-button.danger {color:#ff9189}
+:root[data-bg-color$="-claro"] #adminFoods .admin-icon-button.danger,
+:root[data-bg-color$="-claro"] #adminNotesPanel .admin-icon-button.danger {color:#9f353a}
+#adminFoods .admin-icon-button:where(:hover,:active),
+#adminNotesPanel .admin-icon-button:where(:hover,:active) {background:color-mix(in srgb,currentColor 9%,transparent)}
+#adminFoods .admin-icon-button:focus-visible,
+#adminNotesPanel .admin-icon-button:focus-visible {outline:2px solid currentColor;outline-offset:1px}
+#adminFoods .admin-icon-button:disabled,
+#adminNotesPanel .admin-icon-button:disabled {opacity:.32;cursor:default}
 #adminFoods .admin-category-all {
  display:grid;justify-items:center;align-content:center;gap:2px;
  flex:0 0 46px;min-width:46px;min-height:44px;padding:2px 0;margin:0;
@@ -684,7 +691,6 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
  flex:1 1 135px;width:auto;min-width:0;min-height:44px;
  font-size:15px;padding:10px 12px;border-radius:12px;
 }
-#adminNotesPanel .admin-note-tag-form button{flex:none;min-height:44px;padding:8px 14px;font-size:14px}
 #adminNotesPanel .admin-note-tag-list{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 12px}
 #adminNotesPanel .admin-note-tag-item{
  display:inline-flex;align-items:center;gap:2px;min-height:30px;max-width:100%;
@@ -713,16 +719,9 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 }
 #adminNotesPanel .admin-note-tag-row:last-child{border-bottom:0}
 #adminNotesPanel .admin-note-tag-name{
- flex:1 1 92px;min-width:0;overflow-wrap:anywhere;font-size:clamp(13px,3.5vw,16px);
+ flex:1 1 64px;min-width:0;overflow-wrap:anywhere;font-size:clamp(13px,3.5vw,16px);
 }
-#adminNotesPanel .admin-note-tag-actions{display:flex;gap:4px;align-items:center;margin-inline-start:auto}
-#adminNotesPanel .admin-note-tag-actions .admin-icon-button{
- display:grid;place-items:center;flex:0 0 38px;width:38px;height:42px;min-height:42px;
- padding:0;border-radius:9px;box-shadow:none;
-}
-#adminNotesPanel .admin-note-tag-actions .admin-icon-button svg{width:17px;height:17px}
-#adminNotesPanel .admin-note-tag-actions .admin-icon-button.danger{color:#ffaaa4}
-#adminNotesPanel .admin-note-tag-actions .admin-icon-button:disabled{opacity:.35}
+#adminNotesPanel .admin-note-tag-actions{display:flex;align-items:center;margin-inline-start:auto}
 #adminNotesPanel .admin-note-tag-edit{
  display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:0 0 100%;padding:6px 0 4px;
 }
@@ -730,13 +729,8 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
  flex:1 1 130px;min-width:0;min-height:44px;padding:8px 10px;border-radius:10px;font-size:16px;
 }
 #adminNotesPanel .admin-note-tag-edit button{min-height:44px;padding:8px 11px;font-size:13px}
-#adminNotesPanel .admin-note-tag-form #noteTagAdd{
- display:grid;place-items:center;min-width:48px;min-height:48px;padding:0;font-size:26px;line-height:1;
-}
 @media(max-width:385px){
  #adminNotesPanel .admin-note-tag-row{padding:5px}
- #adminNotesPanel .admin-note-tag-actions{gap:2px}
- #adminNotesPanel .admin-note-tag-actions .admin-icon-button{flex-basis:34px;width:34px}
 }
 
 /* Tarjetas visibles en Administrar categorías (no anidadas en un segundo acordeón). */
