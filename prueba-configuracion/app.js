@@ -1884,7 +1884,8 @@ function render(){
   main.append(p);
  }
  const categories=orderedCategories(pantryCategories())
-  .filter(category=>isFoodGroupVisible(isFreshCategory(category)?'fresh':'dry'));
+  .filter(category=>isFoodGroupVisible(isFreshCategory(category)?'fresh':'dry'))
+  .sort((a,b)=>Number(categoriesWithStock.has(b))-Number(categoriesWithStock.has(a)));
  const groups={dry:document.createDocumentFragment(),fresh:document.createDocumentFragment()};
  // La preferencia de orden se conserva en el selector oculto; las flechas son el control visible.
  foodGroupOrder.hidden=true;
