@@ -770,6 +770,7 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 }
 #adminFoods .admin-food-group-flat.is-hidden-group,
 #categoryList .inactive-food-category,
+#categoryList .category:not(.inactive-food-category) .inactive-category-item,
 #categoryList .inactive-food-label,
 #categoryList .food-group-switch.inactive-food-switch{opacity:.55}
 /* Los dos catálogos predeterminados comparten un panel plegable. */

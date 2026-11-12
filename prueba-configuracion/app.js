@@ -1941,12 +1941,34 @@ function render(){
   .filter(category=>!vintage||isFoodGroupVisible(isFreshCategory(category)?'fresh':'dry'))
   .sort((a,b)=>Number(categoriesWithStock.has(b))-Number(categoriesWithStock.has(a)));
  const groups={dry:document.createDocumentFragment(),fresh:document.createDocumentFragment()};
+ const categoriesWithFoods=new Set(data.map(item=>item.category));
+ const catalogByCategory=new Map();
+ const addCatalogNames=(name,names)=>{
+  const category=findPantryCategory(name)?.nombre??name;
+  const key=categoryIdentity(category);
+  const entries=catalogByCategory.get(key)??new Map();
+  for(const food of names)entries.set(folded(food),food);
+  catalogByCategory.set(key,entries);
+ };
+ for(const [name,foods] of Object.entries(freshCatalogGroups))addCatalogNames(name,foods);
+ if(catalogRows.length){
+  for(const row of catalogRows)addCatalogNames(row.categoria,[row.nombre]);
+ }else{
+  for(const [name,foods] of Object.entries(initial))addCatalogNames(name,foods);
+ }
  // La preferencia de orden se conserva en el selector oculto; las flechas son el control visible.
  foodGroupOrder.hidden=true;
  for(const category of categories){
   const group=isFreshCategory(category)?'fresh':'dry';
   const inactive=!isFoodGroupVisible(group);
-  const rows=shown.filter(x=>x.category===category).sort((a,b)=>esCompare(a.name,b.name));
+  const rows=shown.filter(x=>x.category===category);
+  if(!categoriesWithFoods.has(category)){
+   const catalog=catalogByCategory.get(categoryIdentity(category));
+   for(const name of catalog?.values()??[]){
+    if(folded(name).includes(q))rows.push({name,category,have:false,catalog});
+   }
+  }
+  rows.sort((a,b)=>esCompare(a.name,b.name));
   if(q&&!rows.length)continue;
   const details=document.createElement('details');details.className='category';details.open=openCategories.has(category)||!!q;
   details.classList.toggle('inactive-food-category',inactive);
@@ -1959,6 +1981,7 @@ function render(){
   details.append(categoryAddFoodForm(category,false));
   for(const x of rows){
    const row=document.createElement('div');row.className='item'+(x.have?' done':'');
+   row.classList.toggle('inactive-category-item',!categoriesWithStock.has(category));
    const check=foodAvailabilityCheckbox(x);
    const name=document.createElement('span');name.textContent=x.name;row.append(check,name);details.append(row);
   }
@@ -2618,7 +2641,7 @@ async function showCatalogFoodGroup(category){
 }
 
 let addingCatalogCategory=false;
-async function addCatalogCategory(category,names){
+async function addCatalogCategory(category,names,{markedName=null}={}){
  if(!activePantry||addingCatalogCategory)return;
  const pantryId=activePantry.id;
  const existing=findPantryCategory(category);
@@ -2626,7 +2649,7 @@ async function addCatalogCategory(category,names){
  addingCatalogCategory=true;
  try{
   await ensurePantryCategory(categoryName,pantryId);
-  if(!names.length){
+  if(!markedName&&!names.length){
    if(activePantry?.id===pantryId)await refresh();
    return;
   }
@@ -2634,24 +2657,31 @@ async function addCatalogCategory(category,names){
    .select('id,nombre').eq('despensa_id',pantryId).eq('nombre',categoryName).single();
   if(categoryError)throw categoryError;
   const {data:foods,error:foodError}=await db.from('alimentos')
-   .select('nombre').eq('despensa_id',pantryId).eq('categoria_id',target.id);
+   .select('id,nombre,disponible').eq('despensa_id',pantryId).eq('categoria_id',target.id);
   if(foodError)throw foodError;
   if(activePantry?.id!==pantryId)return;
   const seen=new Set(foods.map(food=>folded(food.nombre)));
+  const marked=markedName&&foods.find(food=>folded(food.nombre)===folded(markedName));
   const rows=[];
   for(const name of names){
    const key=folded(name);
    if(seen.has(key))continue;
    seen.add(key);
-   rows.push({nombre:name,categoria:target.nombre,categoria_id:target.id,disponible:false,despensa_id:pantryId});
+   rows.push({nombre:name,categoria:target.nombre,categoria_id:target.id,disponible:name===markedName,despensa_id:pantryId});
   }
   if(rows.length){
    const {error}=await db.from('alimentos').insert(rows);
    if(error)throw error;
   }
+  if(marked&&!marked.disponible){
+   const {error}=await db.from('alimentos').update({disponible:true}).eq('despensa_id',pantryId).eq('id',marked.id);
+   if(error)throw error;
+  }
   if(activePantry?.id!==pantryId)return;
   await refresh();
-  if(activePantry?.id===pantryId)await showCatalogFoodGroup(target.nombre);
+  if(activePantry?.id!==pantryId)return;
+  if(!markedName)await showCatalogFoodGroup(target.nombre);
+  return true;
  }catch(error){
   if(activePantry?.id===pantryId)alert('No se pudo añadir la categoría: '+error.message);
  }finally{
@@ -2742,6 +2772,16 @@ function renderCatalogList(holder,search,groups,openCategories){
 function foodAvailabilityCheckbox(item){
  const check=document.createElement('input');check.type='checkbox';check.checked=item.have;check.disabled=busy||(pendingCategoryAvailability?.pantryId===activePantry?.id&&pendingCategoryAvailability?.ids.has(item.id));
  check.setAttribute('aria-label','Tengo '+item.name);
+ if(item.catalog){
+  check.onchange=async()=>{
+   check.disabled=true;
+   openCategories.add(item.category);
+   if(await addCatalogCategory(item.category,item.catalog.values(),{markedName:item.name}))return;
+   check.checked=false;
+   check.disabled=false;
+  };
+  return check;
+ }
  check.onchange=async()=>{
   check.disabled=true;
   const {error}=await db.from('alimentos').update({disponible:check.checked}).eq('id',item.id).eq('despensa_id',activePantry.id);
@@ -3308,16 +3348,12 @@ function renderBasicSetupFoodChoices(){
 }
 
 async function saveBasicSetupInventory(setup){
- const activeGroups=new Set([...setup.categories].map(isFreshCategory));
  for(const [category,available] of setup.availableFoods){
   if(session!==setup.session||activePantry?.id!==setup.pantryId)return;
   const pantryId=setup.pantryId;
   await ensurePantryCategory(category,pantryId);
-  const groupActive=activeGroups.has(isFreshCategory(category));
+  if(!available.size)continue;
   const marked=setup.inventory.get(category);
-  // Un grupo oculto conserva su catálogo como alimentos sin marcar.
-  if(!(groupActive?marked:available)?.size)continue;
-  const names=groupActive?marked:available.values();
   const {data:target,error:categoryError}=await db.from('categorias_despensa')
    .select('id,nombre').eq('despensa_id',pantryId).eq('nombre',category).single();
   if(categoryError)throw categoryError;
@@ -3326,7 +3362,7 @@ async function saveBasicSetupInventory(setup){
   if(foodError)throw foodError;
   const existing=new Map(foods.map(food=>[folded(food.nombre),food]));
   const ids=[],rows=[];
-  for(const name of names){
+  for(const name of available.values()){
    const food=existing.get(folded(name));
    const have=marked?.has(name)===true;
    if(!food){
