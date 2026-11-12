@@ -2988,7 +2988,7 @@ function openBasicSetup(){
  const markets=pantryStylePreference('reference_supermarkets');
  basicSetup={
   step:0,city:pantryWeatherCity(),markets:Array.isArray(markets)?[...markets]:[],
-  inventory:new Map(),categories:new Set(),email:pantryStylePreference('basic_setup_pending_email')||'',
+  inventory:new Map(),categories:new Set(),availableCategories:[],email:pantryStylePreference('basic_setup_pending_email')||'',
   pantryId:activePantry.id,session,saving:false,search:null
  };
  renderBasicSetupFoodChoices();
@@ -3182,6 +3182,7 @@ function renderBasicSetupFoodChoices(){
   }
  }
  const sorted=[...foodsByCategory].sort(([a],[b])=>esCompare(bareCategory(a),bareCategory(b)));
+ basicSetup.availableCategories=sorted.map(([category])=>category);
  const dryVisible=isFoodGroupVisible('dry'),freshVisible=isFoodGroupVisible('fresh');
  list.replaceChildren();
  for(const [key,title,selected] of [
@@ -3250,7 +3251,9 @@ function renderBasicSetupFoodChoices(){
 }
 
 async function saveBasicSetupInventory(setup){
- for(const category of setup.categories){
+ const selectedGroups=new Set([...setup.categories].map(isFreshCategory));
+ for(const category of setup.availableCategories){
+  if(!selectedGroups.has(isFreshCategory(category)))continue;
   if(session!==setup.session||activePantry?.id!==setup.pantryId)return;
   const pantryId=setup.pantryId;
   await ensurePantryCategory(category,pantryId);
