@@ -2829,6 +2829,7 @@ function renderGroupedAdmin(container,rows,type,query){
    shell.dataset.foodGroup=group;
    const cards=document.createElement('div');
    cards.className='admin-food-category-cards';
+   cards.id='admin-food-group-'+group+'-cards';
    shell.append(cards);
    foodGroups.set(group,{shell,cards,count:0});
   }
@@ -2851,15 +2852,14 @@ function renderGroupedAdmin(container,rows,type,query){
   foodGroup.cards.hidden=!expanded;
   const collapse=document.createElement('button');
   collapse.type='button';
-  collapse.className='admin-food-group-collapse';
-  collapse.textContent=expanded?'⌃':'⌄';
+  collapse.className='admin-icon-button admin-food-group-collapse';
+  collapse.setAttribute('aria-controls',foodGroup.cards.id);
   collapse.setAttribute('aria-label',(expanded?'Plegar ':'Desplegar ')+title.toLowerCase());
   collapse.setAttribute('aria-expanded',String(expanded));
   collapse.onclick=()=>{
    const next=foodGroup.cards.hidden;
    foodGroup.cards.hidden=!next;
    adminFoodGroupOpen.set(group,next);
-   collapse.textContent=next?'⌃':'⌄';
    collapse.setAttribute('aria-label',(next?'Plegar ':'Desplegar ')+title.toLowerCase());
    collapse.setAttribute('aria-expanded',String(next));
   };
@@ -2867,7 +2867,7 @@ function renderGroupedAdmin(container,rows,type,query){
   const visible=isFoodGroupVisible(group);
   const eye=document.createElement('button');
   eye.type='button';
-  eye.className='food-group-eye';
+  eye.className='admin-icon-button food-group-eye';
   eye.setAttribute('aria-label',(visible?'Ocultar ':'Mostrar ')+title.toLowerCase()+' en la despensa');
   eye.setAttribute('aria-pressed',String(visible));
   eye.title=eye.getAttribute('aria-label');
@@ -2875,7 +2875,7 @@ function renderGroupedAdmin(container,rows,type,query){
   eye.append(foodGroupEyeIcon(visible));
   eye.onclick=event=>{
    event.preventDefault();
-   event.stopPropagation(); // No activar el desplegable <summary>.
+   event.stopPropagation();
    saveFoodGroupVisibility(group,!visible);
   };
   const all=document.createElement('label');
@@ -2895,10 +2895,6 @@ function renderGroupedAdmin(container,rows,type,query){
   all.onclick=event=>event.stopPropagation();
   all.onkeydown=event=>event.stopPropagation();
   allCheck.onchange=()=>setBulkFoodAvailability(allItems,allCheck.checked,title.toLowerCase());
-  // El botón collapse ya es hijo del header; eye todavía no lo es.
-  // Insertar ambos controles delante de collapse evita NotFoundError y la lista vacía.
-  header.insertBefore(all,collapse);
-  header.insertBefore(eye,collapse);
   const move=document.createElement('button');
   move.type='button';
   move.className='admin-food-group-move';
@@ -2915,7 +2911,10 @@ function renderGroupedAdmin(container,rows,type,query){
    container.querySelector('.admin-food-group-flat[data-food-group="'+group+'"] .admin-food-group-move')
     ?.focus({preventScroll:true});
   };
-  header.insertBefore(move,all);
+  const actions=document.createElement('div');
+  actions.className='admin-food-group-actions';
+  actions.append(all,eye,move);
+  header.append(actions);
   foodGroup.shell.classList.toggle('is-hidden-group',!visible);
   foodGroup.shell.prepend(header);
   container.append(foodGroup.shell);
