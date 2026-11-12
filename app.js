@@ -3193,7 +3193,6 @@ function renderBasicSetupFoodChoices(){
  }
  const sorted=[...foodsByCategory].sort(([a],[b])=>esCompare(bareCategory(a),bareCategory(b)));
  basicSetup.availableCategories=sorted.map(([category])=>category);
- const dryVisible=isFoodGroupVisible('dry'),freshVisible=isFoodGroupVisible('fresh');
  const groupOptions=[];
  const orderGroups=()=>{
   const focused=document.activeElement;
@@ -3205,8 +3204,8 @@ function renderBasicSetupFoodChoices(){
  };
  list.replaceChildren();
  for(const [key,title,selected] of [
-  ['dry','Alimentos secos',dryVisible||!freshVisible],
-  ['fresh','Alimentos frescos',freshVisible]
+  ['dry','Alimentos secos',isFoodGroupVisible('dry')],
+  ['fresh','Alimentos frescos',isFoodGroupVisible('fresh')]
  ]){
   const master=basicSetupFoodOption(title,'basic-setup-'+key+'-categories');
   master.check.setAttribute('aria-label','Todas las categorías de '+title.toLowerCase());
@@ -3364,11 +3363,6 @@ $('basicSetupForm').onsubmit=event=>{
  const setup=basicSetup;
  if(!setup||setup.saving)return;
  const status=$('basicSetupStatus');
- if(setup.step===0&&!setup.categories.size){
-  status.textContent='Marca al menos una categoría de alimentos.';
-  $('basicSetupFoodGroups').querySelector('input').focus();
-  return;
- }
  if(setup.step===1&&!setup.city){
   status.textContent='Busca y elige tu ciudad de referencia.';
   $('basicSetupCity').focus();
