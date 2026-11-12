@@ -768,7 +768,7 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 #adminFoods .admin-food-category-cards>.admin-category{
  margin:8px 0 11px;border:1px solid var(--card-edge,#527b9d);box-shadow:none;
 }
-#adminFoods .admin-food-group-flat.is-hidden-group .admin-food-group-bar .cat-name{opacity:.55}
+#adminFoods .admin-food-group-flat.is-hidden-group{opacity:.55}
 /* Los dos catálogos predeterminados comparten un panel plegable. */
 #adminDefaultCategoriesPanel .admin-default-categories-hint{
  margin:5px 0 12px;line-height:1.5;
@@ -864,6 +864,7 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
   background: var(--setup-row);
 }
 .basic-setup-food-option { display: block; padding: 0 .65rem; }
+#basicSetupFoodGroups > .is-inactive { opacity: .55; }
 .basic-setup-food-heading { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
 .basic-setup-food-heading:has(input:is(:checked,:indeterminate)) > label { font-weight: 650; }
 .basic-setup-food-heading label, .basic-setup-food-leaf {

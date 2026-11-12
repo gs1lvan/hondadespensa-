@@ -329,10 +329,10 @@ test('Las flechas de ordenar sustituyen al panel redundante y conservan el orden
  const js=read('app.js');
  assert.doesNotMatch(html,/id="adminFoodsPanel"/,'El panel de orden debe desaparecer');
  assert.match(html,/<select id="foodGroupOrder" hidden/,'El estado guardado debe permanecer oculto');
- assert.match(js,/const firstGroup=foodGroupOrder\.value==='fresh'\?'fresh':'dry'/,'La flecha depende del orden actual');
- assert.match(js,/for\(const group of \(foodGroupOrder\.value==='fresh'\?\['fresh','dry'\]:\['dry','fresh'\]\)\)/,'Los grupos se dibujan según el orden guardado');
+ assert.match(js,/const orderedGroups=\(foodGroupOrder\.value==='fresh'\?\['fresh','dry'\]:\['dry','fresh'\]\)/,'Se respeta el orden guardado entre grupos con la misma visibilidad');
+ assert.match(js,/\.sort\(\(a,b\)=>Number\(isFoodGroupVisible\(b\)\)-Number\(isFoodGroupVisible\(a\)\)\)/,'Los grupos desactivados van al final');
  assert.match(js,/setAdminIcon\(move,moveDown\?'down':'up'/,'Flechas de subir y bajar');
- assert.match(js,/move\.hidden=foodGroups\.size<2/,'No mostrar flecha si solo existe un grupo');
+ assert.match(js,/move\.hidden=orderedGroups\.length<2\|\|isFoodGroupVisible/,'La flecha solo aparece cuando se pueden intercambiar los grupos');
  assert.match(js,/foodGroupOrder\.onchange\(\)/,'Se conserva el guardado existente de la preferencia');
  assert.match(js,/localStorage\.setItem\(foodGroupOrderKey\(\),foodGroupOrder\.value\)/,'Orden independiente por usuario y despensa');
  assert.match(js,/foodGroupOrder\.hidden=true/,'No debe ocultarse el padre del selector');
