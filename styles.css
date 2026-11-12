@@ -844,21 +844,6 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
   background: var(--setup-panel);
   box-shadow: inset 0 1px #ffffff20, 0 16px 64px #03112099;
 }
-.basic-setup[data-style=vintage] {
-  --setup-text: #3e2b20;
-  --setup-muted: #684a37;
-  --setup-panel: linear-gradient(140deg, #fbefda, #eed6b3);
-  --setup-header: #ead1ac;
-  --setup-row: #f9e8cc;
-  --setup-input: #fff5e3;
-  --setup-border: #a27a56;
-  --setup-button: linear-gradient(135deg, #855c41, #694731);
-  --setup-secondary: #f6e6cb;
-  --setup-accent: #855c41;
-  --setup-focus: #9b623d;
-  --setup-error: #842c23;
-  color-scheme: light;
-}
 .basic-setup::backdrop { background: #071b30b3; }
 .basic-setup form { display: flex; flex-direction: column; max-height: calc(100dvh - 26px); }
 .basic-setup-header, .basic-setup-actions { display: flex; align-items: center; gap: .55rem; padding: .9rem 1.1rem; }
@@ -914,10 +899,3 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 .basic-setup-status:empty { display: none; }
 #weatherCity { margin-inline-end: .45em; }
 .basic-setup input[type=checkbox] { width: 1.15rem; height: 1.15rem; accent-color: var(--setup-accent); }
-.pantry-create-form .basic-setup-vintage-option {
-  margin-block-start: .45rem;
-  margin-inline-start: .7rem;
-  padding-inline-start: .65rem;
-  border-inline-start: 2px solid var(--line);
-}
-.basic-setup-vintage-option small { display: block; font-size: .8em; opacity: .85; }

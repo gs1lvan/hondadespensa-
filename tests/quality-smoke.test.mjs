@@ -34,13 +34,17 @@ test('la despensa abre en la vista normal y permite entrar en Administración', 
  assert.doesNotMatch(create,/loadDefaults|loadFresh|p_frescos/,'El alta no debe mostrar las antiguas casillas de secos y frescos');
  assert.match(create,/id="loadBasicPantry"/,'El alta debe ofrecer una despensa básica');
  assert.match(create,/p_cargar_catalogo:setupMode==='basic'/,'El catálogo seco solo se carga al elegir la despensa básica');
- assert.match(create,/type="radio" name="pantrySetup" value="guided" required/);
+ assert.match(create,/type="radio" name="pantrySetup" value="guided" required checked/,
+  'El formulario guiado se selecciona por defecto');
+ assert.match(create,/create\.onclick=\(\)=>\{\s*form\.elements\.pantrySetup\.value='guided';\s*dialog\.showModal\(\)/,
+  'Al abrir de nuevo el diálogo se recupera la selección inicial');
+ assert.doesNotMatch(create,/basicSetupVintage|Inicio vintage/,'El alta solo ofrece los dos modos de configuración');
  assert.match(create,/type="radio" name="pantrySetup" value="basic" required/);
  assert.match(create,/if\(!option\|\|!setupMode\|\|submit.disabled\)return;/,
   'Crear exige elegir una opción de configuración');
  assert.doesNotMatch(html,/id="basicSetupEnabled"/,'El checkbox no debe estar en Administración');
  assert.match(create,/const showSetup=setupMode==='guided';/,'La elección del diálogo decide si se abre el formulario');
- assert.match(create,/await openPantry\(pantry\);\s*if\(session===current&&activePantry===pantry&&showSetup\)openBasicSetup\(vintageSetup\)/,
+ assert.match(create,/await openPantry\(pantry\);\s*if\(session===current&&activePantry===pantry&&showSetup\)openBasicSetup\(\)/,
   'El formulario solo se abre tras crear una despensa si se ha marcado en el diálogo de creación');
  assert.match(js,/\$\('adminToggle'\)\.onclick=\(\)=>\{\s*adminMode=!adminMode/,
   'Se debe poder cambiar de Administración a la despensa y viceversa');

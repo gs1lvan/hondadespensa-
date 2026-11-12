@@ -2158,12 +2158,6 @@ function applyPantryPostcard(pantry){
 function pantryOrderKey(pantry){
  return pantrySystemKey(pantry)==='playa'?'category_order':'category_order_'+pantry.id;
 }
-function basicSetupPreference(key){
- const preferences=session?.user?.user_metadata??{};
- if(typeof preferences[key]==='boolean')return preferences[key];
- // Usar las preferencias anteriores como valor inicial en el diálogo de creación.
- return Object.entries(preferences).some(([name,value])=>value===true&&name.startsWith(key+'_'));
-}
 function pantryReloadSelection(pantryId){
  const userId=session?.user?.id;
  if(!userId)return null;
@@ -2222,12 +2216,8 @@ function choosePantry(keepBackground=false){
   <fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset>
   <div role="radiogroup" aria-label="Configuración inicial" aria-required="true">
    <label class="alternate-home-setting pantry-create-setup">
-    <input id="basicSetupEnabled" type="radio" name="pantrySetup" value="guided" required aria-controls="basicSetupVintageOption">
+    <input id="basicSetupEnabled" type="radio" name="pantrySetup" value="guided" required checked>
     Formulario de configuración de opciones básicas
-   </label>
-   <label id="basicSetupVintageOption" class="alternate-home-setting basic-setup-vintage-option" hidden>
-    <input id="basicSetupVintage" type="checkbox" aria-describedby="basicSetupVintageHint" disabled>
-    <span>Inicio vintage <small id="basicSetupVintageHint">Estilo del formulario</small></span>
    </label>
    <label class="alternate-home-setting pantry-create-setup">
     <input id="loadBasicPantry" type="radio" name="pantrySetup" value="basic" required> Cargar despensa básica
@@ -2259,21 +2249,9 @@ function choosePantry(keepBackground=false){
  const submit=form.querySelector('[type="submit"]');
  const cancel=form.querySelector('[data-cancel]');
  const status=form.querySelector('[role="status"]');
- const setupEnabled=form.querySelector('#basicSetupEnabled');
- const loadBasic=form.querySelector('#loadBasicPantry');
- const setupVintage=form.querySelector('#basicSetupVintage');
- const setupVintageOption=form.querySelector('#basicSetupVintageOption');
- const syncSetupVintage=()=>{
-  setupVintageOption.hidden=!setupEnabled.checked;
-  setupVintage.disabled=!setupEnabled.checked;
- };
- setupEnabled.onchange=loadBasic.onchange=syncSetupVintage;
  dialog.append(form);
  create.onclick=()=>{
-  loadBasic.checked=false;
-  setupEnabled.checked=false;
-  setupVintage.checked=basicSetupPreference('basic_setup_vintage');
-  syncSetupVintage();
+  form.elements.pantrySetup.value='guided';
   dialog.showModal();
  };
  cancel.onclick=()=>{if(!submit.disabled)dialog.close();};
@@ -2289,7 +2267,6 @@ function choosePantry(keepBackground=false){
   submit.disabled=true;
   status.textContent='Creando despensa…';
   const showSetup=setupMode==='guided';
-  const vintageSetup=setupVintage.checked;
   const {data:id,error}=await db.rpc('crear_despensa_personal',{
    p_nombre:nombre,p_icono:icono,p_cargar_catalogo:setupMode==='basic'
   });
@@ -2300,7 +2277,7 @@ function choosePantry(keepBackground=false){
   availablePantries.push(pantry);
   dialog.close();
   await openPantry(pantry);
-  if(session===current&&activePantry===pantry&&showSetup)openBasicSetup(vintageSetup);
+  if(session===current&&activePantry===pantry&&showSetup)openBasicSetup();
  };
  pantryChooser.append(create,dialog);
  heading.focus();
@@ -2986,7 +2963,7 @@ const basicSetupDialog=$('basicSetupDialog');
 const basicSetupSections=[...basicSetupDialog.querySelectorAll('[data-setup-step]')];
 let basicSetup=null;
 
-function openBasicSetup(vintage){
+function openBasicSetup(){
  if(basicSetupDialog.open)return;
  const markets=pantryStylePreference('reference_supermarkets');
  basicSetup={
@@ -3003,7 +2980,6 @@ function openBasicSetup(vintage){
  $('basicSetupMarket').value='';
  renderBasicSetupMarkets();
  $('basicSetupEmail').value=basicSetup.email;
- basicSetupDialog.dataset.style=vintage?'vintage':'marino';
  basicSetupDialog.showModal();
  showBasicSetupStep();
 }
