@@ -2122,14 +2122,11 @@ function applyPantryPostcard(pantry){
 function pantryOrderKey(pantry){
  return pantrySystemKey(pantry)==='playa'?'category_order':'category_order_'+pantry.id;
 }
-function pantryBasicSetupSelection(pantryId){
- const key='hondadespensa:configuracion-basica:'+session?.user?.id;
- try{
-  if(pantryId===undefined)return localStorage.getItem(key);
-  if(pantryId===null)localStorage.removeItem(key);
-  else localStorage.setItem(key,pantryId);
- }catch{}
- return null;
+function basicSetupPreference(key){
+ const preferences=session?.user?.user_metadata??{};
+ if(typeof preferences[key]==='boolean')return preferences[key];
+ // Conservar una activación que se hubiera guardado con los ajustes por despensa.
+ return Object.entries(preferences).some(([name,value])=>value===true&&name.startsWith(key+'_'));
 }
 function pantryReloadSelection(pantryId){
  const userId=session?.user?.id;
@@ -2239,6 +2236,7 @@ function choosePantry(keepBackground=false){
   availablePantries.push(pantry);
   dialog.close();
   await openPantry(pantry);
+  if(session===current&&activePantry===pantry&&basicSetupPreference('basic_setup_enabled'))openBasicSetup();
  };
  pantryChooser.append(create,dialog);
  heading.focus();
@@ -2273,7 +2271,6 @@ async function openPantry(pantry){
  render();
  await refresh();
  syncAdminControls();
- if(activePantry===pantry&&pantryStylePreference('basic_setup_enabled')===true)openBasicSetup();
 }
 function updatePantrySwitchLabel(){
  if(!activePantry)return;
@@ -2429,9 +2426,7 @@ async function signedIn(currentSession,restorePantry=false){
  }
  availablePantries=pantries;
  const selectedId=restorePantry?pantryReloadSelection():null;
- const setupId=pantryBasicSetupSelection();
- const setupPantry=pantries.find(pantry=>pantry.id===setupId&&preferences?.['basic_setup_enabled_'+setupId]===true);
- const selected=pantries.find(pantry=>pantry.id===selectedId)??setupPantry;
+ const selected=pantries.find(pantry=>pantry.id===selectedId);
  if(selected||pantries.length===1)await openPantry(selected??pantries[0]);
  else choosePantry(Boolean(lastBackground));
  await loadCatalog();
@@ -2466,7 +2461,7 @@ $('adminPantryPanel').addEventListener('toggle',()=>{
 
 // Estado único para los controles administrativos tanto al entrar como al cambiar de vista.
 function syncAdminControls(){
- $('basicSetupEnabled').checked=pantryStylePreference('basic_setup_enabled')===true;
+ $('basicSetupEnabled').checked=basicSetupPreference('basic_setup_enabled');
  syncBasicSetupVintageControl();
  $('basicSetupSettingStatus').textContent='';
  refreshPantrySharing();
@@ -2921,26 +2916,24 @@ function syncBasicSetupVintageControl(){
  const vintage=$('basicSetupVintage');
  $('basicSetupVintageOption').hidden=!enabled.checked;
  vintage.disabled=!enabled.checked||enabled.disabled;
- vintage.checked=pantryStylePreference('basic_setup_vintage')===true;
+ vintage.checked=basicSetupPreference('basic_setup_vintage');
 }
 
 $('basicSetupEnabled').onchange=async event=>{
  const checkbox=event.currentTarget;
- const current=session,pantry=activePantry;
- if(!current||!pantry)return;
+ const current=session;
+ if(!current)return;
  const enabled=checkbox.checked;
  const status=$('basicSetupSettingStatus');
  checkbox.disabled=true;
  syncBasicSetupVintageControl();
  status.textContent='Guardando…';
  try{
-  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('basic_setup_enabled')]:enabled}});
+  const {data:result,error}=await db.auth.updateUser({data:{basic_setup_enabled:enabled}});
   if(error)throw error;
   if(session!==current)return;
   current.user=result.user;
-  if(enabled)pantryBasicSetupSelection(pantry.id);
-  else if(pantryBasicSetupSelection()===pantry.id)pantryBasicSetupSelection(null);
-  status.textContent=enabled?'El formulario se abrirá al reiniciar o recargar.':'Formulario desactivado.';
+  status.textContent=enabled?'El formulario se abrirá al crear una despensa nueva.':'Formulario desactivado.';
  }catch(error){
   checkbox.checked=!enabled;
   status.textContent='No se pudo guardar el ajuste: '+error.message;
@@ -2960,11 +2953,11 @@ $('basicSetupVintage').onchange=async event=>{
  enabled.disabled=vintage.disabled=true;
  status.textContent='Guardando estilo…';
  try{
-  const {data:result,error}=await db.auth.updateUser({data:{[pantryStyleKey('basic_setup_vintage')]:value}});
+  const {data:result,error}=await db.auth.updateUser({data:{basic_setup_vintage:value}});
   if(error)throw error;
   if(session!==current)return;
   current.user=result.user;
-  status.textContent='Estilo guardado. Recarga para ver el formulario.';
+  status.textContent='Estilo guardado para el formulario de las nuevas despensas.';
  }catch(error){
   if(session===current)status.textContent='No se pudo guardar el estilo: '+error.message;
  }finally{
@@ -2990,7 +2983,7 @@ function openBasicSetup(){
  $('basicSetupMarket').value='';
  renderBasicSetupMarkets();
  $('basicSetupEmail').value=basicSetup.email;
- basicSetupDialog.dataset.style=pantryStylePreference('basic_setup_vintage')===true?'vintage':'marino';
+ basicSetupDialog.dataset.style=basicSetupPreference('basic_setup_vintage')?'vintage':'marino';
  basicSetupDialog.showModal();
  showBasicSetupStep();
 }
@@ -3238,7 +3231,6 @@ async function finishBasicSetup(includeInventory){
    if(!tagsToReplace.has(folded(tag))&&!usedTags.has(folded(tag)))tags.push(tag);
   }
   const {data:result,error}=await db.auth.updateUser({data:{
-   [pantryStyleKey('basic_setup_enabled')]:false,
    [pantryStyleKey('show_dry_foods')]:$('basicSetupDry').checked,
    [pantryStyleKey('show_fresh_foods')]:$('basicSetupFresh').checked,
    [pantryStyleKey('weather_city')]:setup.city,
@@ -3249,7 +3241,6 @@ async function finishBasicSetup(includeInventory){
   if(error)throw error;
   if(session!==setup.session||activePantry?.id!==setup.pantryId||basicSetup!==setup)return;
   session.user=result.user;
-  if(pantryBasicSetupSelection()===setup.pantryId)pantryBasicSetupSelection(null);
   basicSetupDialog.close();
   syncFoodGroupVisibility();
   syncWeatherStation();

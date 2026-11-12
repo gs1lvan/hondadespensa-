@@ -1036,13 +1036,14 @@
       <section class="admin-section">
         <h2>Opciones de la página de inicio</h2>
         <label class="alternate-home-setting">
-          <input id="basicSetupEnabled" type="checkbox" aria-controls="basicSetupVintageOption">
+          <input id="basicSetupEnabled" type="checkbox" aria-controls="basicSetupVintageOption" aria-describedby="basicSetupCreationHint">
           Formulario de configuración de opciones básicas
         </label>
         <label id="basicSetupVintageOption" class="alternate-home-setting basic-setup-vintage-option" hidden>
           <input id="basicSetupVintage" type="checkbox" aria-describedby="basicSetupVintageHint" disabled>
           <span>Inicio vintage <small id="basicSetupVintageHint">Estilo del formulario</small></span>
         </label>
+        <p id="basicSetupCreationHint" class="hint">Solo al crear una despensa nueva.</p>
         <p id="basicSetupSettingStatus" class="hint" role="status"></p>
         <label class="alternate-home-setting">
           <input id="alternateHome" type="checkbox">
@@ -1315,7 +1316,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=139"></script>
+  <script type="module" src="app.js?v=140"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

@@ -28,8 +28,10 @@ test('la despensa abre en la vista normal y permite entrar en Administración', 
  const open=js.slice(start,end);
  assert.match(open,/adminMode=false;\s*showApp\(true\);\s*render\(\);\s*await refresh\(\);\s*syncAdminControls\(\)/,
   'La primera vista de cada despensa debe mostrar su listado con los controles inicializados');
- assert.match(open,/basic_setup_enabled'\)===true\)openBasicSetup\(\)/,
-  'La configuración se abre únicamente cuando está activada');
+ assert.doesNotMatch(open,/openBasicSetup\(/,'Abrir o recargar una despensa existente no debe mostrar el formulario');
+ const create=js.slice(js.indexOf("await db.rpc('crear_despensa_personal'"),start);
+ assert.match(create,/await openPantry\(pantry\);\s*if\(session===current&&activePantry===pantry&&basicSetupPreference\('basic_setup_enabled'\)\)openBasicSetup\(\)/,
+  'El formulario solo se abre tras crear una despensa y si la opción de la cuenta está activada');
  assert.match(js,/\$\('adminToggle'\)\.onclick=\(\)=>\{\s*adminMode=!adminMode/,
   'Se debe poder cambiar de Administración a la despensa y viceversa');
  assert.match(js,/adminToggle\.innerHTML=adminMode\?'← Volver a despensa'/,

@@ -5,6 +5,7 @@ export function createClient(){
   user:{id:'hondadespensa-demo-configuracion',user_metadata:{
    display_name:'Cuenta de prueba',alternate_home:'nevera-vintage',start_fridge_closed:true,fridge_notes_enabled:true
   }},
+  despensas:[pantry],
   alimentos:[],
   categorias_despensa:[],
   catalogo:[]
@@ -29,8 +30,27 @@ export function createClient(){
   auth,
   channel(){return {on(){return this;},subscribe(){return this;}};},
   async removeChannel(){},
-  async rpc(name){
-   if(name==='listar_mis_despensas')return {data:[pantry],error:null};
+  async rpc(name,params={}){
+   const state=read();
+   const pantries=state.despensas??=[pantry];
+   if(name==='listar_mis_despensas')return {data:pantries,error:null};
+   if(name==='crear_despensa_personal'){
+    const id=crypto.randomUUID();
+    const {p_nombre:nombre,p_icono:icono,p_cargar_catalogo:loadCatalog,p_frescos:fresh=[]}=params;
+    pantries.push({id,nombre,icono});
+    const categories=new Map();
+    for(const food of [...(loadCatalog?state.catalogo:[]),...fresh]){
+     if(!categories.has(food.categoria)){
+      const categoryId=crypto.randomUUID();
+      categories.set(food.categoria,categoryId);
+      state.categorias_despensa.push({id:categoryId,nombre:food.categoria,icono:food.icono,nombres_anteriores:[],despensa_id:id});
+     }
+     state.alimentos.push({id:crypto.randomUUID(),nombre:food.nombre,categoria:food.categoria,
+      categoria_id:categories.get(food.categoria),disponible:false,despensa_id:id});
+    }
+    write(state);
+    return {data:id,error:null};
+   }
    if(name==='casa_principal_compartir_con_gema')return {data:false,error:null};
    if(name==='proteccion_borrado_despensa')return {data:true,error:null};
    return {data:null,error:{message:'Disponible en la aplicación principal.'}};
