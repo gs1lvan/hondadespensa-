@@ -915,10 +915,10 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 .basic-setup-status:empty { display: none; }
 #weatherCity { margin-inline-end: .45em; }
 .basic-setup input[type=checkbox] { width: 1.15rem; height: 1.15rem; accent-color: var(--setup-accent); }
-#adminAlternateHomePanel .basic-setup-vintage-option {
+.pantry-create-form .basic-setup-vintage-option {
+  margin-block-start: .45rem;
   margin-inline-start: .7rem;
   padding-inline-start: .65rem;
   border-inline-start: 2px solid var(--line);
 }
 .basic-setup-vintage-option small { display: block; font-size: .8em; opacity: .85; }
-#basicSetupSettingStatus:empty { display: none; }

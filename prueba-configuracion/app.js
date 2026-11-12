@@ -2123,7 +2123,7 @@ function pantryOrderKey(pantry){
 function basicSetupPreference(key){
  const preferences=session?.user?.user_metadata??{};
  if(typeof preferences[key]==='boolean')return preferences[key];
- // Conservar una activación que se hubiera guardado con los ajustes por despensa.
+ // Usar las preferencias anteriores como valor inicial en el diálogo de creación.
  return Object.entries(preferences).some(([name,value])=>value===true&&name.startsWith(key+'_'));
 }
 function pantryReloadSelection(pantryId){
@@ -2140,7 +2140,7 @@ function pantryReloadSelection(pantryId){
  return null;
 }
 function choosePantry(keepBackground=false){
- if(activePantry&&(savingViewStyle||savingIconFamily||$('alternateHome').disabled||$('basicSetupEnabled').disabled))return;
+ if(activePantry&&(savingViewStyle||savingIconFamily||$('alternateHome').disabled))return;
  if(!activePantry&&keepBackground!==true){
   const preferences=session?.user?.user_metadata;
   const savedBackground=preferences?.chooser_background??preferences?.app_background
@@ -2179,7 +2179,28 @@ function choosePantry(keepBackground=false){
  const dialog=document.createElement('dialog');
  dialog.className='pantry-create-dialog';
  dialog.setAttribute('aria-labelledby','pantry-create-title');
- form.innerHTML='<h2 id="pantry-create-title">Crear despensa</h2><fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset><label class="alternate-home-setting pantry-load-defaults"><input type="checkbox" name="loadDefaults" checked> Cargar alimentos secos</label><label class="alternate-home-setting pantry-load-defaults"><input type="checkbox" name="loadFresh"> Cargar alimentos frescos</label><div class="pantry-create-actions"><button type="button" data-cancel>Cancelar</button><button type="submit">Crear</button></div><p class="hint" role="status"></p>';
+ form.innerHTML=`
+  <h2 id="pantry-create-title">Crear despensa</h2>
+  <fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset>
+  <label class="alternate-home-setting pantry-load-defaults">
+   <input type="checkbox" name="loadDefaults" checked> Cargar alimentos secos
+  </label>
+  <label class="alternate-home-setting pantry-load-defaults">
+   <input type="checkbox" name="loadFresh"> Cargar alimentos frescos
+  </label>
+  <label class="alternate-home-setting pantry-load-defaults">
+   <input id="basicSetupEnabled" type="checkbox" aria-controls="basicSetupVintageOption">
+   Formulario de configuración de opciones básicas
+  </label>
+  <label id="basicSetupVintageOption" class="alternate-home-setting basic-setup-vintage-option" hidden>
+   <input id="basicSetupVintage" type="checkbox" aria-describedby="basicSetupVintageHint" disabled>
+   <span>Inicio vintage <small id="basicSetupVintageHint">Estilo del formulario</small></span>
+  </label>
+  <div class="pantry-create-actions">
+   <button type="button" data-cancel>Cancelar</button>
+   <button type="submit">Crear</button>
+  </div>
+  <p class="hint" role="status"></p>`;
  const iconOptions=form.querySelector('fieldset');
  for(const [key,title,src] of pantryIcons){
   const label=document.createElement('label');
@@ -2201,10 +2222,21 @@ function choosePantry(keepBackground=false){
  const submit=form.querySelector('[type="submit"]');
  const cancel=form.querySelector('[data-cancel]');
  const status=form.querySelector('[role="status"]');
+ const setupEnabled=form.querySelector('#basicSetupEnabled');
+ const setupVintage=form.querySelector('#basicSetupVintage');
+ const setupVintageOption=form.querySelector('#basicSetupVintageOption');
+ const syncSetupVintage=()=>{
+  setupVintageOption.hidden=!setupEnabled.checked;
+  setupVintage.disabled=!setupEnabled.checked;
+ };
+ setupEnabled.onchange=syncSetupVintage;
  dialog.append(form);
  create.onclick=()=>{
   form.elements.loadDefaults.checked=true;
   form.elements.loadFresh.checked=false;
+  setupEnabled.checked=basicSetupPreference('basic_setup_enabled');
+  setupVintage.checked=basicSetupPreference('basic_setup_vintage');
+  syncSetupVintage();
   dialog.showModal();
  };
  cancel.onclick=()=>{if(!submit.disabled)dialog.close();};
@@ -2218,6 +2250,8 @@ function choosePantry(keepBackground=false){
   const current=session;
   submit.disabled=true;
   status.textContent='Creando despensa…';
+  const showSetup=setupEnabled.checked;
+  const vintageSetup=setupVintage.checked;
   const loadDefaults=form.elements.loadDefaults.checked;
   const params={p_nombre:nombre,p_icono:icono};
   if(loadDefaults||form.elements.loadFresh.checked)params.p_cargar_catalogo=loadDefaults;
@@ -2234,7 +2268,7 @@ function choosePantry(keepBackground=false){
   availablePantries.push(pantry);
   dialog.close();
   await openPantry(pantry);
-  if(session===current&&activePantry===pantry&&basicSetupPreference('basic_setup_enabled'))openBasicSetup();
+  if(session===current&&activePantry===pantry&&showSetup)openBasicSetup(vintageSetup);
  };
  pantryChooser.append(create,dialog);
  heading.focus();
@@ -2459,9 +2493,6 @@ $('adminPantryPanel').addEventListener('toggle',()=>{
 
 // Estado único para los controles administrativos tanto al entrar como al cambiar de vista.
 function syncAdminControls(){
- $('basicSetupEnabled').checked=basicSetupPreference('basic_setup_enabled');
- syncBasicSetupVintageControl();
- $('basicSetupSettingStatus').textContent='';
  refreshPantrySharing();
  deletePantrySection.hidden=!adminMode||!activePantry;
  deletePantryButton.hidden=!!pantrySystemKey(activePantry)&&session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
@@ -2909,62 +2940,7 @@ const basicSetupDialog=$('basicSetupDialog');
 const basicSetupSections=[...basicSetupDialog.querySelectorAll('[data-setup-step]')];
 let basicSetup=null;
 
-function syncBasicSetupVintageControl(){
- const enabled=$('basicSetupEnabled');
- const vintage=$('basicSetupVintage');
- $('basicSetupVintageOption').hidden=!enabled.checked;
- vintage.disabled=!enabled.checked||enabled.disabled;
- vintage.checked=basicSetupPreference('basic_setup_vintage');
-}
-
-$('basicSetupEnabled').onchange=async event=>{
- const checkbox=event.currentTarget;
- const current=session;
- if(!current)return;
- const enabled=checkbox.checked;
- const status=$('basicSetupSettingStatus');
- checkbox.disabled=true;
- syncBasicSetupVintageControl();
- status.textContent='Guardando…';
- try{
-  const {data:result,error}=await db.auth.updateUser({data:{basic_setup_enabled:enabled}});
-  if(error)throw error;
-  if(session!==current)return;
-  current.user=result.user;
-  status.textContent=enabled?'El formulario se abrirá al crear una despensa nueva.':'Formulario desactivado.';
- }catch(error){
-  checkbox.checked=!enabled;
-  status.textContent='No se pudo guardar el ajuste: '+error.message;
- }finally{
-  checkbox.disabled=false;
-  syncBasicSetupVintageControl();
- }
-};
-
-$('basicSetupVintage').onchange=async event=>{
- const enabled=$('basicSetupEnabled');
- const vintage=event.currentTarget;
- const current=session;
- if(!current||!activePantry||!enabled.checked||enabled.disabled)return;
- const value=vintage.checked;
- const status=$('basicSetupSettingStatus');
- enabled.disabled=vintage.disabled=true;
- status.textContent='Guardando estilo…';
- try{
-  const {data:result,error}=await db.auth.updateUser({data:{basic_setup_vintage:value}});
-  if(error)throw error;
-  if(session!==current)return;
-  current.user=result.user;
-  status.textContent='Estilo guardado para el formulario de las nuevas despensas.';
- }catch(error){
-  if(session===current)status.textContent='No se pudo guardar el estilo: '+error.message;
- }finally{
-  enabled.disabled=false;
-  syncBasicSetupVintageControl();
- }
-};
-
-function openBasicSetup(){
+function openBasicSetup(vintage){
  if(basicSetupDialog.open)return;
  const markets=pantryStylePreference('reference_supermarkets');
  basicSetup={
@@ -2981,7 +2957,7 @@ function openBasicSetup(){
  $('basicSetupMarket').value='';
  renderBasicSetupMarkets();
  $('basicSetupEmail').value=basicSetup.email;
- basicSetupDialog.dataset.style=basicSetupPreference('basic_setup_vintage')?'vintage':'marino';
+ basicSetupDialog.dataset.style=vintage?'vintage':'marino';
  basicSetupDialog.showModal();
  showBasicSetupStep();
 }
@@ -3244,13 +3220,7 @@ async function finishBasicSetup(includeInventory){
   syncWeatherStation();
   syncAdminControls();
   render();
-  if(adminMode){
-   $('adminAlternateHomePanel').open=true;
-   $('basicSetupEnabled').focus();
-   $('basicSetupSettingStatus').textContent='Configuración guardada.';
-  }else{
-   $('adminToggle').focus({preventScroll:true});
-  }
+  $('adminToggle').focus({preventScroll:true});
   if(includeInventory)await refresh();
  }catch(error){
   if(basicSetup===setup)status.textContent='No se pudo guardar todo. Puedes volver a intentarlo. '+error.message;
