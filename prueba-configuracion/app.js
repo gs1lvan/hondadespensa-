@@ -2557,6 +2557,10 @@ async function addCatalogCategory(category,names){
  addingCatalogCategory=true;
  try{
   await ensurePantryCategory(categoryName,pantryId);
+  if(!names.length){
+   if(activePantry?.id===pantryId)await refresh();
+   return;
+  }
   const {data:target,error:categoryError}=await db.from('categorias_despensa')
    .select('id,nombre').eq('despensa_id',pantryId).eq('nombre',categoryName).single();
   if(categoryError)throw categoryError;
@@ -2610,7 +2614,8 @@ function renderCatalogList(holder,search,groups,openCategories){
  holder.replaceChildren();
  let remaining=0;
  for(const [category,names] of groups.sort((a,b)=>esCompare(a[0],b[0]))){
-  const available=names.filter(name=>!data.some(x=>x.category===(findPantryCategory(category)?.nombre??category)&&folded(x.name)===folded(name))&&folded(name).includes(q));
+  const existingCategory=findPantryCategory(category);
+  const available=names.filter(name=>!data.some(x=>x.category===(existingCategory?.nombre??category)&&folded(x.name)===folded(name))&&folded(name).includes(q));
   if(!available.length)continue;remaining+=available.length;
   const details=document.createElement('details');details.className='catalog-category';details.open=openCategories.has(category)||!!q;
   if(!q)details.addEventListener('toggle',()=>{if(details.open)openCategories.add(category);else openCategories.delete(category)});
@@ -2629,13 +2634,22 @@ function renderCatalogList(holder,search,groups,openCategories){
   const addAll=document.createElement('button');
   addAll.type='button';
   addAll.textContent=q?'＋ Añadir todos de la categoría':'＋ Añadir todos';
-  addAll.disabled=addingCatalogCategory;
-  addAll.onclick=()=>{
+  const addCategory=selectedNames=>{
    if(addingCatalogCategory)return;
    for(const button of document.querySelectorAll('#catalogItems button,#freshCatalogItems button'))button.disabled=true;
-   addCatalogCategory(category,names);
+   addCatalogCategory(category,selectedNames);
   };
+  addAll.disabled=addingCatalogCategory;
+  addAll.onclick=()=>addCategory(names);
   products.append(addAll);
+  if(!existingCategory){
+   const addEmpty=document.createElement('button');
+   addEmpty.type='button';addEmpty.className='secondary';
+   addEmpty.textContent='＋ Añadir solo la categoría';
+   addEmpty.disabled=addingCatalogCategory;
+   addEmpty.onclick=()=>addCategory([]);
+   products.append(addEmpty);
+  }
   for(const name of available){
    const button=document.createElement('button');button.type='button';button.textContent='＋ '+name;
    button.disabled=addingCatalogCategory;
@@ -2939,7 +2953,7 @@ function openBasicSetup(vintage){
  const markets=pantryStylePreference('reference_supermarkets');
  basicSetup={
   step:0,city:pantryWeatherCity(),markets:Array.isArray(markets)?[...markets]:[],
-  inventory:new Map(),email:pantryStylePreference('basic_setup_pending_email')||'',
+  inventory:new Map(),categories:[],email:pantryStylePreference('basic_setup_pending_email')||'',
   pantryId:activePantry.id,session,saving:false,search:null
  };
  $('basicSetupDry').checked=isFoodGroupVisible('dry');
@@ -3107,6 +3121,7 @@ function renderBasicSetupInventory(){
    for(const name of names)add(category,name);
   }
  }
+ basicSetup.categories=[...groups.keys()];
  for(const [category,selected] of inventory){
   for(const name of selected){
    if(groups.get(category)?.get(folded(name))!==name)selected.delete(name);
@@ -3144,11 +3159,13 @@ function renderBasicSetupInventory(){
  updateCount();
 }
 
-async function saveBasicSetupInventory(setup){
- for(const [category,names] of setup.inventory){
+async function saveBasicSetupInventory(setup,includeInventory){
+ for(const category of setup.categories){
   if(session!==setup.session||activePantry?.id!==setup.pantryId)return;
   const pantryId=setup.pantryId;
   await ensurePantryCategory(category,pantryId);
+  const names=includeInventory?setup.inventory.get(category):undefined;
+  if(!names?.size)continue;
   const {data:target,error:categoryError}=await db.from('categorias_despensa')
    .select('id,nombre').eq('despensa_id',pantryId).eq('nombre',category).single();
   if(categoryError)throw categoryError;
@@ -3189,7 +3206,7 @@ async function finishBasicSetup(includeInventory){
  basicSetupDialog.setAttribute('aria-busy','true');
  for(const control of basicSetupDialog.querySelectorAll('button,input'))control.disabled=true;
  try{
-  if(includeInventory)await saveBasicSetupInventory(setup);
+  await saveBasicSetupInventory(setup,includeInventory);
   if(session!==setup.session||activePantry?.id!==setup.pantryId||basicSetup!==setup)return;
   const previous=pantryStylePreference('reference_supermarkets');
   const tagsToReplace=new Set(['Supermercado 1','Supermercado 2',...(Array.isArray(previous)?previous:[])].map(folded));
@@ -3215,7 +3232,7 @@ async function finishBasicSetup(includeInventory){
   syncAdminControls();
   render();
   $('adminToggle').focus({preventScroll:true});
-  if(includeInventory)await refresh();
+  await refresh();
  }catch(error){
   if(basicSetup===setup)status.textContent='No se pudo guardar todo. Puedes volver a intentarlo. '+error.message;
  }finally{
