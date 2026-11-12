@@ -2184,17 +2184,19 @@ function choosePantry(keepBackground=false){
  form.innerHTML=`
   <h2 id="pantry-create-title">Crear despensa</h2>
   <fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset>
-  <label class="alternate-home-setting pantry-create-setup">
-   <input id="basicSetupEnabled" type="checkbox" aria-controls="basicSetupVintageOption">
-   Formulario de configuración de opciones básicas
-  </label>
-  <label id="basicSetupVintageOption" class="alternate-home-setting basic-setup-vintage-option" hidden>
-   <input id="basicSetupVintage" type="checkbox" aria-describedby="basicSetupVintageHint" disabled>
-   <span>Inicio vintage <small id="basicSetupVintageHint">Estilo del formulario</small></span>
-  </label>
-  <label class="alternate-home-setting pantry-create-setup">
-   <input id="loadBasicPantry" type="checkbox"> Cargar despensa básica
-  </label>
+  <div role="radiogroup" aria-label="Configuración inicial" aria-required="true">
+   <label class="alternate-home-setting pantry-create-setup">
+    <input id="basicSetupEnabled" type="radio" name="pantrySetup" value="guided" required aria-controls="basicSetupVintageOption">
+    Formulario de configuración de opciones básicas
+   </label>
+   <label id="basicSetupVintageOption" class="alternate-home-setting basic-setup-vintage-option" hidden>
+    <input id="basicSetupVintage" type="checkbox" aria-describedby="basicSetupVintageHint" disabled>
+    <span>Inicio vintage <small id="basicSetupVintageHint">Estilo del formulario</small></span>
+   </label>
+   <label class="alternate-home-setting pantry-create-setup">
+    <input id="loadBasicPantry" type="radio" name="pantrySetup" value="basic" required> Cargar despensa básica
+   </label>
+  </div>
   <div class="pantry-create-actions">
    <button type="button" data-cancel>Cancelar</button>
    <button type="submit">Crear</button>
@@ -2229,18 +2231,11 @@ function choosePantry(keepBackground=false){
   setupVintageOption.hidden=!setupEnabled.checked;
   setupVintage.disabled=!setupEnabled.checked;
  };
- setupEnabled.onchange=()=>{
-  if(setupEnabled.checked)loadBasic.checked=false;
-  syncSetupVintage();
- };
- loadBasic.onchange=()=>{
-  if(loadBasic.checked)setupEnabled.checked=false;
-  syncSetupVintage();
- };
+ setupEnabled.onchange=loadBasic.onchange=syncSetupVintage;
  dialog.append(form);
  create.onclick=()=>{
   loadBasic.checked=false;
-  setupEnabled.checked=basicSetupPreference('basic_setup_enabled');
+  setupEnabled.checked=false;
   setupVintage.checked=basicSetupPreference('basic_setup_vintage');
   syncSetupVintage();
   dialog.showModal();
@@ -2251,15 +2246,16 @@ function choosePantry(keepBackground=false){
   event.preventDefault();
   const icono=form.elements.pantryIcon.value;
   const option=pantryIcons.find(([key])=>key===icono);
-  if(!option||submit.disabled)return;
+  const setupMode=form.elements.pantrySetup.value;
+  if(!option||!setupMode||submit.disabled)return;
   const nombre=option[1];
   const current=session;
   submit.disabled=true;
   status.textContent='Creando despensa…';
-  const showSetup=setupEnabled.checked;
+  const showSetup=setupMode==='guided';
   const vintageSetup=setupVintage.checked;
   const {data:id,error}=await db.rpc('crear_despensa_personal',{
-   p_nombre:nombre,p_icono:icono,p_cargar_catalogo:loadBasic.checked
+   p_nombre:nombre,p_icono:icono,p_cargar_catalogo:setupMode==='basic'
   });
   if(session!==current)return;
   submit.disabled=false;
