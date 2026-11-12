@@ -2592,6 +2592,13 @@ async function loadCatalog(){
  }
  if(adminMode)renderAdmin();
 }
+async function showCatalogFoodGroup(category){
+ const group=isFreshCategory(category)?'fresh':'dry';
+ if(isFoodGroupVisible(group))return;
+ visibleFoodGroup=group;
+ await saveFoodGroupVisibility(group,true);
+}
+
 let addingCatalogCategory=false;
 async function addCatalogCategory(category,names){
  if(!activePantry||addingCatalogCategory)return;
@@ -2626,6 +2633,7 @@ async function addCatalogCategory(category,names){
   }
   if(activePantry?.id!==pantryId)return;
   await refresh();
+  if(activePantry?.id===pantryId)await showCatalogFoodGroup(target.nombre);
  }catch(error){
   if(activePantry?.id===pantryId)alert('No se pudo añadir la categoría: '+error.message);
  }finally{
@@ -2697,7 +2705,16 @@ function renderCatalogList(holder,search,groups,openCategories){
   for(const name of available){
    const button=document.createElement('button');button.type='button';button.textContent='＋ '+name;
    button.disabled=addingCatalogCategory;
-   button.onclick=async()=>{button.disabled=true;if(!await addSharedFood(name,category))button.disabled=false;else renderCatalog();};
+   button.onclick=async()=>{
+    button.disabled=true;
+    const categoryName=findPantryCategory(category)?.nombre??category;
+    if(!await addSharedFood(name,categoryName)){
+     button.disabled=false;
+     return;
+    }
+    await showCatalogFoodGroup(categoryName);
+    renderCatalog();
+   };
    products.append(button);
   }
   details.append(products);holder.append(details);
@@ -2998,7 +3015,7 @@ function openBasicSetup(){
  const markets=pantryStylePreference('reference_supermarkets');
  basicSetup={
   step:0,city:pantryWeatherCity(),markets:Array.isArray(markets)?[...markets]:[],
-  inventory:new Map(),categories:new Set(),availableCategories:[],email:pantryStylePreference('basic_setup_pending_email')||'',
+  inventory:new Map(),categories:new Set(),availableFoods:new Map(),email:pantryStylePreference('basic_setup_pending_email')||'',
   pantryId:activePantry.id,session,saving:false,search:null
  };
  renderBasicSetupFoodChoices();
@@ -3192,7 +3209,7 @@ function renderBasicSetupFoodChoices(){
   }
  }
  const sorted=[...foodsByCategory].sort(([a],[b])=>esCompare(bareCategory(a),bareCategory(b)));
- basicSetup.availableCategories=sorted.map(([category])=>category);
+ basicSetup.availableFoods=new Map(sorted);
  const groupOptions=[];
  const orderGroups=()=>{
   const focused=document.activeElement;
@@ -3273,12 +3290,16 @@ function renderBasicSetupFoodChoices(){
 }
 
 async function saveBasicSetupInventory(setup){
- for(const category of setup.availableCategories){
+ const activeGroups=new Set([...setup.categories].map(isFreshCategory));
+ for(const [category,available] of setup.availableFoods){
   if(session!==setup.session||activePantry?.id!==setup.pantryId)return;
   const pantryId=setup.pantryId;
   await ensurePantryCategory(category,pantryId);
-  const names=setup.categories.has(category)?setup.inventory.get(category):null;
-  if(!names?.size)continue;
+  const groupActive=activeGroups.has(isFreshCategory(category));
+  const marked=setup.inventory.get(category);
+  // Un grupo oculto conserva su catálogo como alimentos sin marcar.
+  if(!(groupActive?marked:available)?.size)continue;
+  const names=groupActive?marked:available.values();
   const {data:target,error:categoryError}=await db.from('categorias_despensa')
    .select('id,nombre').eq('despensa_id',pantryId).eq('nombre',category).single();
   if(categoryError)throw categoryError;
@@ -3289,6 +3310,7 @@ async function saveBasicSetupInventory(setup){
   const ids=[],rows=[];
   for(const name of names){
    const food=existing.get(folded(name));
+   const have=marked?.has(name)===true;
    if(!food){
     // Usar el mismo ID para dos guardados simultáneos de la misma selección.
     const key=JSON.stringify([pantryId,target.id,folded(name)]);
@@ -3296,8 +3318,8 @@ async function saveBasicSetupInventory(setup){
     const hex=Array.from(new Uint8Array(digest).slice(0,16),byte=>byte.toString(16).padStart(2,'0')).join('');
     const sharedId=hex.slice(0,8)+'-'+hex.slice(8,12)+'-8'+hex.slice(13,16)+'-a'+hex.slice(17,20)+'-'+hex.slice(20);
     const id=foods.some(food=>food.id===sharedId)?crypto.randomUUID():sharedId;
-    rows.push({id,nombre:name,categoria:target.nombre,categoria_id:target.id,disponible:true,despensa_id:pantryId});
-   }else if(!food.disponible)ids.push(food.id);
+    rows.push({id,nombre:name,categoria:target.nombre,categoria_id:target.id,disponible:have,despensa_id:pantryId});
+   }else if(have&&!food.disponible)ids.push(food.id);
   }
   if(session!==setup.session||activePantry?.id!==pantryId)return;
   if(rows.length){
