@@ -2046,7 +2046,7 @@ body:has(.pantry-chooser:not([hidden])) { background:#071c32 url('textura-azul.s
 .pantry-chooser .pantry-create { display:block; width:auto; margin:18px auto 0 }
 .pantry-create-dialog { width:min(440px, calc(100% - 28px)); max-height:calc(100dvh - 32px); overflow:auto; padding:18px; border:1px solid #76a4c1; border-radius:18px; background:#0b2940 url('textura-azul.svg'); color:#fff1ce }
 .pantry-create-dialog::backdrop { background:#03101cba }
-.pantry-load-defaults { margin-top:12px }
+.pantry-create-setup { margin-top:12px }
 .pantry-create-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px }
 .pantry-chooser .pantry-create-actions button { display:block; width:auto; margin:0 }
 .pantry-icon-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; border:1px solid #76a4c1; border-radius:12px; padding:8px }
@@ -2184,13 +2184,7 @@ function choosePantry(keepBackground=false){
  form.innerHTML=`
   <h2 id="pantry-create-title">Crear despensa</h2>
   <fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset>
-  <label class="alternate-home-setting pantry-load-defaults">
-   <input type="checkbox" name="loadDefaults" checked> Cargar alimentos secos
-  </label>
-  <label class="alternate-home-setting pantry-load-defaults">
-   <input type="checkbox" name="loadFresh"> Cargar alimentos frescos
-  </label>
-  <label class="alternate-home-setting pantry-load-defaults">
+  <label class="alternate-home-setting pantry-create-setup">
    <input id="basicSetupEnabled" type="checkbox" aria-controls="basicSetupVintageOption">
    Formulario de configuración de opciones básicas
   </label>
@@ -2234,8 +2228,6 @@ function choosePantry(keepBackground=false){
  setupEnabled.onchange=syncSetupVintage;
  dialog.append(form);
  create.onclick=()=>{
-  form.elements.loadDefaults.checked=true;
-  form.elements.loadFresh.checked=false;
   setupEnabled.checked=basicSetupPreference('basic_setup_enabled');
   setupVintage.checked=basicSetupPreference('basic_setup_vintage');
   syncSetupVintage();
@@ -2254,15 +2246,9 @@ function choosePantry(keepBackground=false){
   status.textContent='Creando despensa…';
   const showSetup=setupEnabled.checked;
   const vintageSetup=setupVintage.checked;
-  const loadDefaults=form.elements.loadDefaults.checked;
-  const params={p_nombre:nombre,p_icono:icono};
-  if(loadDefaults||form.elements.loadFresh.checked)params.p_cargar_catalogo=loadDefaults;
-  if(form.elements.loadFresh.checked){
-   params.p_frescos=Object.entries(freshCatalogGroups).flatMap(([categoria,names])=>
-    names.map(nombre=>({categoria,nombre,icono:freshCategoryIcon(categoria)}))
-   );
-  }
-  const {data:id,error}=await db.rpc('crear_despensa_personal',params);
+  const {data:id,error}=await db.rpc('crear_despensa_personal',{
+   p_nombre:nombre,p_icono:icono,p_cargar_catalogo:false
+  });
   if(session!==current)return;
   submit.disabled=false;
   if(error){status.textContent='No se pudo crear la despensa: '+error.message;return;}
