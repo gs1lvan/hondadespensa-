@@ -851,7 +851,7 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 .basic-setup button.secondary { color: var(--setup-text); background: var(--setup-secondary); }
 .basic-setup :is(button, input, summary):focus-visible { outline-color: var(--setup-focus); }
 .basic-setup button:disabled { opacity: .6; }
-.basic-setup-choice, .basic-setup-list > button, .basic-setup-list details {
+.basic-setup-food-option, .basic-setup-list > button {
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -863,13 +863,27 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
   border-radius: 10px;
   background: var(--setup-row);
 }
-.basic-setup-choice { cursor: pointer; }
-.basic-setup-choice:has(input:checked) { background: var(--setup-secondary); }
-.basic-setup-choice input { margin: 0; }
+.basic-setup-food-option { display: block; padding: 0 .65rem; }
+.basic-setup-food-heading { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
+.basic-setup-food-heading:has(input:is(:checked,:indeterminate)) > label { font-weight: 650; }
+.basic-setup-food-heading label, .basic-setup-food-leaf {
+ display: flex; align-items: center; gap: .55rem; min-height: 44px; cursor: pointer; overflow-wrap: anywhere;
+}
+.basic-setup-food-heading label { flex: 1; }
+.basic-setup-food-heading input, .basic-setup-food-leaf input { flex: none; margin: 0; }
+.basic-setup button.basic-setup-food-toggle {
+ display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px;
+ padding: 0; border: 0; background: transparent; color: inherit;
+}
+.basic-setup-food-toggle::after {
+ content: ""; width: 10px; height: 10px;
+ border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+ transform: translateY(-2px) rotate(45deg);
+}
+.basic-setup-food-toggle[aria-expanded="true"]::after { transform: translateY(2px) rotate(225deg); }
+.basic-setup-food-children { padding: .15rem 0 .35rem .45rem; border-top: 1px solid var(--setup-border); }
+.basic-setup-food-children .basic-setup-food-option { margin: .3rem 0; }
 .basic-setup-list > button { width: 100%; text-align: left; }
-.basic-setup-list details { display: block; }
-.basic-setup-list summary { padding: .2rem; cursor: pointer; }
-.basic-setup-list details label { display: flex; align-items: center; gap: .55rem; min-height: 36px; }
 .basic-setup-markets { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0; list-style: none; }
 .basic-setup-markets button { overflow-wrap: anywhere; text-align: left; }
 .basic-setup-actions { justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid var(--setup-border); }
