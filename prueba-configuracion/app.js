@@ -1,8 +1,7 @@
-import { createClient } from './datos-de-prueba.js?v=2';
+import { createClient } from './datos-de-prueba.js?v=3';
 
 // Conexión pública de la aplicación existente: la seguridad depende de RLS en Supabase.
 const LOCAL_KEY = 'despensa_segunda_vivienda_v1';
-const db = createClient();
 const $ = id => document.getElementById(id);
 
 // Se conserva el listado de respaldo original, usado ÚNICAMENTE en la importación
@@ -22,6 +21,7 @@ const initial = {
  '🧃 Bebidas y suplementos':['Agua mineral','Refrescos en lata','Bebidas isotónicas']
 };
 
+const db = createClient(initial);
 const esCompare = (a,b) => String(a).localeCompare(String(b),'es',{sensitivity:'base',numeric:true});
 const folded = s => String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const bareCategory = s => String(s).replace(/^[^\p{L}\p{N}]+/u,'').trim();
@@ -2190,6 +2190,9 @@ function choosePantry(keepBackground=false){
    <input id="basicSetupVintage" type="checkbox" aria-describedby="basicSetupVintageHint" disabled>
    <span>Inicio vintage <small id="basicSetupVintageHint">Estilo del formulario</small></span>
   </label>
+  <label class="alternate-home-setting pantry-create-setup">
+   <input id="loadBasicPantry" type="checkbox"> Cargar despensa básica
+  </label>
   <div class="pantry-create-actions">
    <button type="button" data-cancel>Cancelar</button>
    <button type="submit">Crear</button>
@@ -2217,15 +2220,24 @@ function choosePantry(keepBackground=false){
  const cancel=form.querySelector('[data-cancel]');
  const status=form.querySelector('[role="status"]');
  const setupEnabled=form.querySelector('#basicSetupEnabled');
+ const loadBasic=form.querySelector('#loadBasicPantry');
  const setupVintage=form.querySelector('#basicSetupVintage');
  const setupVintageOption=form.querySelector('#basicSetupVintageOption');
  const syncSetupVintage=()=>{
   setupVintageOption.hidden=!setupEnabled.checked;
   setupVintage.disabled=!setupEnabled.checked;
  };
- setupEnabled.onchange=syncSetupVintage;
+ setupEnabled.onchange=()=>{
+  if(setupEnabled.checked)loadBasic.checked=false;
+  syncSetupVintage();
+ };
+ loadBasic.onchange=()=>{
+  if(loadBasic.checked)setupEnabled.checked=false;
+  syncSetupVintage();
+ };
  dialog.append(form);
  create.onclick=()=>{
+  loadBasic.checked=false;
   setupEnabled.checked=basicSetupPreference('basic_setup_enabled');
   setupVintage.checked=basicSetupPreference('basic_setup_vintage');
   syncSetupVintage();
@@ -2245,7 +2257,7 @@ function choosePantry(keepBackground=false){
   const showSetup=setupEnabled.checked;
   const vintageSetup=setupVintage.checked;
   const {data:id,error}=await db.rpc('crear_despensa_personal',{
-   p_nombre:nombre,p_icono:icono,p_cargar_catalogo:false
+   p_nombre:nombre,p_icono:icono,p_cargar_catalogo:loadBasic.checked
   });
   if(session!==current)return;
   submit.disabled=false;

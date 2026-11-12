@@ -1,4 +1,4 @@
-export function createClient(){
+export function createClient(defaultDryCatalog={}){
  const key='hondadespensa:prueba-configuracion:datos';
  const pantry={id:'demo-configuracion',nombre:'Despensa de ejemplo'};
  const defaultState={
@@ -39,7 +39,10 @@ export function createClient(){
     const {p_nombre:nombre,p_icono:icono,p_cargar_catalogo:loadCatalog,p_frescos:fresh=[]}=params;
     pantries.push({id,nombre,icono});
     const categories=new Map();
-    for(const food of [...(loadCatalog?state.catalogo:[]),...fresh]){
+    const dry=loadCatalog
+     ? (state.catalogo.length?state.catalogo:Object.entries(defaultDryCatalog).flatMap(([categoria,names])=>names.map(nombre=>({categoria,nombre}))))
+     : [];
+    for(const food of [...dry,...fresh]){
      if(!categories.has(food.categoria)){
       const categoryId=crypto.randomUUID();
       categories.set(food.categoria,categoryId);

@@ -31,8 +31,10 @@ test('la despensa abre en la vista normal y permite entrar en Administración', 
  assert.doesNotMatch(open,/openBasicSetup\(/,'Abrir o recargar una despensa existente no debe mostrar el formulario');
  const create=js.slice(js.indexOf("function choosePantry("),start);
  assert.match(create,/id="basicSetupEnabled"/,'El checkbox debe estar en Crear despensa');
- assert.doesNotMatch(create,/loadDefaults|loadFresh|p_frescos/,'El alta no debe cargar catálogos de alimentos');
- assert.match(create,/p_cargar_catalogo:false/,'La despensa nueva debe empezar vacía');
+ assert.doesNotMatch(create,/loadDefaults|loadFresh|p_frescos/,'El alta no debe mostrar las antiguas casillas de secos y frescos');
+ assert.match(create,/id="loadBasicPantry"/,'El alta debe ofrecer una despensa básica');
+ assert.match(create,/p_cargar_catalogo:loadBasic\.checked/,'El catálogo seco solo se carga al elegir la despensa básica');
+ assert.match(create,/if\(loadBasic\.checked\)setupEnabled\.checked=false;/,'La despensa básica debe abrirse directamente');
  assert.doesNotMatch(html,/id="basicSetupEnabled"/,'El checkbox no debe estar en Administración');
  assert.match(create,/const showSetup=setupEnabled\.checked;/,'La elección del diálogo decide si se abre el formulario');
  assert.match(create,/await openPantry\(pantry\);\s*if\(session===current&&activePantry===pantry&&showSetup\)openBasicSetup\(vintageSetup\)/,
