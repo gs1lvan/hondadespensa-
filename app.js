@@ -2047,8 +2047,8 @@ function render(){
  }
  if(adminMode)renderAdmin();
 }
-async function refresh(){
- if(!session||!activePantry)return;
+async function refresh(setup=null){
+ if(!session||!activePantry||(basicSetup?.saving&&setup!==basicSetup))return;
  const pantryId=activePantry.id;
  const version=++refreshVersion;
  const [food,categories]=await Promise.all([
@@ -2057,7 +2057,12 @@ async function refresh(){
  ]);
  if(version!==refreshVersion||!session)return;
  const {data:rows}=food,error=food.error??categories.error;
- if(error){setStatus('Sin conexión o sin permisos: '+error.message);$('auth').hidden=false;$('status').hidden=false;return;}
+ if(error){
+  if(setup)throw error;
+  setStatus('Sin conexión o sin permisos: '+error.message);
+  $('auth').hidden=false;$('status').hidden=false;
+  return;
+ }
  const nextCategories=new Map(categories.data.map(row=>[row.nombre,row]));
  const namesById=new Map(categories.data.map(row=>[row.id,row.nombre]));
  const next=rows.map(x=>({id:x.id,name:x.nombre,category:namesById.get(x.categoria_id)??x.categoria,have:pendingCategoryAvailability?.pantryId===pantryId&&pendingCategoryAvailability.ids.has(x.id)
@@ -2070,6 +2075,7 @@ async function refresh(){
  $('migration').hidden=data.length!==0||pantrySystemKey(activePantry)!=='playa';
  $('auth').hidden=$('migration').hidden;
  $('status').hidden=$('migration').hidden;
+ return true;
 }
 let activePantry=null, availablePantries=[];
 const pantryChooser=document.createElement('section');
@@ -3296,6 +3302,8 @@ async function finishBasicSetup(email){
  const setup=basicSetup;
  if(!setup||setup.saving)return;
  setup.saving=true;
+ // Descartar lecturas iniciadas antes de terminar de guardar el inventario.
+ refreshVersion++;
  const status=$('basicSetupStatus');
  status.textContent='Guardando la configuración…';
  basicSetupDialog.setAttribute('aria-busy','true');
@@ -3322,13 +3330,13 @@ async function finishBasicSetup(email){
   if(error)throw error;
   if(session!==setup.session||activePantry?.id!==setup.pantryId||basicSetup!==setup)return;
   session.user=result.user;
-  basicSetupDialog.close();
+  if(!await refresh(setup)||session!==setup.session||activePantry?.id!==setup.pantryId||basicSetup!==setup)return;
   syncFoodGroupVisibility();
   syncWeatherStation();
   syncAdminControls();
   render();
+  basicSetupDialog.close();
   $('adminToggle').focus({preventScroll:true});
-  await refresh();
  }catch(error){
   if(basicSetup===setup)status.textContent='No se pudo guardar todo. Puedes volver a intentarlo. '+error.message;
  }finally{
