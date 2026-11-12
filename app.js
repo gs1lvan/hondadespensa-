@@ -1904,6 +1904,24 @@ function isFreshCategory(category){
  return Object.hasOwn(freshCategoryArt,row?.icono)
   || [category,...(row?.nombres_anteriores??[])].some(name=>freshCategoryIcon(name));
 }
+function closeFridgeFromRightEdge(event){
+ if(event.defaultPrevented||event.button!==0||event.detail===0)return;
+ const distanceFromRight=document.documentElement.clientWidth-event.clientX;
+ if(distanceFromRight<0||distanceFromRight>24)return;
+ const list=$('categoryList');
+ if($('items').hidden||!list.classList.contains('fridge-with-doors'))return;
+ if(event.target.closest('button,input,select,textarea,label,summary,a,form,dialog,.item,[contenteditable]'))return;
+ // En una nevera combi, la altura del toque identifica la puerta.
+ for(const compartment of list.querySelectorAll(':scope > .fridge-compartment')){
+  const {top,bottom}=compartment.getBoundingClientRect();
+  if(event.clientY>=top&&event.clientY<bottom){
+   compartment.querySelector('.fridge-close-door')?.click();
+   return;
+  }
+ }
+}
+document.addEventListener('click',closeFridgeFromRightEdge);
+
 function render(){
  const q=folded($('search').value.trim());
  const visibleData=data.filter(x=>isFoodGroupVisible(isFreshCategory(x.category)?'fresh':'dry'));
