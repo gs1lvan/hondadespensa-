@@ -1876,7 +1876,7 @@ function render(){
  $('have').textContent=visibleData.filter(x=>x.have).length;
  $('missing').textContent=visibleData.filter(x=>!x.have).length;
  const shown=visibleData.filter(x=>folded(x.name).includes(q));
- const populatedCategories=new Set(visibleData.map(item=>item.category));
+ const categoriesWithStock=new Set(visibleData.filter(item=>item.have).map(item=>item.category));
  const main=$('categoryList');main.replaceChildren();
  if(!shown.length){
   const p=document.createElement('p');p.className='empty';
@@ -1892,14 +1892,14 @@ function render(){
  foodGroupOrder.hidden=true;
  for(const category of categories){
   const rows=shown.filter(x=>x.category===category).sort((a,b)=>esCompare(a.name,b.name));
-  if(!rows.length&&(q||filter!=='all'))continue;
+  if(q&&!rows.length)continue;
   const details=document.createElement('details');details.className='category';details.open=openCategories.has(category)||!!q;
   if(!q)details.addEventListener('toggle',()=>{
    if(details.open)openCategories.add(category);
    else openCategories.delete(category);
   });
   details.append(categoryHeader(category,`${rows.filter(x=>x.have).length}/${rows.length}`,
-   pantryCategoryByName.get(category)?.icono,!populatedCategories.has(category)));
+   pantryCategoryByName.get(category)?.icono,!categoriesWithStock.has(category)));
   details.append(categoryAddFoodForm(category,false));
   for(const x of rows){
    const row=document.createElement('div');row.className='item'+(x.have?' done':'');
@@ -2770,7 +2770,7 @@ function renderGroupedAdmin(container,rows,type,query){
  // El estado de los grupos se guarda cuando el usuario toca su flecha.
  if(type==='food')container.dataset.query=query;
  container.replaceChildren();const groups=new Map();
- const populatedCategories=type==='food'?new Set(rows.map(item=>item.category)):null;
+ const categoriesWithStock=type==='food'?new Set(rows.filter(item=>item.have).map(item=>item.category)):null;
  if(type==='food')for(const category of pantryCategories())if(!query||folded(category).includes(query))groups.set(category,[]);
  for(const item of rows){
   const category=type==='food'?item.category:item.categoria;
@@ -2786,7 +2786,7 @@ function renderGroupedAdmin(container,rows,type,query){
   const count=groups.get(category).length;
   const header=categoryHeader(category,type==='food'?String(count):count+' alimentos',
    type==='food'?pantryCategoryByName.get(category)?.icono:undefined,
-   type==='food'&&!populatedCategories.has(category));
+   type==='food'&&!categoriesWithStock.has(category));
   if(type==='food')header.querySelector('.cat-count').setAttribute('aria-label',count+' alimentos');
   section.append(header);
   if(type==='food')section.append(categoryManagement(category),categoryAddFoodForm(category));
