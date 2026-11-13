@@ -10,7 +10,7 @@
   <title>HondaDespensa · Prueba de configuración</title>
   <link rel="icon" href="../icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="../icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=19">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -1035,6 +1035,16 @@
         <p class="hint">Nevera vintage</p>
         <p id="alternateHomeMessage" class="admin-msg" role="status"></p>
       </section>
+      <section class="admin-section">
+        <h2>Ciudad de referencia</h2>
+        <p id="referenceCityCurrent" class="hint"></p>
+        <form id="referenceCityForm" class="admin-inline-form">
+          <input id="referenceCityInput" type="search" placeholder="Ej. Cartagena" aria-label="Ciudad de referencia" autocomplete="off" minlength="2" required>
+          <button type="submit">Buscar</button>
+        </form>
+        <div id="referenceCityResults" class="reference-city-results"></div>
+        <p id="referenceCityStatus" class="admin-msg" role="status"></p>
+      </section>
         </div>
       </details>
       <details class="admin-group-panel" id="adminNotesPanel">
@@ -1044,7 +1054,7 @@
             <h2>Etiquetas de las notas personales</h2>
             <p class="hint">Añade, ordena, edita o elimina las etiquetas de las notas. Si no escribes un título, se utilizará la primera etiqueta seleccionada. Siempre podrás poner un título propio.</p>
             <form id="noteTagForm" class="admin-note-tag-form">
-              <input id="noteTagInput" type="text" maxlength="30" autocomplete="off" placeholder="Nueva etiqueta" aria-label="Nueva etiqueta de notas" required>
+              <input id="noteTagInput" type="text" maxlength="30" autocomplete="off" placeholder="Ej. supermercado o frutería" aria-label="Nueva etiqueta de notas" required>
               <button id="noteTagAdd" type="submit" aria-label="Añadir etiqueta" title="Añadir etiqueta">+</button>
             </form>
             <div id="adminNoteTags" class="admin-note-tag-list" aria-label="Etiquetas disponibles"></div>
@@ -1181,55 +1191,6 @@
       <button id="adminToggle" class="admin-link" type="button" aria-label="Administrar"><span aria-hidden="true">&#9881;&#65038;</span></button>
     </footer>
   </div>
-  <dialog id="basicSetupDialog" class="basic-setup" aria-labelledby="basicSetupTitle">
-    <form id="basicSetupForm" novalidate>
-      <header class="basic-setup-header">
-        <div>
-          <h2 id="basicSetupTitle">Configuración de opciones básicas</h2>
-          <p id="basicSetupProgress" aria-live="polite"></p>
-        </div>
-        <button id="basicSetupClose" class="secondary" type="button" aria-label="Cerrar configuración">×</button>
-      </header>
-      <div class="basic-setup-body">
-        <section data-setup-step>
-          <h3 tabindex="-1">¿Qué tipo de alimentos tienes?</h3>
-          <p>Marca un grupo entero o despliega sus categorías para elegirlas. Los alimentos de las categorías marcadas se seleccionan automáticamente. Puedes desmarcar los que no tengas o dejar un grupo desmarcado para ocultarlo. Su catálogo se guarda sin marcar para cuando quieras activarlo.</p>
-          <div id="basicSetupFoodGroups"></div>
-        </section>
-        <section data-setup-step hidden>
-          <h3 tabindex="-1">¿Cuál es tu ciudad de referencia?</h3>
-          <p>La estación mostrará la temperatura y la humedad de la ciudad que elijas.</p>
-          <div class="basic-setup-inline">
-            <input id="basicSetupCity" type="search" placeholder="Ej. Cartagena" aria-label="Ciudad de referencia" autocomplete="off">
-            <button id="basicSetupSearch" type="button" class="secondary">Buscar</button>
-          </div>
-          <p id="basicSetupSelectedCity"></p>
-          <div id="basicSetupCityResults" class="basic-setup-list"></div>
-        </section>
-        <section data-setup-step hidden>
-          <h3 tabindex="-1">¿Cuáles son tus supermercados de referencia?</h3>
-          <p>Los nombres que añadas aparecerán como etiquetas en tus notas.</p>
-          <div class="basic-setup-inline">
-            <input id="basicSetupMarket" placeholder="Ej. Mercadona, Lidl o Condis" aria-label="Nombre del supermercado" autocomplete="off">
-            <button id="basicSetupAddMarket" type="button" class="secondary">Añadir</button>
-          </div>
-          <ul id="basicSetupMarkets" class="basic-setup-markets" aria-label="Supermercados añadidos"></ul>
-        </section>
-        <section data-setup-step hidden>
-          <h3 tabindex="-1">¿Te gustaría compartir tu despensa?</h3>
-          <p>El correo quedará como pendiente en Perfil. Puedes omitir este paso.</p>
-          <label for="basicSetupEmail">Correo de la otra persona</label>
-          <input id="basicSetupEmail" type="email" autocomplete="off" placeholder="nombre@ejemplo.es">
-        </section>
-        <p id="basicSetupStatus" class="basic-setup-status" role="status"></p>
-      </div>
-      <footer class="basic-setup-actions">
-        <button id="basicSetupBack" class="secondary" type="button" hidden>Atrás</button>
-        <button id="basicSetupSkip" class="secondary" type="button" hidden>Omitir</button>
-        <button id="basicSetupNext" type="submit">Continuar</button>
-      </footer>
-    </form>
-  </dialog>
   <template id="fridgeNoteControlsTemplate">
     <div class="fridge-note-controls">
       <button type="button" class="fridge-add-note">Añadir<br>nota</button>
@@ -1272,7 +1233,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=38"></script>
+  <script type="module" src="app.js?v=39"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
