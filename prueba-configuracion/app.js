@@ -2745,7 +2745,7 @@ async function showCatalogFoodGroup(category){
 }
 
 let addingCatalogCategory=false;
-async function addCatalogCategory(category,names,{markedName=null}={}){
+async function addCatalogCategory(category,names,{markedName=null,markAll=false}={}){
  if(!activePantry||addingCatalogCategory)return;
  const pantryId=activePantry.id;
  const existing=findPantryCategory(category);
@@ -2753,10 +2753,6 @@ async function addCatalogCategory(category,names,{markedName=null}={}){
  addingCatalogCategory=true;
  try{
   await ensurePantryCategory(categoryName,pantryId);
-  if(!markedName&&!names.length){
-   if(activePantry?.id===pantryId)await refresh();
-   return;
-  }
   const {data:target,error:categoryError}=await db.from('categorias_despensa')
    .select('id,nombre').eq('despensa_id',pantryId).eq('nombre',categoryName).single();
   if(categoryError)throw categoryError;
@@ -2765,20 +2761,22 @@ async function addCatalogCategory(category,names,{markedName=null}={}){
   if(foodError)throw foodError;
   if(activePantry?.id!==pantryId)return;
   const seen=new Set(foods.map(food=>folded(food.nombre)));
-  const marked=markedName&&foods.find(food=>folded(food.nombre)===folded(markedName));
+  const markedNames=new Set((markAll?[...names]:markedName?[markedName]:[]).map(folded));
   const rows=[];
   for(const name of names){
    const key=folded(name);
    if(seen.has(key))continue;
    seen.add(key);
-   rows.push({nombre:name,categoria:target.nombre,categoria_id:target.id,disponible:name===markedName,despensa_id:pantryId});
+   rows.push({nombre:name,categoria:target.nombre,categoria_id:target.id,disponible:markedNames.has(key),despensa_id:pantryId});
   }
   if(rows.length){
    const {error}=await db.from('alimentos').insert(rows);
    if(error)throw error;
   }
-  if(marked&&!marked.disponible){
-   const {error}=await db.from('alimentos').update({disponible:true}).eq('despensa_id',pantryId).eq('id',marked.id);
+  const idsToMark=foods.filter(food=>!food.disponible&&markedNames.has(folded(food.nombre))).map(food=>food.id);
+  if(idsToMark.length){
+   const {error}=await db.from('alimentos').update({disponible:true})
+    .eq('despensa_id',pantryId).eq('categoria_id',target.id).in('id',idsToMark);
    if(error)throw error;
   }
   if(activePantry?.id!==pantryId)return;
@@ -2819,8 +2817,12 @@ function renderCatalogList(holder,search,groups,openCategories){
  let remaining=0;
  for(const [category,names] of groups.sort((a,b)=>esCompare(a[0],b[0]))){
   const existingCategory=findPantryCategory(category);
-  const available=names.filter(name=>!data.some(x=>x.category===(existingCategory?.nombre??category)&&folded(x.name)===folded(name))&&folded(name).includes(q));
-  if(!available.length)continue;remaining+=available.length;
+  const categoryName=existingCategory?.nombre??category;
+  const foods=new Map(data.filter(item=>item.category===categoryName).map(item=>[folded(item.name),item]));
+  const matching=names.filter(name=>folded(name).includes(q));
+  const available=matching.filter(name=>!foods.has(folded(name)));
+  const pending=matching.filter(name=>!foods.get(folded(name))?.have);
+  if(!pending.length)continue;remaining+=pending.length;
   const details=document.createElement('details');details.className='catalog-category';details.open=openCategories.has(category)||!!q;
   if(!q)details.addEventListener('toggle',()=>{if(details.open)openCategories.add(category);else openCategories.delete(category)});
   const summary=document.createElement('summary');
@@ -2832,27 +2834,27 @@ function renderCatalogList(holder,search,groups,openCategories){
     summary.append(image);
    }
   }
-  summary.append(bareCategory(category)+' · '+available.length);
+  summary.append(bareCategory(category)+' · '+pending.length);
   details.append(summary);
   const products=document.createElement('div');products.className='catalog-products';
   const addAll=document.createElement('button');
   addAll.type='button';
-  addAll.textContent=q?'＋ Añadir todos de la categoría':'＋ Añadir todos';
-  const addCategory=selectedNames=>{
+  addAll.textContent='＋ Añadir todos marcados';
+  const addCategory=markAll=>{
    if(addingCatalogCategory)return;
    for(const button of document.querySelectorAll('#catalogItems button,#freshCatalogItems button'))button.disabled=true;
-   addCatalogCategory(category,selectedNames);
+   return addCatalogCategory(category,names,{markAll});
   };
   addAll.disabled=addingCatalogCategory;
-  addAll.onclick=()=>addCategory(names);
+  addAll.onclick=()=>addCategory(true);
   products.append(addAll);
-  if(!existingCategory){
-   const addEmpty=document.createElement('button');
-   addEmpty.type='button';addEmpty.className='secondary';
-   addEmpty.textContent='＋ Añadir solo la categoría';
-   addEmpty.disabled=addingCatalogCategory;
-   addEmpty.onclick=()=>addCategory([]);
-   products.append(addEmpty);
+  if(available.length){
+   const addUnmarked=document.createElement('button');
+   addUnmarked.type='button';addUnmarked.className='secondary';
+   addUnmarked.textContent='＋ Añadir categoría sin marcar';
+   addUnmarked.disabled=addingCatalogCategory;
+   addUnmarked.onclick=()=>addCategory(false);
+   products.append(addUnmarked);
   }
   for(const name of available){
    const button=document.createElement('button');button.type='button';button.textContent='＋ '+name;
@@ -2871,7 +2873,7 @@ function renderCatalogList(holder,search,groups,openCategories){
   }
   details.append(products);holder.append(details);
  }
- if(!remaining){const p=document.createElement('p');p.className='empty';p.textContent=q?'No hay alimentos disponibles con esa búsqueda.':'Todos los alimentos del catálogo ya están añadidos.';holder.append(p);}
+ if(!remaining){const p=document.createElement('p');p.className='empty';p.textContent=q?'No hay alimentos pendientes con esa búsqueda.':'Todos los alimentos del catálogo ya están añadidos y marcados.';holder.append(p);}
 }
 function foodAvailabilityCheckbox(item){
  const check=document.createElement('input');check.type='checkbox';check.checked=item.have;check.disabled=busy||(pendingCategoryAvailability?.pantryId===activePantry?.id&&pendingCategoryAvailability?.ids.has(item.id));
