@@ -2207,6 +2207,8 @@ pantryStyle.textContent=`
 .pantry-chooser .pantry-create { display:block; width:auto; margin:18px auto 0 }
 .pantry-create-dialog { width:min(440px, calc(100% - 28px)); max-height:calc(100dvh - 32px); overflow:auto; padding:18px; border:1px solid var(--theme-edge,#76a4c1); border-radius:18px; background:var(--control-surface,#0b2940); color:var(--control-ink,#fff1ce) }
 .pantry-create-dialog::backdrop { background:#03101cba }
+.pantry-create-name { display:grid; gap:6px; margin-bottom:12px }
+.pantry-create-name input { width:100%; background:var(--control-surface,#0b2940); color:inherit; border-color:var(--theme-edge,#76a4c1) }
 .pantry-create-setup { margin-top:12px }
 .pantry-create-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px }
 .pantry-chooser .pantry-create-actions button { display:block; width:auto; margin:0 }
@@ -2357,7 +2359,10 @@ function choosePantry(keepBackground=false){
  dialog.setAttribute('aria-labelledby','pantry-create-title');
  form.innerHTML=`
   <h2 id="pantry-create-title">Crear despensa</h2>
-  <fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset>
+  <label class="pantry-create-name">Nombre de la despensa
+   <input type="text" name="pantryName" autocomplete="off" required>
+  </label>
+  <fieldset class="pantry-icon-options"><legend>Elige un icono</legend></fieldset>
   <label class="alternate-home-setting pantry-create-setup">
    <input id="loadBasicPantry" type="checkbox" name="loadBasicPantry" checked> Cargar despensa básica
   </label>
@@ -2387,19 +2392,26 @@ function choosePantry(keepBackground=false){
  const submit=form.querySelector('[type="submit"]');
  const cancel=form.querySelector('[data-cancel]');
  const status=form.querySelector('[role="status"]');
+ const nameInput=form.elements.pantryName;
  dialog.append(form);
  create.onclick=()=>{
   form.reset();
+  status.textContent='';
   dialog.showModal();
+  nameInput.focus();
  };
  cancel.onclick=()=>{if(!submit.disabled)dialog.close();};
  dialog.addEventListener('cancel',event=>{if(submit.disabled)event.preventDefault();});
  form.onsubmit=async event=>{
   event.preventDefault();
   const icono=form.elements.pantryIcon.value;
-  const option=pantryIcons.find(([key])=>key===icono);
-  if(!option||submit.disabled)return;
-  const nombre=option[1];
+  if(!icono||submit.disabled)return;
+  const nombre=nameInput.value.trim();
+  if(!nombre){
+   status.textContent='Escribe el nombre de la despensa.';
+   nameInput.focus();
+   return;
+  }
   const current=session;
   submit.disabled=true;
   status.textContent='Creando despensa…';
@@ -2412,7 +2424,7 @@ function choosePantry(keepBackground=false){
   const {data:id,error}=await db.rpc('crear_despensa_personal',params);
   if(session!==current)return;
   submit.disabled=false;
-  if(error){status.textContent='No se pudo crear la despensa: '+error.message;return;}
+  if(error){status.textContent='No se pudo crear la despensa. Inténtalo de nuevo.';return;}
   const pantry={id,nombre,icono};
   availablePantries.push(pantry);
   dialog.close();
