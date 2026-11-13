@@ -1950,6 +1950,9 @@ homeCardRemoval.onchange=()=>{
  try{localStorage.setItem(homeCardRemovalKey(),String(homeCardRemoval.checked));}catch{}
 };
 
+const pendingFoodAvailability=new Map();
+const foodAvailabilityKey=(pantryId,item)=>JSON.stringify([pantryId,item.category,folded(item.name)]);
+
 function render(){
  const q=folded($('search').value.trim());
  const visibleData=data.filter(x=>isFoodGroupVisible(isFreshCategory(x.category)?'fresh':'dry'));
@@ -1959,6 +1962,9 @@ function render(){
  const vintage=usesVintageHome();
  const shown=(vintage?visibleData:data).filter(x=>folded(x.name).includes(q));
  const categoriesWithStock=new Set(data.filter(item=>item.have).map(item=>item.category));
+ for(const change of pendingFoodAvailability.values()){
+  if(change.pantry===activePantry&&change.catalog)categoriesWithStock.add(change.category);
+ }
  const main=$('categoryList');main.replaceChildren();
  if(vintage&&!shown.length){
   const p=document.createElement('p');p.className='empty';
@@ -1995,7 +2001,11 @@ function render(){
   if(!categoriesWithFoods.has(category)){
    const catalog=catalogByCategory.get(categoryIdentity(category));
    for(const name of catalog?.values()??[]){
-    if(folded(name).includes(q))rows.push({name,category,have:false,catalog});
+    if(folded(name).includes(q)){
+     const item={name,category,catalog};
+     item.have=pendingFoodAvailability.has(foodAvailabilityKey(activePantry?.id,item));
+     rows.push(item);
+    }
    }
   }
   rows.sort((a,b)=>esCompare(a.name,b.name));
@@ -2136,8 +2146,13 @@ async function refresh(setup=null){
  }
  const nextCategories=new Map(categories.data.map(row=>[row.nombre,row]));
  const namesById=new Map(categories.data.map(row=>[row.id,row.nombre]));
- const next=rows.map(x=>({id:x.id,name:x.nombre,category:namesById.get(x.categoria_id)??x.categoria,have:pendingCategoryAvailability?.pantryId===pantryId&&pendingCategoryAvailability.ids.has(x.id)
-  ?pendingCategoryAvailability.available:!!x.disponible}));
+ const next=rows.map(row=>{
+  const item={id:row.id,name:row.nombre,category:namesById.get(row.categoria_id)??row.categoria};
+  const pending=pendingFoodAvailability.get(foodAvailabilityKey(pantryId,item));
+  item.have=pending?.available??(pendingCategoryAvailability?.pantryId===pantryId&&pendingCategoryAvailability.ids.has(item.id)
+   ?pendingCategoryAvailability.available:!!row.disponible);
+  return item;
+ });
  const changed=JSON.stringify(next)!==JSON.stringify(data)||
   JSON.stringify([...nextCategories.values()])!==JSON.stringify([...pantryCategoryByName.values()]);
  pantryCategoryByName=nextCategories;
@@ -2732,7 +2747,7 @@ async function loadCatalog(){
  else{
   const next=rows||[];const changed=JSON.stringify(next)!==JSON.stringify(catalogRows);
   catalogRows=next;catalogReady=true;
-  if(changed&&adminMode)renderAdmin();
+  if(changed&&activePantry)render();
   return;
  }
  if(adminMode)renderAdmin();
@@ -2876,23 +2891,42 @@ function renderCatalogList(holder,search,groups,openCategories){
  if(!remaining){const p=document.createElement('p');p.className='empty';p.textContent=q?'No hay alimentos pendientes con esa búsqueda.':'Todos los alimentos del catálogo ya están añadidos y marcados.';holder.append(p);}
 }
 function foodAvailabilityCheckbox(item){
- const check=document.createElement('input');check.type='checkbox';check.checked=item.have;check.disabled=busy||(pendingCategoryAvailability?.pantryId===activePantry?.id&&pendingCategoryAvailability?.ids.has(item.id));
+ const check=document.createElement('input');
+ const pantry=activePantry;
+ const key=foodAvailabilityKey(pantry?.id,item);
+ check.type='checkbox';
+ check.checked=item.have;
+ check.disabled=busy||pendingFoodAvailability.has(key)||
+  (pendingCategoryAvailability?.pantryId===pantry?.id&&pendingCategoryAvailability?.ids.has(item.id));
  check.setAttribute('aria-label','Tengo '+item.name);
- if(item.catalog){
-  check.onchange=async()=>{
-   check.disabled=true;
-   openCategories.add(item.category);
-   if(await addCatalogCategory(item.category,item.catalog.values(),{markedName:item.name}))return;
-   check.checked=false;
-   check.disabled=false;
-  };
-  return check;
- }
  check.onchange=async()=>{
-  check.disabled=true;
-  const {error}=await db.from('alimentos').update({disponible:check.checked}).eq('id',item.id).eq('despensa_id',activePantry.id);
-  if(error)alert('No se pudo guardar: '+error.message);
-  await refresh();
+  if(!pantry||pantry!==activePantry||pendingFoodAvailability.has(key))return;
+  const available=check.checked;
+  const previous=item.have;
+  pendingFoodAvailability.set(key,{pantry,available,category:item.category,catalog:!!item.catalog});
+  if(check.closest('#categoryList .category')?.open)openCategories.add(item.category);
+  item.have=available;
+  render();
+  try{
+   if(item.catalog){
+    await addCatalogCategory(item.category,item.catalog.values(),{markedName:item.name});
+   }else{
+    const {error}=await db.from('alimentos').update({disponible:available}).eq('id',item.id).eq('despensa_id',pantry.id);
+    if(error)throw error;
+   }
+  }catch(error){
+   if(activePantry===pantry){
+    const current=data.find(food=>food.id===item.id);
+    if(current)current.have=previous;
+    alert('No se pudo guardar: '+error.message);
+   }
+  }finally{
+   pendingFoodAvailability.delete(key);
+   if(activePantry===pantry){
+    render();
+    await refresh();
+   }
+  }
  };
  return check;
 }
