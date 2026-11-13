@@ -31,9 +31,12 @@ test('la despensa abre en la vista normal y permite entrar en Administración', 
  assert.doesNotMatch(open,/openBasicSetup\(/,'Abrir o recargar una despensa existente no debe mostrar el formulario');
  const create=js.slice(js.indexOf("function choosePantry("),start);
  assert.match(create,/id="basicSetupEnabled"/,'El formulario debe poder elegirse en Crear despensa');
- assert.doesNotMatch(create,/loadDefaults|loadFresh|p_frescos/,'El alta no debe mostrar las antiguas casillas de secos y frescos');
+ assert.doesNotMatch(create,/loadDefaults|loadFresh/,'El alta no debe mostrar las antiguas casillas de secos y frescos');
  assert.match(create,/id="loadBasicPantry"/,'El alta debe ofrecer una despensa básica');
- assert.match(create,/p_cargar_catalogo:setupMode==='basic'/,'El catálogo seco solo se carga al elegir la despensa básica');
+ assert.match(create,/const loadBasicCatalogs=setupMode==='basic';/);
+ assert.match(create,/p_cargar_catalogo:loadBasicCatalogs/,'La carga básica debe incluir el catálogo seco');
+ assert.match(create,/if\(loadBasicCatalogs\)\{\s*params\.p_frescos=Object\.entries\(freshCatalogGroups\)/,
+  'La carga básica debe incluir el catálogo fresco en la misma operación');
  assert.match(create,/type="radio" name="pantrySetup" value="guided" required checked/,
   'El formulario guiado se selecciona por defecto');
  assert.match(create,/<div role="radiogroup" aria-label="Configuración inicial" aria-required="true" hidden>/,
