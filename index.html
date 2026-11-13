@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=118">
+  <link rel="stylesheet" href="styles.css?v=119">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -894,40 +894,6 @@
     #fridgeNoteDialog #fridgeNoteSave { background:#263e70; color:#fff6ce; }
   </style>
   <style>
-    :root[data-bg-color$="-claro"] body:has(.pantry-chooser:not([hidden])) {
-      background-color:var(--customBackground,var(--app-bg-color));
-      background-image:var(--app-bg-texture,none);
-      background-size:var(--app-bg-tile,230px 230px);
-      background-attachment:fixed;
-    }
-    :root[data-bg-color$="-claro"] :is(.pantry-chooser,.pantry-create-dialog) {
-      color:var(--textColor,var(--ink));
-    }
-    :root[data-bg-color$="-claro"] :is(.pantry-chooser button,.pantry-create-dialog) {
-      background:var(--card-inner);
-      border-color:var(--borderColor,var(--card-edge));
-    }
-    :root[data-bg-color$="-claro"] .pantry-chooser small {
-      color:var(--textColor,var(--muted));
-    }
-    :root[data-bg-color$="-claro"] .pantry-icon-options label:has(:checked) {
-      color:var(--textColor,var(--ink));
-      background:var(--card-dark);
-      border-color:var(--borderColor,var(--card-edge));
-    }
-    :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .pantry-quick-add input {
-      background:var(--card-light); color:var(--ink);
-      border-color:var(--card-edge); box-shadow:none;
-    }
-    :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .pantry-quick-add input::placeholder {
-      color:var(--muted); opacity:1;
-    }
-    :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .pantry-quick-add button {
-      background:#254b57; color:#fff; border-color:#17323c;
-    }
-    :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .pantry-quick-add :is(input,button):focus-visible {
-      outline:2px solid #254b57; outline-offset:3px;
-    }
     .food-group-order:not([hidden]) { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-block:.75rem; }
     .food-group-title { position:relative; scroll-margin-top:1rem; }
     .food-group-title .food-group-switch {
@@ -966,13 +932,13 @@
       color:var(--textColor,var(--ink));
     }
     :root[data-bg-color$="-claro"] #items:not([data-home=nevera-vintage]) .food-group-title :is(.food-group-jump, .fridge-close-door) {
-      color:#254b57;
+      color:var(--control-ink,var(--ink));
     }
     :root[data-bg-color$="-claro"] #adminPanel #foodGroupOrder {
       color:var(--ink); background:var(--card-light); border-color:var(--card-edge);
     }
     :root[data-bg-color$="-claro"] :is(.food-group-jump,#foodGroupOrder):focus-visible {
-      outline:2px solid #254b57; outline-offset:3px;
+      outline:2px solid var(--control-focus); outline-offset:3px;
     }
     .food-group-title { grid-column:1 / -1; font-size:1.15rem; margin:.65rem 0 .9rem; }
     #items[data-home=nevera-vintage] .food-group-title {
@@ -1322,7 +1288,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=168"></script>
+  <script type="module" src="app.js?v=169"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
