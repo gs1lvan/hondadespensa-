@@ -893,7 +893,7 @@ async function renamePantryCategory(category,name,icon){
  }catch(error){adminMessage('No se pudo guardar la categoría: '+error.message);}
  finally{categoryMutation=false;}
 }
-async function deletePantryCategory(category,showMessage=adminMessage){
+async function deletePantryCategory(category){
  const current=pantryCategoryByName.get(category);
  if(!current||!session||!activePantry||categoryMutation)return;
  const pantry=activePantry,account=session;
@@ -927,11 +927,11 @@ async function deletePantryCategory(category,showMessage=adminMessage){
   if(removedCategory?.length!==1)throw new Error('No se confirmó el borrado de la categoría. Comprueba los permisos.');
   adminOpenCategories.food.delete(category);openCategories.delete(category);categoryFoodDrafts.delete(category);
   await refresh();
-  showMessage('Categoría «'+name+'» eliminada'+(count?' junto con '+count+' alimento'+(count===1?'':'s'):'')+'.');
+  adminMessage('Categoría «'+name+'» eliminada'+(count?' junto con '+count+' alimento'+(count===1?'':'s'):'')+'.');
  }catch(error){
   if(activePantry===pantry){
    await refresh();
-   showMessage((deletedFoods?'Se borraron '+deletedFoods+' alimentos, pero no se completó el borrado de la categoría. ':'No se pudo eliminar la categoría. ')+error.message);
+   adminMessage((deletedFoods?'Se borraron '+deletedFoods+' alimentos, pero no se completó el borrado de la categoría. ':'No se pudo eliminar la categoría. ')+error.message);
   }
  }finally{categoryMutation=false;}
 }
@@ -1923,14 +1923,23 @@ function closeFridgeFromRightEdge(event){
 document.addEventListener('click',closeFridgeFromRightEdge);
 
 const homeCardRemoval=$('enableHomeCardRemoval');
-const homeCardRemovalStatus=$('homeCardRemovalStatus');
 function homeCardRemovalKey(){
- return 'hondadespensa:eliminar-tarjetas:'+session.user.id+':'+activePantry.id;
+ return 'hondadespensa:eliminar-tarjetas:'+session.user.id;
+}
+function restoreHomeCardRemoval(){
+ homeCardRemoval.checked=false;
+ try{
+  const key=homeCardRemovalKey();
+  const saved=localStorage.getItem(key);
+  homeCardRemoval.checked=saved===null
+   ?availablePantries.some(pantry=>localStorage.getItem(key+':'+pantry.id)==='true')
+   :saved==='true';
+  if(saved===null&&homeCardRemoval.checked)localStorage.setItem(key,'true');
+ }catch{}
 }
 homeCardRemoval.onchange=()=>{
- if(!session||!activePantry)return;
+ if(!session)return;
  try{localStorage.setItem(homeCardRemovalKey(),String(homeCardRemoval.checked));}catch{}
- if(!homeCardRemoval.checked)homeCardRemovalStatus.hidden=true;
 };
 
 function render(){
@@ -1989,30 +1998,8 @@ function render(){
    if(details.open)openCategories.add(category);
    else openCategories.delete(category);
   });
-  const header=categoryHeader(category,`${rows.filter(x=>x.have).length}/${rows.length}`,
-   pantryCategoryByName.get(category)?.icono,!categoriesWithStock.has(category));
-  if(homeCardRemoval.checked&&pantryCategoryByName.has(category)){
-   const remove=document.createElement('button');
-   const label='Eliminar categoría '+bareCategory(category);
-   remove.type='button';
-   remove.className='home-card-remove';
-   remove.textContent='×';
-   remove.setAttribute('aria-label',label);
-   remove.title=label;
-   remove.onclick=async event=>{
-    event.preventDefault();
-    event.stopPropagation();
-    const pantry=activePantry,account=session;
-    homeCardRemovalStatus.hidden=true;
-    await deletePantryCategory(category,message=>{
-     if(activePantry!==pantry||session!==account)return;
-     homeCardRemovalStatus.hidden=false;
-     homeCardRemovalStatus.textContent=message;
-    });
-   };
-   header.append(remove);
-  }
-  details.append(header);
+  details.append(categoryHeader(category,`${rows.filter(x=>x.have).length}/${rows.length}`,
+   pantryCategoryByName.get(category)?.icono,!categoriesWithStock.has(category)));
   details.append(categoryAddFoodForm(category,false));
   for(const x of rows){
    const row=document.createElement('div');row.className='item'+(x.have?' done':'');
@@ -2290,7 +2277,10 @@ function choosePantry(keepBackground=false){
  const heading=document.createElement('h2');
  heading.textContent='Elige tu despensa';
  heading.tabIndex=-1;
- pantryChooser.replaceChildren(heading);
+ const removalStatus=document.createElement('p');
+ removalStatus.className='pantry-removal-status hint';
+ removalStatus.setAttribute('role','status');
+ pantryChooser.replaceChildren(heading,removalStatus);
  for(const pantry of availablePantries){
   const card=document.createElement('button');
   card.type='button';
@@ -2300,7 +2290,23 @@ function choosePantry(keepBackground=false){
   card.querySelector('strong').textContent=pantry.nombre;
   card.querySelector('small').textContent=(pantry.compartida??beach)?'Compartida':'Personal';
   card.onclick=()=>openPantry(pantry);
-  pantryChooser.append(card);
+  if(homeCardRemoval.checked){
+   const row=document.createElement('div');
+   row.className='pantry-chooser-card';
+   const remove=document.createElement('button');
+   const label='Eliminar despensa '+pantry.nombre;
+   remove.type='button';
+   remove.className='home-card-remove';
+   remove.textContent='×';
+   remove.setAttribute('aria-label',label);
+   remove.title=label;
+   remove.onclick=()=>{
+    row.after(removalStatus);
+    return removePantry(pantry,remove,removalStatus);
+   };
+   row.append(card,remove);
+   pantryChooser.append(row);
+  }else pantryChooser.append(card);
  }
  const create=document.createElement('button');
  create.type='button';
@@ -2393,9 +2399,6 @@ function choosePantry(keepBackground=false){
 }
 async function openPantry(pantry){
  activePantry=pantry;
- homeCardRemoval.checked=false;
- homeCardRemovalStatus.hidden=true;
- try{homeCardRemoval.checked=localStorage.getItem(homeCardRemovalKey())==='true';}catch{}
  openedFridgeDoors.clear();
  visibleFoodGroup=undefined;
  foodGroupOrder.value='dry';
@@ -2515,22 +2518,52 @@ renamePantryButton.onclick=async()=>{
  deletePantryStatus.textContent='Nombre guardado.';
 };
 const deletePantryStatus=deletePantrySection.querySelector('[role="status"]');
-deletePantryButton.onclick=async()=>{
- const pantry=activePantry;
+function canManagePantry(pantry){
+ return !pantrySystemKey(pantry)||session?.user?.id==='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
+}
+let removingPantry=false;
+async function removePantry(pantry,button,status){
  const current=session;
- if(!pantry||!current||deletePantryButton.disabled)return;
- if(!confirm('¿Eliminar «'+pantry.nombre+'»? Se borrarán sus alimentos y categorías. Esta acción es definitiva.'))return;
- deletePantryButton.disabled=true;
- deletePantryStatus.textContent='Eliminando despensa…';
- const {error}=await db.rpc('eliminar_despensa_personal',{p_despensa_id:pantry.id});
- deletePantryButton.disabled=false;
- if(session!==current)return;
- if(error){
-  deletePantryStatus.textContent='No se pudo eliminar: '+error.message;
+ if(!pantry||!current||button.disabled||removingPantry)return;
+ if(!canManagePantry(pantry)){
+  status.textContent='Tu cuenta no puede eliminar «'+pantry.nombre+'».';
   return;
  }
- await signedIn(current);
-};
+ removingPantry=true;
+ button.disabled=true;
+ const fromChooser=pantryChooser.contains(button);
+ if(fromChooser)pantryChooser.inert=true;
+ try{
+  status.textContent='Comprobando la protección…';
+  const {data:protectedState,error:protectionError}=await db.rpc('proteccion_borrado_despensa',{
+   p_despensa_id:pantry.id,p_proteger:null
+  });
+  if(session!==current)return;
+  if(protectionError)throw protectionError;
+  if(protectedState!==false){
+   status.textContent='«'+pantry.nombre+'» está protegida. Desactiva la protección en Administrar → Despensa actual.';
+   return;
+  }
+  status.textContent='';
+  if(!confirm('¿Eliminar «'+pantry.nombre+'»? Se borrarán sus alimentos y categorías. Esta acción es definitiva.'))return;
+  status.textContent='Eliminando despensa…';
+  const {error}=await db.rpc('eliminar_despensa_personal',{p_despensa_id:pantry.id});
+  if(session!==current)return;
+  if(error)throw error;
+  pantryReloadSelection(null);
+  await signedIn(current);
+ }catch(error){
+  if(session===current)status.textContent='No se pudo eliminar: '+error.message;
+ }finally{
+  removingPantry=false;
+  button.disabled=false;
+  if(fromChooser){
+   pantryChooser.inert=false;
+   if(button.isConnected&&!pantryChooser.hidden)button.focus();
+  }
+ }
+}
+deletePantryButton.onclick=()=>removePantry(activePantry,deletePantryButton,deletePantryStatus);
 
 async function signedIn(currentSession,restorePantry=false){
  if($('basicSetupDialog').open)$('basicSetupDialog').close();
@@ -2578,6 +2611,7 @@ async function signedIn(currentSession,restorePantry=false){
   return;
  }
  availablePantries=pantries;
+ restoreHomeCardRemoval();
  const selectedId=restorePantry?pantryReloadSelection():null;
  const selected=pantries.find(pantry=>pantry.id===selectedId);
  if(selected||pantries.length===1)await openPantry(selected??pantries[0]);
@@ -2616,8 +2650,8 @@ $('adminPantryPanel').addEventListener('toggle',()=>{
 function syncAdminControls(){
  refreshPantrySharing();
  deletePantrySection.hidden=!adminMode||!activePantry;
- deletePantryButton.hidden=!!pantrySystemKey(activePantry)&&session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
- renamePantryButton.hidden=!!pantrySystemKey(activePantry)&&session?.user?.id!=='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
+ deletePantryButton.hidden=!canManagePantry(activePantry);
+ renamePantryButton.hidden=!canManagePantry(activePantry);
  deletePantryStatus.textContent='';
  refreshPantryProtection();
 }
