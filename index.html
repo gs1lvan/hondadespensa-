@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=115">
+  <link rel="stylesheet" href="styles.css?v=116">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -1033,6 +1033,12 @@
     </section>
 
     <section id="adminPanel" class="admin-panel" hidden aria-label="Panel de administración">
+      <details class="admin-group-panel" id="adminToolsPanel" open>
+        <summary>Herramientas de administrador</summary>
+        <div class="admin-group-content">
+          <label class="alternate-home-setting"><input id="enableHomeCardRemoval" type="checkbox"> Activar eliminar tarjetas de inicio</label>
+        </div>
+      </details>
       <details class="admin-group-panel" id="adminProfilePanel" open>
         <summary>Perfil</summary>
         <div class="admin-group-content" id="adminProfilePanelContent">
@@ -1217,6 +1223,7 @@
         </div>
         <button class="fridge-dial" id="clearFridgeSearch" type="button" aria-label="Borrar búsqueda"></button>
       </div>
+      <p id="homeCardRemovalStatus" class="hint" role="status" hidden></p>
       <div id="categoryList"></div>
     </main>
     <div class="fridge-feet" aria-hidden="true"></div>
@@ -1316,7 +1323,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=165"></script>
+  <script type="module" src="app.js?v=166"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
