@@ -2020,7 +2020,6 @@ function render(){
   });
   details.append(categoryHeader(category,`${rows.filter(x=>x.have).length}/${rows.length}`,
    pantryCategoryByName.get(category)?.icono,!categoriesWithStock.has(category)));
-  details.append(categoryAddFoodForm(category,false));
   for(const x of rows){
    const row=document.createElement('div');row.className='item'+(x.have?' done':'');
    row.classList.toggle('inactive-category-item',!categoriesWithStock.has(category));
@@ -2998,16 +2997,15 @@ function makeAdminRow(item,type){
  return row;
 }
 const categoryFoodDrafts=new Map(),categoryFoodSaving=new Set();
-function categoryAddFoodForm(category,inAdmin=true){
- const form=document.createElement('form');form.className='add category-add-food'+(inAdmin?'':' pantry-quick-add');
- if(!inAdmin)form.style.cssText='padding:10px 12px;margin:0;border-top:1px solid #476581';
+function categoryAddFoodForm(category){
+ const form=document.createElement('form');form.className='add category-add-food';
  form.setAttribute('aria-label','Añadir alimento en '+bareCategory(category));
  const input=document.createElement('input');input.type='text';input.required=true;input.maxLength=100;
- input.placeholder=inAdmin?'Nuevo alimento':'Añadir a esta categoría';input.setAttribute('aria-label','Nombre del nuevo alimento en '+bareCategory(category));
+ input.placeholder='Nuevo alimento';input.setAttribute('aria-label','Nombre del nuevo alimento en '+bareCategory(category));
  input.value=categoryFoodDrafts.get(category)||'';
  input.oninput=()=>categoryFoodDrafts.set(category,input.value);
  const button=document.createElement('button');button.type='submit';button.textContent='Añadir';
- if(inAdmin)setAdminIcon(button,'add','Añadir alimento');
+ setAdminIcon(button,'add','Añadir alimento');
  input.disabled=button.disabled=categoryFoodSaving.has(category);
  form.append(input,button);
  form.onsubmit=async event=>{
@@ -3015,23 +3013,20 @@ function categoryAddFoodForm(category,inAdmin=true){
   if(!name||categoryFoodSaving.has(category))return;
   categoryFoodDrafts.set(category,input.value);categoryFoodSaving.add(category);
   input.disabled=button.disabled=true;
-  if(!inAdmin)button.textContent='Añadiendo…';
   try{
-   if(await addSharedFood(name,category,inAdmin)){
+   if(await addSharedFood(name,category,true)){
     categoryFoodDrafts.delete(category);
-    if(inAdmin)adminMessage('Alimento añadido en '+bareCategory(category)+'.');
+    adminMessage('Alimento añadido en '+bareCategory(category)+'.');
    }
   }catch(error){
    const message='No se pudo añadir: '+error.message;
-   if(inAdmin)adminMessage(message);else alert(message);
+   adminMessage(message);
   }
   finally{
    categoryFoodSaving.delete(category);
-   if(inAdmin){
-    renderAdmin();
+   renderAdmin();
    const section=[...$('adminFoods').querySelectorAll('details.admin-category')].find(x=>x.dataset.category===category);
-    section?.querySelector('.category-add-food input')?.focus();
-   }else render();
+   section?.querySelector('.category-add-food input')?.focus();
   }
  };
  return form;
