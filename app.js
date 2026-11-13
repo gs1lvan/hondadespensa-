@@ -2024,8 +2024,12 @@ function render(){
   for(const x of rows){
    const row=document.createElement('div');row.className='item'+(x.have?' done':'');
    row.classList.toggle('inactive-category-item',!categoriesWithStock.has(category));
-   const check=foodAvailabilityCheckbox(x);
-   const name=document.createElement('span');name.textContent=x.name;row.append(check,name);details.append(row);
+   const toggle=document.createElement('label');
+   toggle.className='item-toggle';
+   const name=document.createElement('span');name.textContent=x.name;
+   toggle.append(foodAvailabilityCheckbox(x),name);
+   row.append(toggle);
+   details.append(row);
   }
   groups[group].append(details);
  }

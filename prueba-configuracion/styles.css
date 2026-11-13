@@ -41,7 +41,9 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:var(--control
 .cat-count{flex:none;font-weight:430;font-size:clamp(15px,2.7vw,20px);color:#b8cde1;white-space:nowrap}
 .chevron{width:15px;height:15px;flex:none;border-right:3px solid #f2f9ff;border-bottom:3px solid #f2f9ff;transform:rotate(45deg) translateY(-3px);margin-left:4px;transition:transform .15s}
 .category[open]>.category-header .chevron{transform:rotate(225deg) translateY(-3px)}
-.item{display:flex;align-items:center;gap:13px;padding:13px 18px;min-height:59px;border-top:1px solid var(--theme-edge,#496f8b);background:var(--card-inner,#09243b91)}
+.item{display:flex;padding-inline-end:44px;min-height:59px;border-top:1px solid var(--theme-edge,#496f8b);background:var(--card-inner,#09243b91)}
+.item-toggle{display:flex;align-items:center;gap:13px;flex:1;min-width:0;padding:13px 0 13px 18px;cursor:pointer}
+.item-toggle:has(input:disabled){cursor:default}
 .item input[type=checkbox]{accent-color:#2fa8fb;width:21px;height:21px;flex:none;cursor:pointer}
 .item span{flex:1;overflow-wrap:anywhere}.item.done span{text-decoration:none;color:#a3b9ca}
 .auth,.admin-panel{border:1px solid #527ba1;background:linear-gradient(140deg,#173d5d,#0b2844);border-radius:22px;padding:20px;margin:18px 0;box-shadow:0 6px 15px #0004}
@@ -96,7 +98,8 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:var(--control
 [data-view-style=compactado] .cat-icon{width:30px;height:30px;font-size:25px}
 [data-view-style=compactado] .cat-count{font-size:13px}
 [data-view-style=compactado] .chevron{width:11px;height:11px}
-[data-view-style=compactado] .item{min-height:44px;padding:7px 12px;font-size:14px;gap:10px}
+[data-view-style=compactado] .item{min-height:44px;font-size:14px}
+[data-view-style=compactado] .item-toggle{padding:7px 0 7px 12px;gap:10px}
 [data-view-style=compactado] .item input[type=checkbox]{margin:4px;width:21px;height:21px}
 [data-view-style=compactado] .admin-panel{padding:12px;margin:10px 0;border-radius:15px}
 [data-view-style=compactado] .admin-account{padding:10px;margin-bottom:10px}
