@@ -177,7 +177,7 @@ test('catálogos secos y frescos juntos en Añadir categorías por defecto',()=>
 
 test('el borrado de categoría incluye alimentos con confirmación y respeta la despensa', async()=>{
  const js=read('app.js');
- const start=js.indexOf('async function deletePantryCategory(category,showMessage=adminMessage){');
+ const start=js.indexOf('async function deletePantryCategory(category){');
  const end=js.indexOf('const adminIconPaths={',start);
  assert.ok(start>=0&&end>start,'No se ha encontrado la función de borrado');
  const make=new Function('scope','with(scope){'+js.slice(start,end)+';return deletePantryCategory;}');
