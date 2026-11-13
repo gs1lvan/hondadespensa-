@@ -2350,12 +2350,16 @@ function choosePantry(keepBackground=false){
  create.textContent='+ Crear despensa';
  const form=document.createElement('form');
  form.className='pantry-create-form';
+ form.noValidate=true;
  const dialog=document.createElement('dialog');
  dialog.className='pantry-create-dialog';
  dialog.setAttribute('aria-labelledby','pantry-create-title');
  form.innerHTML=`
   <h2 id="pantry-create-title">Crear despensa</h2>
-  <fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset>
+  <fieldset class="pantry-icon-options" tabindex="-1" aria-describedby="pantry-type-error">
+   <legend>Tipo de despensa</legend>
+  </fieldset>
+  <p id="pantry-type-error" class="hint" role="alert" hidden></p>
   <label class="alternate-home-setting pantry-create-setup">
    <input id="loadBasicPantry" type="checkbox" name="loadBasicPantry" checked> Cargar despensa básica
   </label>
@@ -2365,6 +2369,12 @@ function choosePantry(keepBackground=false){
   </div>
   <p class="hint" role="status"></p>`;
  const iconOptions=form.querySelector('fieldset');
+ const typeError=form.querySelector('#pantry-type-error');
+ function clearTypeError(){
+  typeError.hidden=true;
+  typeError.textContent='';
+ }
+ iconOptions.onchange=clearTypeError;
  for(const [key,title,src] of pantryIcons){
   const label=document.createElement('label');
   const radio=document.createElement('input');
@@ -2388,6 +2398,8 @@ function choosePantry(keepBackground=false){
  dialog.append(form);
  create.onclick=()=>{
   form.reset();
+  clearTypeError();
+  status.textContent='';
   dialog.showModal();
  };
  cancel.onclick=()=>{if(!submit.disabled)dialog.close();};
@@ -2396,7 +2408,13 @@ function choosePantry(keepBackground=false){
   event.preventDefault();
   const icono=form.elements.pantryIcon.value;
   const option=pantryIcons.find(([key])=>key===icono);
-  if(!option||submit.disabled)return;
+  if(submit.disabled)return;
+  if(!option){
+   typeError.hidden=false;
+   typeError.textContent='Selecciona un tipo de despensa.';
+   iconOptions.focus();
+   return;
+  }
   const nombre=option[1];
   const current=session;
   submit.disabled=true;
@@ -2410,7 +2428,7 @@ function choosePantry(keepBackground=false){
   const {data:id,error}=await db.rpc('crear_despensa_personal',params);
   if(session!==current)return;
   submit.disabled=false;
-  if(error){status.textContent='No se pudo crear la despensa: '+error.message;return;}
+  if(error){status.textContent='No se pudo crear la despensa. Inténtalo de nuevo.';return;}
   const pantry={id,nombre,icono};
   availablePantries.push(pantry);
   dialog.close();
