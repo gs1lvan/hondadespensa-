@@ -28,10 +28,10 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:#244a6f;borde
  position:absolute;inset-block-start:4px;inset-inline-end:6px;
  display:grid;grid-template-columns:1fr;place-items:center;
  width:44px;height:44px;min-height:0;margin:0;padding:0;
- border:1px solid #b28186;border-radius:50%;background:#522d3d;box-shadow:none;
- color:#fff1ce;font-size:26px;font-weight:500;line-height:1;
+ border:0;border-radius:0;background:transparent;box-shadow:none;
+ color:#b0c4d1;font-size:20px;font-weight:400;line-height:1;
 }
-.pantry-chooser .home-card-remove:is(:hover,:focus-visible){background:#a53143;color:#fff}
+.pantry-chooser .home-card-remove:is(:hover,:focus-visible){color:#fff1ce}
 .pantry-removal-status:empty{display:none}
 .category>summary::-webkit-details-marker,.admin-catalog>summary::-webkit-details-marker,.admin-add-collapsible>summary::-webkit-details-marker{display:none}
 .cat-icon{display:grid;place-items:center;width:clamp(46px,8vw,65px);height:clamp(46px,8vw,65px);flex:none;font-size:clamp(31px,5.8vw,46px);line-height:1}

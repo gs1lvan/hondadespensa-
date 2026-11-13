@@ -2530,6 +2530,7 @@ async function removePantry(pantry,button,status){
  removingPantry=true;
  button.disabled=true;
  const fromChooser=pantryChooser.contains(button);
+ let protectionRemoved=false;
  if(fromChooser)pantryChooser.inert=true;
  try{
   status.textContent='Comprobando la protección…';
@@ -2538,20 +2539,40 @@ async function removePantry(pantry,button,status){
   });
   if(session!==current)return;
   if(protectionError)throw protectionError;
-  if(protectedState!==false){
+  if(typeof protectedState!=='boolean')throw new Error('No se pudo comprobar la protección.');
+  if(protectedState&&!fromChooser){
    status.textContent='«'+pantry.nombre+'» está protegida. Desactiva la protección en Administrar → Despensa actual.';
    return;
   }
   status.textContent='';
-  if(!confirm('¿Eliminar «'+pantry.nombre+'»? Se borrarán sus alimentos y categorías. Esta acción es definitiva.'))return;
+  const action=protectedState?'Quitar la protección y eliminar':'Eliminar';
+  if(!confirm('¿'+action+' «'+pantry.nombre+'»? Se borrarán sus alimentos y categorías. Esta acción es definitiva.'))return;
   status.textContent='Eliminando despensa…';
-  const {error}=await db.rpc('eliminar_despensa_personal',{p_despensa_id:pantry.id});
+  if(protectedState){
+   const {data,error}=await db.rpc('proteccion_borrado_despensa',{p_despensa_id:pantry.id,p_proteger:false});
+   if(error)throw error;
+   if(data!==false)throw new Error('No se pudo quitar la protección.');
+   protectionRemoved=true;
+  }
   if(session!==current)return;
+  const {error}=await db.rpc('eliminar_despensa_personal',{p_despensa_id:pantry.id});
   if(error)throw error;
+  protectionRemoved=false;
+  if(session!==current)return;
   pantryReloadSelection(null);
   await signedIn(current);
  }catch(error){
-  if(session===current)status.textContent='No se pudo eliminar: '+error.message;
+  if(session!==current)return;
+  let message='No se pudo eliminar: '+error.message;
+  if(protectionRemoved){
+   try{
+    const result=await db.rpc('proteccion_borrado_despensa',{p_despensa_id:pantry.id,p_proteger:true});
+    if(result.error||result.data!==true)throw new Error('Protección sin confirmar.');
+   }catch{
+    message+=' No se pudo confirmar que la protección se haya reactivado.';
+   }
+  }
+  if(session===current)status.textContent=message;
  }finally{
   removingPantry=false;
   button.disabled=false;
