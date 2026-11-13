@@ -107,9 +107,12 @@ test('se pueden ocultar secos y frescos de forma independiente sin borrar los al
  assert.match(js,/foodGroup\.shell\.classList\.toggle\('is-hidden-group',!visible\)/, 'El grupo oculto debe atenuarse');
 });
 
-test('Perfil es el primer panel e incluye Cuenta activa y Compartir despensa', () => {
+test('Herramientas de administrador aparece antes de Perfil', () => {
   const js = read('app.js');
+  const tools=html.indexOf('id="adminToolsPanel"');
   const profile=html.indexOf('id="adminProfilePanel"');
+  assert.ok(tools>=0&&tools<profile);
+  assert.match(html.slice(tools,profile),/id="enableHomeCardRemoval" type="checkbox"> Activar eliminar tarjetas de inicio/);
   const pantry=html.indexOf('id="adminPantryPanel"');
   const alternate=html.indexOf('id="adminAlternateHomePanel"');
   const account=html.indexOf('class="admin-account"');
@@ -174,7 +177,7 @@ test('catálogos secos y frescos juntos en Añadir categorías por defecto',()=>
 
 test('el borrado de categoría incluye alimentos con confirmación y respeta la despensa', async()=>{
  const js=read('app.js');
- const start=js.indexOf('async function deletePantryCategory(category){');
+ const start=js.indexOf('async function deletePantryCategory(category,showMessage=adminMessage){');
  const end=js.indexOf('const adminIconPaths={',start);
  assert.ok(start>=0&&end>start,'No se ha encontrado la función de borrado');
  const make=new Function('scope','with(scope){'+js.slice(start,end)+';return deletePantryCategory;}');
