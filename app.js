@@ -2146,8 +2146,8 @@ function render(){
  }
  if(adminMode)renderAdmin();
 }
-async function refresh(setup=null){
- if(!session||!activePantry||(basicSetup?.saving&&setup!==basicSetup))return;
+async function refresh(){
+ if(!session||!activePantry)return;
  const pantryId=activePantry.id;
  const version=++refreshVersion;
  const [food,categories]=await Promise.all([
@@ -2157,7 +2157,6 @@ async function refresh(setup=null){
  if(version!==refreshVersion||!session)return;
  const {data:rows}=food,error=food.error??categories.error;
  if(error){
-  if(setup)throw error;
   setStatus('Sin conexión o sin permisos: '+error.message);
   $('auth').hidden=false;$('status').hidden=false;
   return;
@@ -2360,15 +2359,9 @@ function choosePantry(keepBackground=false){
  form.innerHTML=`
   <h2 id="pantry-create-title">Crear despensa</h2>
   <fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset>
-  <div role="radiogroup" aria-label="Configuración inicial" aria-required="true" hidden>
-   <label class="alternate-home-setting pantry-create-setup">
-    <input id="basicSetupEnabled" type="radio" name="pantrySetup" value="guided" required checked>
-    Formulario de configuración de opciones básicas
-   </label>
-   <label class="alternate-home-setting pantry-create-setup">
-    <input id="loadBasicPantry" type="radio" name="pantrySetup" value="basic" required> Cargar despensa básica
-   </label>
-  </div>
+  <label class="alternate-home-setting pantry-create-setup">
+   <input id="loadBasicPantry" type="checkbox" name="loadBasicPantry" checked> Cargar despensa básica
+  </label>
   <div class="pantry-create-actions">
    <button type="button" data-cancel>Cancelar</button>
    <button type="submit">Crear</button>
@@ -2395,14 +2388,9 @@ function choosePantry(keepBackground=false){
  const submit=form.querySelector('[type="submit"]');
  const cancel=form.querySelector('[data-cancel]');
  const status=form.querySelector('[role="status"]');
- const setupOptions=form.querySelector('[role="radiogroup"]');
- iconOptions.onchange=()=>{
-  setupOptions.hidden=!form.elements.pantryIcon.value;
- };
  dialog.append(form);
  create.onclick=()=>{
   form.reset();
-  setupOptions.hidden=true;
   dialog.showModal();
  };
  cancel.onclick=()=>{if(!submit.disabled)dialog.close();};
@@ -2411,14 +2399,12 @@ function choosePantry(keepBackground=false){
   event.preventDefault();
   const icono=form.elements.pantryIcon.value;
   const option=pantryIcons.find(([key])=>key===icono);
-  const setupMode=form.elements.pantrySetup.value;
-  if(!option||!setupMode||submit.disabled)return;
+  if(!option||submit.disabled)return;
   const nombre=option[1];
   const current=session;
   submit.disabled=true;
   status.textContent='Creando despensa…';
-  const showSetup=setupMode==='guided';
-  const loadBasicCatalogs=setupMode==='basic';
+  const loadBasicCatalogs=form.elements.loadBasicPantry.checked;
   const params={p_nombre:nombre,p_icono:icono,p_cargar_catalogo:loadBasicCatalogs};
   if(loadBasicCatalogs){
    params.p_frescos=Object.entries(freshCatalogGroups).flatMap(([categoria,names])=>
@@ -2432,7 +2418,6 @@ function choosePantry(keepBackground=false){
   availablePantries.push(pantry);
   dialog.close();
   await openPantry(pantry);
-  if(session===current&&activePantry===pantry&&showSetup)openBasicSetup();
  };
  pantryChooser.append(create,dialog);
  heading.focus();
@@ -2480,10 +2465,33 @@ switchPantry.onclick=choosePantry;
 const sharingSection=document.createElement('section');
 sharingSection.hidden=true;
 sharingSection.className='admin-section';
-sharingSection.innerHTML='<h2>Compartir despensa</h2><p class="hint" id="basicSetupPendingShare" hidden></p><label class="alternate-home-setting"><input type="checkbox"> Compartir con Gema</label><p class="hint" role="status"></p>';
+sharingSection.innerHTML='<h2>Compartir despensa</h2><label class="alternate-home-setting"><input type="checkbox"> Compartir con Gema</label><p class="hint" data-sharing-status role="status"></p><form id="pendingShareForm"><label for="pendingShareEmail">Correo para compartir más adelante</label><div class="admin-inline-form"><input id="pendingShareEmail" type="email" autocomplete="off" placeholder="nombre@ejemplo.es"><button type="submit">Guardar</button></div><p class="hint">El correo queda pendiente. Guardarlo no envía una invitación ni da acceso.</p><p class="admin-msg" id="pendingShareStatus" role="status"></p></form>';
 $('adminProfilePanelContent').append(sharingSection);
 const shareWithGema=sharingSection.querySelector('input');
-const sharingStatus=sharingSection.querySelector('[role="status"]');
+const sharingStatus=sharingSection.querySelector('[data-sharing-status]');
+$('pendingShareForm').onsubmit=async event=>{
+ event.preventDefault();
+ const account=session,pantry=activePantry;
+ if(!account||!pantry)return;
+ const form=event.currentTarget;
+ const input=$('pendingShareEmail');
+ const button=form.querySelector('button');
+ if(button.disabled)return;
+ const status=$('pendingShareStatus');
+ const email=input.value.trim();
+ if(!input.reportValidity())return;
+ const key=pantryStyleKey('basic_setup_pending_email');
+ button.disabled=true;
+ status.textContent='Guardando…';
+ try{
+  const {data:result,error}=await db.auth.updateUser({data:{[key]:email||null}});
+  if(error)throw error;
+  if(session===account)account.user=result.user;
+  if(session===account&&activePantry===pantry)status.textContent=email?'Correo guardado como pendiente.':'Correo pendiente eliminado.';
+ }catch(error){
+  if(session===account&&activePantry===pantry)status.textContent='No se pudo guardar el correo: '+error.message;
+ }finally{button.disabled=false;}
+};
 let sharingRequest=0;
 let sharedWithGema=false;
 
@@ -2493,9 +2501,10 @@ async function refreshPantrySharing(enabled=null){
  // Mostrar siempre el apartado; Supabase decide si la cuenta puede compartir.
  sharingSection.hidden=!adminMode||!pantry;
  if(sharingSection.hidden)return;
- const pendingEmail=pantryStylePreference('basic_setup_pending_email');
- $('basicSetupPendingShare').hidden=!pendingEmail;
- $('basicSetupPendingShare').textContent=pendingEmail?'Correo pendiente de invitación · '+pendingEmail:'';
+ if(enabled===null){
+  $('pendingShareEmail').value=pantryStylePreference('basic_setup_pending_email')||'';
+  $('pendingShareStatus').textContent='';
+ }
  shareWithGema.checked=!!pantry.compartida;
  shareWithGema.disabled=true;
  sharingStatus.textContent=enabled===null?'Comprobando acceso…':'Guardando acceso…';
@@ -2627,7 +2636,6 @@ async function removePantry(pantry,button,status){
 deletePantryButton.onclick=()=>removePantry(activePantry,deletePantryButton,deletePantryStatus);
 
 async function signedIn(currentSession,restorePantry=false){
- if($('basicSetupDialog').open)$('basicSetupDialog').close();
  session=currentSession;
  activePantry=null;
  applyPantryPostcard(null);
@@ -2709,6 +2717,7 @@ $('adminPantryPanel').addEventListener('toggle',()=>{
 
 // Estado único para los controles administrativos tanto al entrar como al cambiar de vista.
 function syncAdminControls(){
+ syncReferenceCity();
  refreshPantrySharing();
  deletePantrySection.hidden=!adminMode||!activePantry;
  deletePantryButton.hidden=!canManagePantry(activePantry);
@@ -3222,77 +3231,48 @@ const emptyCategoryHint=document.createElement('p');emptyCategoryHint.className=
 emptyCategoryHint.textContent='Las categorías vacías se conservan hasta que las elimines desde aquí.';
 $('adminFoods').before(emptyCategoryHint);
 
-const basicSetupDialog=$('basicSetupDialog');
-const basicSetupSections=[...basicSetupDialog.querySelectorAll('[data-setup-step]')];
-let basicSetup=null;
-
-function openBasicSetup(){
- if(basicSetupDialog.open)return;
- const markets=pantryStylePreference('reference_supermarkets');
- basicSetup={
-  step:0,city:pantryWeatherCity(),markets:Array.isArray(markets)?[...markets]:[],
-  inventory:new Map(),categories:new Set(),availableFoods:new Map(),email:pantryStylePreference('basic_setup_pending_email')||'',
-  pantryId:activePantry.id,session,saving:false,search:null
- };
- renderBasicSetupFoodChoices();
- $('basicSetupCity').value='';
- $('basicSetupCityResults').replaceChildren();
- showBasicSetupCity();
- $('basicSetupMarket').value='';
- renderBasicSetupMarkets();
- $('basicSetupEmail').value=basicSetup.email;
- basicSetupDialog.showModal();
- showBasicSetupStep();
+const referenceCityForm=$('referenceCityForm');
+const referenceCityInput=$('referenceCityInput');
+const referenceCityResults=$('referenceCityResults');
+const referenceCityStatus=$('referenceCityStatus');
+let referenceCitySearch=null;
+function syncReferenceCity(){
+ referenceCitySearch?.abort();
+ referenceCitySearch=null;
+ referenceCityForm.querySelector('button').disabled=false;
+ referenceCityInput.value='';
+ referenceCityResults.replaceChildren();
+ referenceCityStatus.textContent='';
+ $('referenceCityCurrent').textContent=activePantry?(pantryWeatherCity().label||pantryWeatherCity().name):'';
 }
-
-function showBasicSetupStep(){
- const {step}=basicSetup;
- basicSetup.search?.abort();
- basicSetup.search=null;
- $('basicSetupSearch').disabled=false;
- basicSetupSections.forEach((section,index)=>{section.hidden=index!==step;});
- $('basicSetupProgress').textContent='Paso '+(step+1)+' de '+basicSetupSections.length;
- $('basicSetupBack').hidden=step===0;
- const lastStep=step===basicSetupSections.length-1;
- $('basicSetupSkip').hidden=!lastStep;
- $('basicSetupNext').textContent=lastStep?'Guardar configuración':'Continuar';
- $('basicSetupStatus').textContent='';
- basicSetupSections[step].querySelector('h3').focus();
-}
-
-function showBasicSetupCity(){
- const city=basicSetup.city;
- $('basicSetupSelectedCity').textContent=city?'Ciudad elegida · '+city.label:'Elige una ciudad de los resultados.';
-}
-
-$('basicSetupCity').oninput=()=>{
- basicSetup.search?.abort();
- basicSetup.search=null;
- $('basicSetupSearch').disabled=false;
- basicSetup.city=null;
- $('basicSetupCityResults').replaceChildren();
- $('basicSetupStatus').textContent='';
- showBasicSetupCity();
+referenceCityInput.oninput=()=>{
+ referenceCitySearch?.abort();
+ referenceCitySearch=null;
+ referenceCityForm.querySelector('button').disabled=false;
+ referenceCityResults.replaceChildren();
+ referenceCityStatus.textContent='';
 };
-$('basicSetupSearch').onclick=async ()=>{
- const setup=basicSetup;
- const name=$('basicSetupCity').value.trim();
- const status=$('basicSetupStatus');
- if(name.length<2){status.textContent='Escribe al menos dos caracteres para buscar.';return;}
+referenceCityForm.onsubmit=async event=>{
+ event.preventDefault();
+ const account=session,pantry=activePantry;
+ if(!account||!pantry)return;
+ const name=referenceCityInput.value.trim();
+ if(savingReferenceCity)return;
+ if(name.length<2){referenceCityStatus.textContent='Escribe al menos dos caracteres para buscar.';return;}
+ referenceCitySearch?.abort();
  const search=new AbortController();
- setup.search=search;
- const button=$('basicSetupSearch');
- const results=$('basicSetupCityResults');
- results.replaceChildren();
+ referenceCitySearch=search;
+ const button=referenceCityForm.querySelector('button');
+ referenceCityResults.replaceChildren();
  button.disabled=true;
- status.textContent='Buscando ciudades…';
+ referenceCityStatus.textContent='Buscando ciudades…';
  try{
   const url=new URL('https://geocoding-api.open-meteo.com/v1/search');
   url.search=new URLSearchParams({name,count:'8',language:'es'});
   const response=await fetch(url,{signal:AbortSignal.any([search.signal,AbortSignal.timeout(12000)])});
   if(!response.ok)throw new Error('Error de búsqueda');
   const {results:matches=[]}=await response.json();
-  if(basicSetup!==setup||setup.search!==search)return;
+  if(referenceCitySearch!==search||session!==account||activePantry!==pantry)return;
   for(const {name,admin1,country,latitude,longitude} of matches){
    if(!name||!Number.isFinite(latitude)||!Number.isFinite(longitude))continue;
    const label=[...new Set([name,admin1,country].filter(Boolean))].join(', ');
@@ -3300,331 +3280,39 @@ $('basicSetupSearch').onclick=async ()=>{
    option.type='button';
    option.className='secondary';
    option.textContent=label;
-   option.onclick=()=>{
-    setup.city={name,label,latitude,longitude};
-    $('basicSetupCity').value=name;
-    results.replaceChildren();
-    status.textContent='';
-    showBasicSetupCity();
-    $('basicSetupNext').focus();
-   };
-   results.append(option);
+   option.onclick=()=>saveReferenceCity({name,label,latitude,longitude});
+   referenceCityResults.append(option);
   }
-  status.textContent=results.childElementCount?'':'No se encontraron ciudades. Prueba con otro nombre.';
+  referenceCityStatus.textContent=referenceCityResults.childElementCount?'':'No se encontraron ciudades. Prueba con otro nombre.';
  }catch{
-  if(basicSetup===setup&&setup.search===search)status.textContent='No se pudo buscar la ciudad. Vuelve a intentarlo.';
+  if(referenceCitySearch===search)referenceCityStatus.textContent='No se pudo buscar la ciudad. Vuelve a intentarlo.';
  }finally{
-  if(basicSetup===setup&&setup.search===search){
-   setup.search=null;
+  if(referenceCitySearch===search){
+   referenceCitySearch=null;
    button.disabled=false;
   }
  }
 };
-
-function renderBasicSetupMarkets(){
- const list=$('basicSetupMarkets');
- list.replaceChildren();
- for(const market of basicSetup.markets){
-  const item=document.createElement('li');
-  const remove=document.createElement('button');
-  remove.type='button';
-  remove.className='secondary';
-  remove.textContent=market+' ×';
-  remove.setAttribute('aria-label','Quitar '+market);
-  remove.onclick=()=>{
-   basicSetup.markets=basicSetup.markets.filter(name=>name!==market);
-   renderBasicSetupMarkets();
-   $('basicSetupMarket').focus();
-  };
-  item.append(remove);
-  list.append(item);
- }
-}
-function addBasicSetupMarket(){
- const input=$('basicSetupMarket');
- const market=input.value.trim().replace(/\s+/g,' ');
- if(!market)return true;
- if(basicSetup.markets.some(name=>folded(name)===folded(market))){
-  $('basicSetupStatus').textContent='Ya has añadido ese supermercado.';
-  input.focus();
-  return false;
- }
- basicSetup.markets.push(market);
- input.value='';
- $('basicSetupStatus').textContent='';
- renderBasicSetupMarkets();
- return true;
-}
-$('basicSetupAddMarket').onclick=()=>{
- addBasicSetupMarket();
- $('basicSetupMarket').focus();
-};
-for(const [id,button] of [['basicSetupCity','basicSetupSearch'],['basicSetupMarket','basicSetupAddMarket']]){
- $(id).onkeydown=event=>{
-  if(event.key!=='Enter'||event.isComposing)return;
-  event.preventDefault();
-  $(button).click();
- };
-}
-
-function basicSetupFoodOption(name,id,expandable=true){
- const row=document.createElement('div');
- row.className='basic-setup-food-option';
- const heading=document.createElement('div');
- heading.className='basic-setup-food-heading';
- const label=document.createElement('label');
- const check=document.createElement('input');
- check.type='checkbox';
- label.append(check,name);
- heading.append(label);
- row.append(heading);
- const children=document.createElement('div');
- children.className='basic-setup-food-children';
- children.id=id;
- children.hidden=true;
- if(expandable){
-  const toggle=document.createElement('button');
-  toggle.type='button';
-  toggle.className='basic-setup-food-toggle';
-  toggle.setAttribute('aria-controls',id);
-  toggle.setAttribute('aria-expanded','false');
-  toggle.setAttribute('aria-label','Desplegar '+name);
-  toggle.onclick=()=>{
-   children.hidden=!children.hidden;
-   toggle.setAttribute('aria-expanded',String(!children.hidden));
-   toggle.setAttribute('aria-label',(children.hidden?'Desplegar ':'Plegar ')+name);
-  };
-  heading.append(toggle);
-  row.append(children);
- }
- return {row,check,children};
-}
-
-function renderBasicSetupFoodChoices(){
- const {inventory,categories}=basicSetup;
- const list=$('basicSetupFoodGroups');
- const foodsByCategory=new Map(pantryCategories().map(name=>[name,new Map()]));
- const categoryNames=new Map([...foodsByCategory.keys()].map(name=>[categoryIdentity(name),name]));
- const add=(category,name)=>{
-  const identity=categoryIdentity(category);
-  const actual=findPantryCategory(category)?.nombre??categoryNames.get(identity)??category;
-  categoryNames.set(identity,actual);
-  if(!foodsByCategory.has(actual))foodsByCategory.set(actual,new Map());
-  const foods=foodsByCategory.get(actual);
-  if(!foods.has(folded(name)))foods.set(folded(name),name);
- };
- for(const item of data)add(item.category,item.name);
- for(const [category,names] of Object.entries(freshCatalogGroups)){
-  for(const name of names)add(category,name);
- }
- if(catalogRows.length){
-  for(const row of catalogRows)add(row.categoria,row.nombre);
- }else{
-  for(const [category,names] of Object.entries(initial)){
-   for(const name of names)add(category,name);
-  }
- }
- const sorted=[...foodsByCategory].sort(([a],[b])=>esCompare(bareCategory(a),bareCategory(b)));
- basicSetup.availableFoods=new Map(sorted);
- const groupOptions=[];
- const orderGroups=()=>{
-  const focused=document.activeElement;
-  const ordered=[...groupOptions].sort((a,b)=>Number(a.inactive)-Number(b.inactive));
-  ordered.forEach(({row},index)=>{
-   if(list.children[index]!==row)list.insertBefore(row,list.children[index]??null);
-  });
-  if(focused&&list.contains(focused)&&document.activeElement!==focused)focused.focus({preventScroll:true});
- };
- list.replaceChildren();
- for(const [key,title,selected] of [
-  ['dry','Alimentos secos',isFoodGroupVisible('dry')],
-  ['fresh','Alimentos frescos',isFoodGroupVisible('fresh')]
- ]){
-  const master=basicSetupFoodOption(title,'basic-setup-'+key+'-categories');
-  master.check.setAttribute('aria-label','Todas las categorías de '+title.toLowerCase());
-  const groupOption={row:master.row,inactive:false};
-  groupOptions.push(groupOption);
-  const group=sorted.filter(([category])=>isFreshCategory(category)===(key==='fresh'));
-  const updateMaster=()=>{
-   const count=group.filter(([category])=>categories.has(category)).length;
-   master.check.checked=count>0&&count===group.length;
-   master.check.indeterminate=count>0&&count<group.length;
-   groupOption.inactive=count===0;
-   master.row.classList.toggle('is-inactive',groupOption.inactive);
-   orderGroups();
-  };
-  const categoryControls=group.map(([category,foods],index)=>{
-   const option=basicSetupFoodOption(bareCategory(category),'basic-setup-'+key+'-foods-'+index,foods.size>0);
-   const foodChecks=[];
-   const selectCategory=checked=>{
-    option.check.checked=checked;
-    if(checked){
-     categories.add(category);
-     if(foods.size)inventory.set(category,new Set(foods.values()));
-    }else{
-     categories.delete(category);
-     inventory.delete(category);
-    }
-    for(const check of foodChecks)check.checked=checked;
-   };
-   option.check.onchange=()=>{
-    selectCategory(option.check.checked);
-    updateMaster();
-   };
-   for(const name of [...foods.values()].sort(esCompare)){
-    const label=document.createElement('label');
-    label.className='basic-setup-food-leaf';
-    const check=document.createElement('input');
-    check.type='checkbox';
-    check.onchange=()=>{
-     if(check.checked){
-      option.check.checked=true;
-      categories.add(category);
-      if(!inventory.has(category))inventory.set(category,new Set());
-      inventory.get(category).add(name);
-     }else{
-      const names=inventory.get(category);
-      names?.delete(name);
-      if(!names?.size)inventory.delete(category);
-     }
-     updateMaster();
-    };
-    foodChecks.push(check);
-    label.append(check,name);
-    option.children.append(label);
-   }
-   selectCategory(selected);
-   master.children.append(option.row);
-   return selectCategory;
-  });
-  master.check.onchange=()=>{
-   for(const selectCategory of categoryControls)selectCategory(master.check.checked);
-   updateMaster();
-  };
-  updateMaster();
- }
-}
-
-async function saveBasicSetupInventory(setup){
- for(const [category,available] of setup.availableFoods){
-  if(session!==setup.session||activePantry?.id!==setup.pantryId)return;
-  const pantryId=setup.pantryId;
-  await ensurePantryCategory(category,pantryId);
-  if(!available.size)continue;
-  const marked=setup.inventory.get(category);
-  const {data:target,error:categoryError}=await db.from('categorias_despensa')
-   .select('id,nombre').eq('despensa_id',pantryId).eq('nombre',category).single();
-  if(categoryError)throw categoryError;
-  const {data:foods,error:foodError}=await db.from('alimentos')
-   .select('id,nombre,disponible').eq('despensa_id',pantryId).eq('categoria_id',target.id);
-  if(foodError)throw foodError;
-  const existing=new Map(foods.map(food=>[folded(food.nombre),food]));
-  const ids=[],rows=[];
-  for(const name of available.values()){
-   const food=existing.get(folded(name));
-   const have=marked?.has(name)===true;
-   if(!food){
-    // Usar el mismo ID para dos guardados simultáneos de la misma selección.
-    const key=JSON.stringify([pantryId,target.id,folded(name)]);
-    const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(key));
-    const hex=Array.from(new Uint8Array(digest).slice(0,16),byte=>byte.toString(16).padStart(2,'0')).join('');
-    const sharedId=hex.slice(0,8)+'-'+hex.slice(8,12)+'-8'+hex.slice(13,16)+'-a'+hex.slice(17,20)+'-'+hex.slice(20);
-    const id=foods.some(food=>food.id===sharedId)?crypto.randomUUID():sharedId;
-    rows.push({id,nombre:name,categoria:target.nombre,categoria_id:target.id,disponible:have,despensa_id:pantryId});
-   }else if(have&&!food.disponible)ids.push(food.id);
-  }
-  if(session!==setup.session||activePantry?.id!==pantryId)return;
-  if(rows.length){
-   const {error}=await db.from('alimentos').upsert(rows,{onConflict:'id',ignoreDuplicates:true});
-   if(error)throw error;
-  }
-  if(ids.length){
-   const {error}=await db.from('alimentos').update({disponible:true}).eq('despensa_id',pantryId).in('id',ids);
-   if(error)throw error;
-  }
- }
-}
-async function finishBasicSetup(email){
- const setup=basicSetup;
- if(!setup||setup.saving)return;
- setup.saving=true;
- // Descartar lecturas iniciadas antes de terminar de guardar el inventario.
- refreshVersion++;
- const status=$('basicSetupStatus');
- status.textContent='Guardando la configuración…';
- basicSetupDialog.setAttribute('aria-busy','true');
- for(const control of basicSetupDialog.querySelectorAll('button,input'))control.disabled=true;
+let savingReferenceCity=false;
+async function saveReferenceCity(city){
+ const account=session,pantry=activePantry;
+ if(!account||!pantry||savingReferenceCity)return;
+ savingReferenceCity=true;
+ referenceCityResults.replaceChildren();
+ referenceCityStatus.textContent='Guardando ciudad…';
+ const key=pantryStyleKey('weather_city');
  try{
-  await saveBasicSetupInventory(setup);
-  if(session!==setup.session||activePantry?.id!==setup.pantryId||basicSetup!==setup)return;
-  const previous=pantryStylePreference('reference_supermarkets');
-  const tagsToReplace=new Set(['Supermercado 1','Supermercado 2',...(Array.isArray(previous)?previous:[])].map(folded));
-  const tags=[...setup.markets];
-  const usedTags=new Set(tags.map(folded));
-  for(const tag of configuredPersonalNoteTags()){
-   if(!tagsToReplace.has(folded(tag))&&!usedTags.has(folded(tag)))tags.push(tag);
-  }
-  const categories=[...setup.categories];
-  const {data:result,error}=await db.auth.updateUser({data:{
-   [pantryStyleKey('show_dry_foods')]:categories.some(category=>!isFreshCategory(category)),
-   [pantryStyleKey('show_fresh_foods')]:categories.some(isFreshCategory),
-   [pantryStyleKey('weather_city')]:setup.city,
-   [pantryStyleKey('reference_supermarkets')]:setup.markets,
-   [pantryStyleKey('basic_setup_pending_email')]:email||null,
-   [pantryStyleKey(noteTagMetadataKey)]:tags
-  }});
+  const {data:result,error}=await db.auth.updateUser({data:{[key]:city}});
   if(error)throw error;
-  if(session!==setup.session||activePantry?.id!==setup.pantryId||basicSetup!==setup)return;
-  session.user=result.user;
-  if(!await refresh(setup)||session!==setup.session||activePantry?.id!==setup.pantryId||basicSetup!==setup)return;
-  syncFoodGroupVisibility();
+  if(session===account)account.user=result.user;
+  if(session!==account||activePantry!==pantry)return;
+  syncReferenceCity();
   syncWeatherStation();
-  syncAdminControls();
-  render();
-  basicSetupDialog.close();
-  $('adminToggle').focus({preventScroll:true});
+  referenceCityStatus.textContent='Ciudad guardada.';
  }catch(error){
-  if(basicSetup===setup)status.textContent='No se pudo guardar todo. Puedes volver a intentarlo. '+error.message;
- }finally{
-  setup.saving=false;
-  basicSetupDialog.removeAttribute('aria-busy');
-  for(const control of basicSetupDialog.querySelectorAll('button,input'))control.disabled=false;
- }
+  if(session===account&&activePantry===pantry)referenceCityStatus.textContent='No se pudo guardar la ciudad: '+error.message;
+ }finally{savingReferenceCity=false;}
 }
-
-$('basicSetupForm').onsubmit=event=>{
- event.preventDefault();
- const setup=basicSetup;
- if(!setup||setup.saving)return;
- const status=$('basicSetupStatus');
- if(setup.step===1&&!setup.city){
-  status.textContent='Busca y elige tu ciudad de referencia.';
-  $('basicSetupCity').focus();
-  return;
- }
- if(setup.step===2&&!addBasicSetupMarket())return;
- if(setup.step===basicSetupSections.length-1){
-  const input=$('basicSetupEmail');
-  input.value=input.value.trim();
-  if(input.reportValidity())finishBasicSetup(input.value);
-  return;
- }
- setup.step++;
- showBasicSetupStep();
-};
-$('basicSetupBack').onclick=()=>{
- basicSetup.step--;
- showBasicSetupStep();
-};
-$('basicSetupSkip').onclick=()=>finishBasicSetup(basicSetup?.email);
-$('basicSetupClose').onclick=()=>basicSetupDialog.close();
-basicSetupDialog.oncancel=event=>{
- if(basicSetup?.saving)event.preventDefault();
-};
-basicSetupDialog.onclose=()=>{
- basicSetup?.search?.abort();
- basicSetup=null;
-};
 
 const {data:authData,error:authError}=await db.auth.getSession();
 if(authError)setStatus('Error de sesión: '+authError.message);

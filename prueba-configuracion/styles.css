@@ -261,13 +261,11 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
  --control-button:linear-gradient(135deg,var(--control-raised),var(--control-surface));
  --control-ink:var(--textColor,var(--ink));
  --control-focus:var(--theme-accent);
- --control-error:#ffd2c7;
  accent-color:var(--theme-accent);
 }
 :root:is([data-bg-color$="-claro"]:not([data-custom-tone=dark]),[data-custom-tone=light]){
  --control-surface:color-mix(in srgb,var(--card-inner),#fff 24%);
  --control-raised:color-mix(in srgb,var(--card-dark),var(--card-light) 20%);
- --control-error:#852c32;
 }
 :root:is([data-bg-color]:not([data-bg-color=marino]),[style*="--customBackground"]) #items:not([data-home=nevera-vintage]){
  --item-check-edge:var(--theme-edge);
@@ -836,100 +834,13 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
  #adminFoods .admin-category-toolbar .admin-category-all{flex-basis:42px;min-width:42px}
 }
 
-.basic-setup {
-  --setup-text: var(--control-ink,#f5f9ff);
-  --setup-muted: var(--muted,#b9cee3);
-  --setup-panel: var(--control-button,linear-gradient(140deg, #173d5d, #0b2844));
-  --setup-header: var(--control-raised,#123553);
-  --setup-row: var(--control-raised,#102e4b);
-  --setup-input: var(--control-surface,#092540);
-  --setup-border: var(--theme-edge,#6a96b8);
-  --setup-button: var(--control-button,linear-gradient(135deg, #178bda, #075eae));
-  --setup-secondary: var(--control-surface,#244a6f);
-  --setup-accent: var(--theme-accent,#9acbff);
-  --setup-focus: var(--control-focus,#93d9ff);
-  --setup-error: var(--control-error,#ffd2c7);
-  width: min(36rem, calc(100% - 24px));
-  max-width: none;
-  max-height: calc(100dvh - 24px);
-  box-sizing: border-box;
-  padding: 0;
-  border: 1px solid var(--setup-border);
-  border-radius: 20px;
-  color: var(--setup-text);
-  background: var(--setup-panel);
-  box-shadow: inset 0 1px #ffffff20, 0 16px 64px #03112099;
-}
-.basic-setup::backdrop { background: #071b30b3; }
-.basic-setup form { display: flex; flex-direction: column; max-height: calc(100dvh - 26px); }
-.basic-setup-header, .basic-setup-actions { display: flex; align-items: center; gap: .55rem; padding: .9rem 1.1rem; }
-.basic-setup-header { justify-content: space-between; background: var(--setup-header); border-bottom: 1px solid var(--setup-border); }
-.basic-setup-header h2 { margin: 0; font-size: 1.12rem; color: inherit; }
-.basic-setup-header p { margin: .25rem 0 0; color: var(--setup-muted); font-size: .85rem; }
-.basic-setup-header button { flex-shrink: 0; font-size: 1.3rem; line-height: 1; }
-.basic-setup-body { min-height: 0; overflow-y: auto; padding: 1rem 1.1rem; }
-.basic-setup-body h3 { margin: 0; color: inherit; font-size: 1.3rem; }
-.basic-setup-body h3:focus { outline: none; }
-.basic-setup-body p { margin: .65rem 0; }
-.basic-setup-body label { color: inherit; }
-.basic-setup-body input:not([type=checkbox]) {
-  width: 100%;
-  min-width: 0;
-  padding: .65rem;
-  color: var(--setup-text);
-  background: var(--setup-input);
-  border: 1px solid var(--setup-border);
-  border-radius: 10px;
-}
-.basic-setup-body input::placeholder { color: var(--setup-muted); }
-.basic-setup-body input[type=email] { display: block; margin-top: .4rem; box-sizing: border-box; }
-.basic-setup-inline { display: flex; align-items: stretch; gap: .5rem; }
-.basic-setup button { border: 1px solid var(--setup-border); border-radius: 10px; padding: .55rem .75rem; color: var(--setup-text); background: var(--setup-button); }
-.basic-setup button.secondary { color: var(--setup-text); background: var(--setup-secondary); }
-.basic-setup :is(button, input, summary):focus-visible { outline-color: var(--setup-focus); }
-.basic-setup button:disabled { opacity: .6; }
-.basic-setup-food-option, .basic-setup-list > button {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-  min-height: 42px;
-  margin: .45rem 0;
-  padding: .5rem .65rem;
-  border: 1px solid var(--setup-border);
-  border-radius: 10px;
-  background: var(--setup-row);
-}
-.basic-setup-food-option { display: block; padding: 0 .65rem; }
-#basicSetupFoodGroups > .is-inactive { opacity: .55; }
-.basic-setup-food-heading { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
-.basic-setup-food-heading:has(input:is(:checked,:indeterminate)) > label { font-weight: 650; }
-.basic-setup-food-heading label, .basic-setup-food-leaf {
- display: flex; align-items: center; gap: .55rem; min-height: 44px; cursor: pointer; overflow-wrap: anywhere;
-}
-.basic-setup-food-heading label { flex: 1; }
-.basic-setup-food-heading input, .basic-setup-food-leaf input { flex: none; margin: 0; }
-.basic-setup button.basic-setup-food-toggle {
- display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px;
- padding: 0; border: 0; background: transparent; color: inherit;
-}
-.basic-setup-food-toggle::after {
- content: ""; width: 10px; height: 10px;
- border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
- transform: translateY(-2px) rotate(45deg);
-}
-.basic-setup-food-toggle[aria-expanded="true"]::after { transform: translateY(2px) rotate(225deg); }
-.basic-setup-food-children { padding: .15rem 0 .35rem .45rem; border-top: 1px solid var(--setup-border); }
-.basic-setup-food-children .basic-setup-food-option { margin: .3rem 0; }
-.basic-setup-list > button { width: 100%; text-align: left; }
-.basic-setup-markets { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0; list-style: none; }
-.basic-setup-markets button { overflow-wrap: anywhere; text-align: left; }
-.basic-setup-actions { justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid var(--setup-border); }
-.basic-setup-actions #basicSetupBack { margin-right: auto; }
-.basic-setup-status { color: var(--setup-error); }
-.basic-setup-status:empty { display: none; }
 #weatherCity { margin-inline-end: .45em; }
-.basic-setup input[type=checkbox] { width: 1.15rem; height: 1.15rem; accent-color: var(--setup-accent); }
+.admin-inline-form { display:flex; flex-wrap:wrap; align-items:stretch; gap:8px; }
+.admin-inline-form input { flex:1 1 10rem; width:auto; }
+.reference-city-results:not(:empty) { display:grid; gap:6px; margin-block:8px; }
+.reference-city-results button { text-align:start; }
+#pendingShareForm { margin-block-start:12px; }
+#pendingShareForm label { display:block; margin-block-end:6px; }
 
 .preview-banner {
  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.65rem;

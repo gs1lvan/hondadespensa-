@@ -28,31 +28,14 @@ test('la despensa abre en la vista normal y permite entrar en Administración', 
  const open=js.slice(start,end);
  assert.match(open,/adminMode=false;\s*showApp\(true\);\s*render\(\);\s*await refresh\(\);\s*syncAdminControls\(\)/,
   'La primera vista de cada despensa debe mostrar su listado con los controles inicializados');
- assert.doesNotMatch(open,/openBasicSetup\(/,'Abrir o recargar una despensa existente no debe mostrar el formulario');
  const create=js.slice(js.indexOf("function choosePantry("),start);
- assert.match(create,/id="basicSetupEnabled"/,'El formulario debe poder elegirse en Crear despensa');
- assert.doesNotMatch(create,/loadDefaults|loadFresh/,'El alta no debe mostrar las antiguas casillas de secos y frescos');
- assert.match(create,/id="loadBasicPantry"/,'El alta debe ofrecer una despensa básica');
- assert.match(create,/const loadBasicCatalogs=setupMode==='basic';/);
- assert.match(create,/p_cargar_catalogo:loadBasicCatalogs/,'La carga básica debe incluir el catálogo seco');
+ assert.doesNotMatch(js,/openBasicSetup|pantrySetup/,'El formulario guiado se ha retirado');
+ assert.doesNotMatch(html,/id="basicSetupDialog"/);
+ assert.match(create,/id="loadBasicPantry" type="checkbox" name="loadBasicPantry" checked/);
+ assert.match(create,/const loadBasicCatalogs=form\.elements\.loadBasicPantry\.checked;/);
+ assert.match(create,/p_cargar_catalogo:loadBasicCatalogs/,'La carga básica incluye el catálogo seco');
  assert.match(create,/if\(loadBasicCatalogs\)\{\s*params\.p_frescos=Object\.entries\(freshCatalogGroups\)/,
-  'La carga básica debe incluir el catálogo fresco en la misma operación');
- assert.match(create,/type="radio" name="pantrySetup" value="guided" required checked/,
-  'El formulario guiado se selecciona por defecto');
- assert.match(create,/<div role="radiogroup" aria-label="Configuración inicial" aria-required="true" hidden>/,
-  'Las opciones de configuración se ocultan al principio');
- assert.match(create,/iconOptions\.onchange=\(\)=>\{\s*setupOptions\.hidden=!form\.elements\.pantryIcon\.value;/,
-  'Las opciones aparecen al seleccionar el tipo de despensa');
- assert.match(create,/create\.onclick=\(\)=>\{\s*form\.reset\(\);\s*setupOptions\.hidden=true;\s*dialog\.showModal\(\)/,
-  'Al abrir de nuevo el diálogo se recupera la selección inicial');
- assert.doesNotMatch(create,/basicSetupVintage|Inicio vintage/,'El alta solo ofrece los dos modos de configuración');
- assert.match(create,/type="radio" name="pantrySetup" value="basic" required/);
- assert.match(create,/if\(!option\|\|!setupMode\|\|submit.disabled\)return;/,
-  'Crear exige elegir una opción de configuración');
- assert.doesNotMatch(html,/id="basicSetupEnabled"/,'El checkbox no debe estar en Administración');
- assert.match(create,/const showSetup=setupMode==='guided';/,'La elección del diálogo decide si se abre el formulario');
- assert.match(create,/await openPantry\(pantry\);\s*if\(session===current&&activePantry===pantry&&showSetup\)openBasicSetup\(\)/,
-  'El formulario solo se abre tras crear una despensa si se ha marcado en el diálogo de creación');
+  'La carga básica incluye el catálogo fresco en la misma operación');
  assert.match(js,/\$\('adminToggle'\)\.onclick=\(\)=>\{\s*adminMode=!adminMode/,
   'Se debe poder cambiar de Administración a la despensa y viceversa');
  assert.match(js,/adminToggle\.innerHTML=adminMode\?'← Volver a despensa'/,
@@ -120,6 +103,7 @@ test('Herramientas de administrador aparece antes de Perfil', () => {
   assert.match(html,/id="adminProfilePanelContent"/);
   assert.match(html,/id="adminPantryPanelContent"/);
   assert.match(js,/\$\('adminProfilePanelContent'\)\.append\(sharingSection\)/,'Compartir despensa en Perfil');
+  assert.match(js,/id="pendingShareForm"/,'El correo pendiente se edita dentro de Compartir despensa');
   assert.match(js,/sharingSection\.hidden=!adminMode\|\|!pantry;/,'Compartir no debe depender de un ID fijo');
   assert.doesNotMatch(js,/sharingSection\.hidden=!adminMode\|\|!pantry\|\|/,'El apartado se ocultaría por un ID fijo');
   assert.match(js,/shareWithGema\.disabled=!!error;/,'El control debe bloquearse si el servidor deniega el permiso');
@@ -137,7 +121,7 @@ test('Administración distribuye inicio, Estilos y alimentos en paneles padres',
   const alternate = html.slice(headings[2], headings[3]);
   for (const id of [
     'alternateHome', 'startFridgeClosed', 'enableFridgeNotes',
-    'enableAutomaticPantryNote', 'calendarIndependent', 'calendarIntegrated'
+    'enableAutomaticPantryNote', 'calendarIndependent', 'calendarIntegrated', 'referenceCityForm'
   ]) assert.ok(alternate.includes('id="' + id + '"'), 'Opción de inicio fuera de su panel: ' + id);
   const categoryPanelPosition=html.indexOf('id="adminCategoriesPanel"');
   const categories=html.slice(categoryPanelPosition,html.indexOf('id="adminAddMount"'));
