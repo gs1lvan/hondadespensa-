@@ -896,13 +896,15 @@
   <style>
     .food-group-order:not([hidden]) { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-block:.75rem; }
     .food-group-title { position:relative; scroll-margin-top:1rem; }
-    .food-group-title .food-group-switch {
-      margin-inline-start:.4em; padding:.15em .35em .15em .55em;
-      border:0; border-inline-start:1px solid currentColor; border-radius:0;
+    .food-group-controls { display:inline-flex; align-items:center; }
+    .food-group-controls .food-group-switch {
+      padding:.15em .45em; border:0; border-radius:0; box-shadow:none;
       background:transparent; color:inherit; font:inherit; opacity:.72;
     }
-    .food-group-title .food-group-switch:is(:hover,:focus-visible) {
-      opacity:1; text-decoration:underline; outline-color:currentColor;
+    .food-group-controls .food-group-switch + .food-group-switch { border-inline-start:1px solid currentColor; }
+    .food-group-controls .food-group-switch[aria-pressed="true"],
+    .food-group-controls .food-group-switch:is(:hover,:focus-visible) {
+      opacity:1; text-decoration:underline; text-underline-offset:.2em;
     }
     .food-group-title :is(.food-group-jump, .fridge-close-door) {
       display:inline-flex; align-items:center; justify-content:center; vertical-align:middle;
@@ -1288,7 +1290,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=171"></script>
+  <script type="module" src="app.js?v=172"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

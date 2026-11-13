@@ -2030,7 +2030,7 @@ function render(){
  const groupOrder=(foodGroupOrder.value==='fresh'?['fresh','dry']:['dry','fresh'])
   .filter(group=>vintage?groups[group].childElementCount:
    !isFoodGroupVisible(group)||categories.some(category=>isFreshCategory(category)===(group==='fresh')));
- if(!vintage)groupOrder.sort((a,b)=>Number(isFoodGroupVisible(b))-Number(isFoodGroupVisible(a)));
+
  if(!vintage&&!groupOrder.length){
   const empty=document.createElement('p');empty.className='empty';
   empty.textContent='No hay alimentos con este filtro.';
@@ -2040,7 +2040,9 @@ function render(){
  main.classList.toggle('fridge-with-doors',useDoors&&groupOrder.length>0);
  const allDoorsClosed=groupOrder.every(group=>!openedFridgeDoors.has(group));
  main.classList.toggle('fridge-all-doors-closed',useDoors&&groupOrder.length>0&&allDoorsClosed);
- const displayedGroups=vintage?groupOrder:[groupOrder.find(group=>group===visibleFoodGroup)??groupOrder[0]].filter(Boolean);
+ const selectedGroup=groupOrder.find(group=>group===visibleFoodGroup)
+  ??groupOrder.find(isFoodGroupVisible)??groupOrder[0];
+ const displayedGroups=vintage?groupOrder:[selectedGroup].filter(Boolean);
  for(const [index,group] of displayedGroups.entries()){
   const title=document.createElement('h2');
   title.className='food-group-title';
@@ -2079,7 +2081,30 @@ function render(){
    };
    title.append(door);
   }
-  if(groupOrder.length===2){
+  if(!vintage&&groupOrder.length===2){
+   const controls=document.createElement('span');
+   controls.className='food-group-controls';
+   controls.setAttribute('role','group');
+   controls.setAttribute('aria-label','Tipo de alimentos');
+   for(const target of groupOrder){
+    const button=document.createElement('button');
+    const label=target==='fresh'?'frescos':'secos';
+    button.type='button';
+    button.id='show-food-group-'+target;
+    button.className='food-group-switch';
+    button.classList.toggle('inactive-food-switch',!isFoodGroupVisible(target));
+    button.textContent=label;
+    button.setAttribute('aria-pressed',String(target===group));
+    button.onclick=()=>{
+     visibleFoodGroup=target;
+     render();
+     $(button.id)?.focus({preventScroll:true});
+    };
+    controls.append(button);
+   }
+   title.replaceChildren('Alimentos ',controls);
+  }
+  if(vintage&&groupOrder.length===2){
    const target=group==='fresh'?'dry':'fresh';
    const jump=document.createElement('button');
    jump.type='button';
@@ -2093,19 +2118,6 @@ function render(){
     foodGroupOrder.onchange();
     $('food-group-'+group).querySelector('.food-group-jump').focus({preventScroll:true});
    };
-   if(!vintage){
-    const targetName=target==='fresh'?'frescos':'secos';
-    jump.className='food-group-switch';
-    jump.textContent=targetName;
-    jump.classList.toggle('inactive-food-switch',!isFoodGroupVisible(target));
-    jump.title='Consultar alimentos '+targetName;
-    jump.setAttribute('aria-label',jump.title);
-    jump.onclick=()=>{
-     visibleFoodGroup=target;
-     render();
-     $('food-group-'+target).querySelector('.food-group-switch').focus({preventScroll:true});
-    };
-   }
    title.append(jump);
   }
   if(useDoors){
