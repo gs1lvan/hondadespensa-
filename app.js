@@ -2339,9 +2339,13 @@ function choosePantry(keepBackground=false){
   submit.disabled=true;
   status.textContent='Creando despensa…';
   const showSetup=setupMode==='guided';
-  const {data:id,error}=await db.rpc('crear_despensa_personal',{
-   p_nombre:nombre,p_icono:icono,p_cargar_catalogo:setupMode==='basic'
-  });
+  const loadBasicCatalogs=setupMode==='basic';
+  const params={p_nombre:nombre,p_icono:icono,p_cargar_catalogo:loadBasicCatalogs};
+  if(loadBasicCatalogs){
+   params.p_frescos=Object.entries(freshCatalogGroups).flatMap(([categoria,names])=>
+    names.map(nombre=>({categoria,nombre,icono:suggestedCategoryIcon(categoria)})));
+  }
+  const {data:id,error}=await db.rpc('crear_despensa_personal',params);
   if(session!==current)return;
   submit.disabled=false;
   if(error){status.textContent='No se pudo crear la despensa: '+error.message;return;}
