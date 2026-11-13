@@ -22,7 +22,7 @@ test('JavaScript principal y service worker tienen sintaxis válida', () => {
 
 test('la despensa abre en la vista normal y permite entrar en Administración', () => {
  const js = read('app.js');
- const start=js.indexOf('async function openPantry(pantry){');
+ const start=js.indexOf('async function openPantry(pantry,');
  const end=js.indexOf('function updatePantrySwitchLabel()',start);
  assert.ok(start>=0&&end>start,'No se ha encontrado la apertura de despensa');
  const open=js.slice(start,end);
@@ -36,7 +36,7 @@ test('la despensa abre en la vista normal y permite entrar en Administración', 
  assert.match(create,/p_cargar_catalogo:loadBasicCatalogs/,'La carga básica incluye el catálogo seco');
  assert.match(create,/if\(loadBasicCatalogs\)\{\s*params\.p_frescos=Object\.entries\(freshCatalogGroups\)/,
   'La carga básica incluye el catálogo fresco en la misma operación');
- assert.match(js,/\$\('adminToggle'\)\.onclick=\(\)=>\{\s*adminMode=!adminMode/,
+ assert.match(js,/\$\('adminToggle'\)\.onclick=\(\)=>\{[\s\S]*?showPantryAdministration\(!adminMode\)/,
   'Se debe poder cambiar de Administración a la despensa y viceversa');
  assert.match(js,/adminToggle\.innerHTML=adminMode\?'← Volver a despensa'/,
   'El botón para regresar debe permanecer visible en Administración');

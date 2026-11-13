@@ -2296,8 +2296,50 @@ function pantryReloadSelection(pantryId){
  }
  return null;
 }
-function choosePantry(keepBackground=false){
- if(activePantry&&(savingViewStyle||savingIconFamily||$('alternateHome').disabled))return;
+function writePantryHistory(screen,pantryId=null,replace=false){
+ const userId=session?.user?.id??null;
+ const previous=history.state?.hondaDespensa;
+ if(!replace&&previous?.userId===userId&&previous.screen===screen&&previous.pantryId===pantryId)return;
+ const parent=replace?previous?.parent:previous?.screen;
+ const state={userId,screen,pantryId,parent};
+ history[replace?'replaceState':'pushState']({...history.state,hondaDespensa:state},'');
+}
+
+window.addEventListener('popstate',event=>{
+ const route=event.state?.hondaDespensa;
+ const dialog=[...document.querySelectorAll('dialog[open]')].at(-1);
+ if(dialog){
+  const cancel=new Event('cancel',{cancelable:true});
+  if(dialog.dispatchEvent(cancel))dialog.close();
+  const screen=activePantry?(adminMode?'admin':'pantry'):session?'chooser':'login';
+  writePantryHistory(screen,activePantry?.id??null);
+  return;
+ }
+ if(!session){
+  if(route?.screen!=='login')writePantryHistory('login');
+  return;
+ }
+ const pantry=route?.userId===session.user.id&&availablePantries.find(item=>item.id===route.pantryId);
+ if(!pantry){
+  choosePantry(true,false);
+  if(route?.screen!=='chooser'||route.userId!==session.user.id)writePantryHistory('chooser');
+  return;
+ }
+ if(activePantry===pantry){
+  if(adminMode!==(route.screen==='admin'))showPantryAdministration(route.screen==='admin');
+ }else{
+  const account=session;
+  openPantry(pantry,false).then(()=>{
+   if(route.screen==='admin'&&session===account&&activePantry===pantry&&history.state?.hondaDespensa?.screen==='admin'&&history.state.hondaDespensa.pantryId===pantry.id){
+    showPantryAdministration(true);
+   }
+  });
+ }
+});
+
+function choosePantry(keepBackground=false,recordHistory=true){
+ if(recordHistory&&activePantry&&(savingViewStyle||savingIconFamily||$('alternateHome').disabled))return;
+ if(recordHistory)writePantryHistory('chooser');
  if(!activePantry&&keepBackground!==true){
   const preferences=session?.user?.user_metadata;
   const savedBackground=preferences?.chooser_background??preferences?.app_background
@@ -2439,7 +2481,8 @@ function choosePantry(keepBackground=false){
  pantryChooser.append(create,dialog);
  heading.focus();
 }
-async function openPantry(pantry){
+async function openPantry(pantry,recordHistory=true){
+ if(recordHistory)writePantryHistory('pantry',pantry.id);
  activePantry=pantry;
  openedFridgeDoors.clear();
  visibleFoodGroup=undefined;
@@ -2682,7 +2725,9 @@ async function signedIn(currentSession,restorePantry=false){
  $('loginForm').hidden=!!currentSession;
  if(channel){await db.removeChannel(channel);channel=null;}
  if(catalogChannel){await db.removeChannel(catalogChannel);catalogChannel=null;}
- if(!currentSession){setStatus('Inicia sesión con tu cuenta de HondaDespensa.');$('auth').hidden=false;$('status').hidden=false;$('loginForm').hidden=false;return;}
+ if(!currentSession){
+  writePantryHistory('login',null,true);
+  setStatus('Inicia sesión con tu cuenta de HondaDespensa.');$('auth').hidden=false;$('status').hidden=false;$('loginForm').hidden=false;return;}
  const u=currentSession.user||{};
  $('accountName').textContent=u.user_metadata?.display_name||u.user_metadata?.full_name||u.email?.split('@')[0]||'Usuario';
  setStatus('Cargando despensas…');
@@ -2700,8 +2745,20 @@ async function signedIn(currentSession,restorePantry=false){
  restoreHomeCardRemoval();
  const selectedId=restorePantry?pantryReloadSelection():null;
  const selected=pantries.find(pantry=>pantry.id===selectedId);
- if(selected||pantries.length===1)await openPantry(selected??pantries[0]);
- else choosePantry(Boolean(lastBackground));
+ const initialPantry=selected??(pantries.length===1?pantries[0]:null);
+ const route=history.state?.hondaDespensa;
+ if(route?.userId!==u.id||route.screen==='root'||route.screen==='login'){
+  writePantryHistory('root',null,true);
+  writePantryHistory('chooser');
+  if(initialPantry)await openPantry(initialPantry);
+  else choosePantry(Boolean(lastBackground),false);
+ }else if(initialPantry){
+  writePantryHistory('pantry',initialPantry.id,true);
+  await openPantry(initialPantry,false);
+ }else{
+  writePantryHistory('chooser',null,true);
+  choosePantry(Boolean(lastBackground),false);
+ }
  await loadCatalog();
  if(session!==currentSession)return;
  channel=db.channel('alimentos-honda-v21').on('postgres_changes',{event:'*',schema:'public',table:'alimentos'},()=>refresh()).subscribe();
@@ -2743,11 +2800,20 @@ function syncAdminControls(){
  refreshPantryProtection();
 }
 $('adminToggle').onclick=()=>{
- adminMode=!adminMode;recentAdminFoods.clear();showApp(true);
+ if(!activePantry)return;
+ if(adminMode&&history.state?.hondaDespensa?.parent==='pantry'){
+  history.back();
+  return;
+ }
+ writePantryHistory(adminMode?'pantry':'admin',activePantry.id);
+ showPantryAdministration(!adminMode);
+};
+function showPantryAdministration(enabled){
+ adminMode=enabled;recentAdminFoods.clear();showApp(true);
  if(adminMode)renderAdmin();else render();
  syncAdminControls();
  window.scrollTo({top:0,behavior:'smooth'});
-};
+}
 
 $('upload').onclick=async()=>{
  if(busy||pantrySystemKey(activePantry)!=='playa')return;
