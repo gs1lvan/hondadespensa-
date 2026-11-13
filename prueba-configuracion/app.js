@@ -306,8 +306,18 @@ function applyBackground(value){
  const preference=backgroundPreference(value);
  const {color,texture}=preference;
  applyCustomColors(document.documentElement,preference);
- document.documentElement.dataset.bgColor=color;
- document.documentElement.dataset.bgTexture=texture;
+ const root=document.documentElement;
+ root.dataset.bgColor=color;
+ root.dataset.bgTexture=texture;
+ const custom=preference.customBackground;
+ if(custom){
+  const channels=custom.slice(1).match(/../g).map(hex=>{
+   const value=parseInt(hex,16)/255;
+   return value<=.04045?value/12.92:((value+.055)/1.055)**2.4;
+  });
+  const luminance=.2126*channels[0]+.7152*channels[1]+.0722*channels[2];
+  root.dataset.customTone=luminance>.24?'light':'dark';
+ }else delete root.dataset.customTone;
  const themeColor=document.querySelector('meta[name="theme-color"]');
  themeColor.content=preference.customBackground
   ?? (getComputedStyle(document.documentElement).getPropertyValue('--app-bg-color').trim() || '#071c32');
@@ -2161,26 +2171,25 @@ pantryStyle.textContent=`
 #adminPanel[data-admin-icon-family=estencil-sin-envases] .admin-category .fresh-category-sprite { background-image:var(--fresh-bare); filter:var(--stencil-ink,none) }
 #adminPanel[data-admin-icon-family=ilustrados] .admin-category .fresh-category-sprite { background-image:var(--fresh-illustrated); filter:none }
 #adminPanel > #adminToggle { display:flex; margin:0 0 10px; min-height:44px; padding:5px 0; font-size:15px; color:inherit }
-body:has(.pantry-chooser:not([hidden])) { background:#071c32 url('../textura-azul.svg'); }
-.pantry-chooser { color:#fff1ce; font-family:Georgia,serif; padding-bottom:18px }
+.pantry-chooser { color:var(--control-ink,#fff1ce); font-family:Georgia,serif; padding-bottom:18px }
 .pantry-chooser h2 { text-align:center; font-size:clamp(24px,6vw,36px); outline:none }
 .pantry-chooser .pantry-create { display:block; width:auto; margin:18px auto 0 }
-.pantry-create-dialog { width:min(440px, calc(100% - 28px)); max-height:calc(100dvh - 32px); overflow:auto; padding:18px; border:1px solid #76a4c1; border-radius:18px; background:#0b2940 url('../textura-azul.svg'); color:#fff1ce }
+.pantry-create-dialog { width:min(440px, calc(100% - 28px)); max-height:calc(100dvh - 32px); overflow:auto; padding:18px; border:1px solid var(--theme-edge,#76a4c1); border-radius:18px; background:var(--control-surface,#0b2940); color:var(--control-ink,#fff1ce) }
 .pantry-create-dialog::backdrop { background:#03101cba }
 .pantry-create-setup { margin-top:12px }
 .pantry-create-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px }
 .pantry-chooser .pantry-create-actions button { display:block; width:auto; margin:0 }
-.pantry-icon-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; border:1px solid #76a4c1; border-radius:12px; padding:8px }
+.pantry-icon-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; border:1px solid var(--theme-edge,#76a4c1); border-radius:12px; padding:8px }
 .pantry-icon-options label { display:grid; justify-items:center; align-content:center; gap:4px; min-height:96px; text-align:center; border:1px solid transparent; border-radius:8px; padding:4px; cursor:pointer }
 .pantry-icon-options label:has(:disabled) { opacity:.55; cursor:default }
-.pantry-icon-options label:has(:checked) { border-color:#ffdda2; background:#133950 }
+.pantry-icon-options label:has(:checked) { border-color:var(--theme-edge,#ffdda2); background:var(--control-raised,#133950) }
 .pantry-icon-options input { width:16px; height:16px; min-height:0; margin:0 }
 .pantry-icon-options img { width:74px; height:64px; object-fit:contain }
-.pantry-chooser button { display:grid; grid-template-columns:minmax(84px,34%) 1fr auto; gap:12px; align-items:center; width:100%; margin-bottom:14px; padding:9px 13px; background:#0b2940; color:#fff1ce; border:1px solid #76a4c1; border-radius:18px; text-align:left }
+.pantry-chooser button { display:grid; grid-template-columns:minmax(84px,34%) 1fr auto; gap:12px; align-items:center; width:100%; margin-bottom:14px; padding:9px 13px; background:var(--control-surface,#0b2940); color:var(--control-ink,#fff1ce); border:1px solid var(--theme-edge,#76a4c1); border-radius:18px; text-align:left }
 .pantry-chooser img { display:block; width:100%; border-radius:8px }
 .pantry-chooser strong { font:700 clamp(18px,5vw,28px) Georgia,serif; overflow-wrap:anywhere }
-.pantry-chooser small { display:block; color:#c4d9e6; margin-top:4px }
-.pantry-switch { display:block; margin:0 auto 14px; padding:7px 12px; background:#0b2940; font-size:13px }
+.pantry-chooser small { display:block; color:var(--textColor,var(--muted,#c4d9e6)); margin-top:4px }
+.pantry-switch { display:block; margin:0 auto 14px; padding:7px 12px; background:var(--control-surface,#0b2940); font-size:13px }
 #items[data-home=nevera-vintage] #toolbar .pantry-switch:is(:hover,:focus-visible) { text-decoration:underline }
 .pantry-switch[hidden], .pantry-chooser[hidden], .beach-polaroid-caption[hidden] { display:none }
 .hero .beach-polaroid-caption { z-index:0; }
