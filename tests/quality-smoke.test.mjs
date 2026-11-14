@@ -32,10 +32,10 @@ test('la despensa abre en la vista normal y permite entrar en Administración', 
  assert.doesNotMatch(js,/openBasicSetup|pantrySetup/,'El formulario guiado se ha retirado');
  assert.doesNotMatch(html,/id="basicSetupDialog"/);
  assert.match(create,/id="loadBasicPantry" type="checkbox" name="loadBasicPantry" checked/);
- assert.match(create,/const loadBasicCatalogs=form\.elements\.loadBasicPantry\.checked;/);
- assert.match(create,/p_cargar_catalogo:loadBasicCatalogs/,'La carga básica incluye el catálogo seco');
- assert.match(create,/if\(loadBasicCatalogs\)\{\s*params\.p_frescos=Object\.entries\(freshCatalogGroups\)/,
-  'La carga básica incluye el catálogo fresco en la misma operación');
+ assert.match(create,/basicPantry\.onchange=\(\)=>\{\s*basicPantry\.checked=true;/);
+ assert.match(create,/Las despensas tienen que estar con alimentos/);
+ assert.match(create,/p_cargar_catalogo:true,\s*p_frescos:Object\.entries\(freshCatalogGroups\)/,
+  'El alta siempre carga los catálogos de secos y frescos');
  assert.match(js,/\$\('adminToggle'\)\.onclick=\(\)=>\{[\s\S]*?showPantryAdministration\(!adminMode\)/,
   'Se debe poder cambiar de Administración a la despensa y viceversa');
  assert.match(js,/adminToggle\.innerHTML=adminMode\?'← Volver a despensa'/,

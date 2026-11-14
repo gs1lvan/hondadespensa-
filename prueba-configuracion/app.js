@@ -2205,7 +2205,9 @@ pantryStyle.textContent=`
 .pantry-chooser .pantry-create { display:block; width:auto; margin:18px auto 0 }
 .pantry-create-dialog { width:min(440px, calc(100% - 28px)); max-height:calc(100dvh - 32px); overflow:auto; padding:18px; border:1px solid var(--theme-edge,#76a4c1); border-radius:18px; background:var(--control-surface,#0b2940); color:var(--control-ink,#fff1ce) }
 .pantry-create-dialog::backdrop { background:#03101cba }
-.pantry-create-setup { margin-top:12px }
+.pantry-create-setup { margin-top:12px; position:relative }
+.pantry-create-notice { position:absolute; z-index:1; inset:auto 0 calc(100% + 6px); margin:0; padding:10px 12px; border:1px solid var(--theme-edge,#76a4c1); border-radius:10px; background:var(--control-surface,#0b2940); color:var(--control-ink,#fff1ce); box-shadow:0 4px 14px #0006; pointer-events:none }
+.pantry-create-announcement { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap }
 .pantry-create-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px }
 .pantry-chooser .pantry-create-actions button { display:block; width:auto; margin:0 }
 .pantry-icon-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; border:1px solid var(--theme-edge,#76a4c1); border-radius:12px; padding:8px }
@@ -2404,7 +2406,9 @@ function choosePantry(keepBackground=false,recordHistory=true){
   <p id="pantry-type-error" class="hint" role="alert" hidden></p>
   <label class="alternate-home-setting pantry-create-setup">
    <input id="loadBasicPantry" type="checkbox" name="loadBasicPantry" checked> Cargar despensa básica
+   <span class="pantry-create-notice" aria-hidden="true" hidden>Las despensas tienen que estar con alimentos</span>
   </label>
+  <span class="pantry-create-announcement" role="alert"></span>
   <div class="pantry-create-actions">
    <button type="button" data-cancel>Cancelar</button>
    <button type="submit">Crear</button>
@@ -2437,9 +2441,27 @@ function choosePantry(keepBackground=false,recordHistory=true){
  const submit=form.querySelector('[type="submit"]');
  const cancel=form.querySelector('[data-cancel]');
  const status=form.querySelector('[role="status"]');
+ const basicPantry=form.elements.loadBasicPantry;
+ const notice=form.querySelector('.pantry-create-notice');
+ const announcement=form.querySelector('.pantry-create-announcement');
+ let noticeTimer;
+ function hideBasicPantryNotice(){
+  clearTimeout(noticeTimer);
+  notice.hidden=true;
+  announcement.textContent='';
+ }
+ basicPantry.onchange=()=>{
+  basicPantry.checked=true;
+  hideBasicPantryNotice();
+  notice.hidden=false;
+  announcement.textContent=notice.textContent;
+  noticeTimer=setTimeout(hideBasicPantryNotice,4000);
+ };
+ dialog.addEventListener('close',hideBasicPantryNotice);
  dialog.append(form);
  create.onclick=()=>{
   form.reset();
+  hideBasicPantryNotice();
   clearTypeError();
   status.textContent='';
   dialog.showModal();
@@ -2461,12 +2483,11 @@ function choosePantry(keepBackground=false,recordHistory=true){
   const current=session;
   submit.disabled=true;
   status.textContent='Creando despensa…';
-  const loadBasicCatalogs=form.elements.loadBasicPantry.checked;
-  const params={p_nombre:nombre,p_icono:icono,p_cargar_catalogo:loadBasicCatalogs};
-  if(loadBasicCatalogs){
-   params.p_frescos=Object.entries(freshCatalogGroups).flatMap(([categoria,names])=>
-    names.map(nombre=>({categoria,nombre,icono:suggestedCategoryIcon(categoria)})));
-  }
+  const params={
+   p_nombre:nombre,p_icono:icono,p_cargar_catalogo:true,
+   p_frescos:Object.entries(freshCatalogGroups).flatMap(([categoria,names])=>
+    names.map(nombre=>({categoria,nombre,icono:suggestedCategoryIcon(categoria)})))
+  };
   const {data:id,error}=await db.rpc('crear_despensa_personal',params);
   if(session!==current)return;
   submit.disabled=false;
