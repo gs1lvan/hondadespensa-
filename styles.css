@@ -844,7 +844,9 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 #adminDefaultCategoriesPanel .catalog-food-row{
  min-height:44px;padding:0;background:none;container-type:inline-size;
 }
-#adminDefaultCategoriesPanel .catalog-food-row .item-toggle{padding:4px 0;gap:7px}
+#adminDefaultCategoriesPanel .catalog-food-row .item-toggle{
+ padding-block:4px;padding-inline-start:6px;gap:7px;
+}
 #adminDefaultCategoriesPanel .catalog-food-row .item-toggle>span{
  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
  font-size:clamp(12px,6.25cqi,16px);line-height:1.2;
