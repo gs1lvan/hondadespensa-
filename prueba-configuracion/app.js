@@ -2205,16 +2205,13 @@ pantryStyle.textContent=`
 .pantry-chooser .pantry-create { display:block; width:auto; margin:18px auto 0 }
 .pantry-create-dialog { width:min(440px, calc(100% - 28px)); max-height:calc(100dvh - 32px); overflow:auto; padding:18px; border:1px solid var(--theme-edge,#76a4c1); border-radius:18px; background:var(--control-surface,#0b2940); color:var(--control-ink,#fff1ce) }
 .pantry-create-dialog::backdrop { background:#03101cba }
-.pantry-create-setup { margin-top:12px; position:relative }
-.pantry-create-notice { position:absolute; z-index:1; inset:auto 0 calc(100% + 6px); margin:0; padding:10px 12px; border:1px solid var(--theme-edge,#76a4c1); border-radius:10px; background:var(--control-surface,#0b2940); color:var(--control-ink,#fff1ce); box-shadow:0 4px 14px #0006; pointer-events:none }
-.pantry-create-announcement { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap }
-.pantry-create-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px }
-.pantry-chooser .pantry-create-actions button { display:block; width:auto; margin:0 }
+.pantry-create-dialog .pantry-create-close { position:absolute; inset-block-start:6px; inset-inline-end:6px; display:grid; place-items:center; width:44px; height:44px; margin:0; padding:0; background:none; border:0; box-shadow:none; font:24px/1 system-ui }
+.pantry-create-dialog [role=status] { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap }
+.pantry-create-progress { display:grid; gap:8px; margin-block-start:14px }
+.pantry-create-progress progress { width:100%; accent-color:var(--theme-accent,#76a4c1) }
 .pantry-icon-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; border:1px solid var(--theme-edge,#76a4c1); border-radius:12px; padding:8px }
-.pantry-icon-options label { display:grid; justify-items:center; align-content:center; gap:4px; min-height:96px; text-align:center; border:1px solid transparent; border-radius:8px; padding:4px; cursor:pointer }
-.pantry-icon-options label:has(:disabled) { opacity:.55; cursor:default }
-.pantry-icon-options label:has(:checked) { border-color:var(--theme-edge,#ffdda2); background:var(--control-raised,#133950) }
-.pantry-icon-options input { width:16px; height:16px; min-height:0; margin:0 }
+.pantry-chooser .pantry-icon-options button { display:grid; grid-template-columns:minmax(0,1fr); justify-items:center; align-content:center; gap:4px; min-height:96px; margin:0; text-align:center; border:1px solid transparent; border-radius:8px; padding:4px }
+.pantry-icon-options button[data-creating] { border-color:var(--theme-edge,#ffdda2); background:var(--control-raised,#133950) }
 .pantry-icon-options img { width:74px; height:64px; object-fit:contain }
 .pantry-chooser button { display:grid; grid-template-columns:minmax(84px,34%) 1fr auto; gap:12px; align-items:center; width:100%; margin-bottom:14px; padding:9px 13px; background:var(--control-surface,#0b2940); color:var(--control-ink,#fff1ce); border:1px solid var(--theme-edge,#76a4c1); border-radius:18px; text-align:left }
 .pantry-chooser img { display:block; width:100%; border-radius:8px }
@@ -2392,111 +2389,86 @@ function choosePantry(keepBackground=false,recordHistory=true){
  create.type='button';
  create.className='pantry-create';
  create.textContent='+ Crear despensa';
- const form=document.createElement('form');
- form.className='pantry-create-form';
- form.noValidate=true;
  const dialog=document.createElement('dialog');
  dialog.className='pantry-create-dialog';
  dialog.setAttribute('aria-labelledby','pantry-create-title');
- form.innerHTML=`
+ dialog.innerHTML=`
   <h2 id="pantry-create-title">Crear despensa</h2>
-  <fieldset class="pantry-icon-options" tabindex="-1" aria-describedby="pantry-type-error">
-   <legend>Tipo de despensa</legend>
-  </fieldset>
-  <p id="pantry-type-error" class="hint" role="alert" hidden></p>
-  <label class="alternate-home-setting pantry-create-setup">
-   <input id="loadBasicPantry" type="checkbox" name="loadBasicPantry" checked> Cargar despensa básica
-   <span class="pantry-create-notice" aria-hidden="true" hidden>Las despensas tienen que estar con alimentos</span>
-  </label>
-  <span class="pantry-create-announcement" role="alert"></span>
-  <div class="pantry-create-actions">
-   <button type="button" data-cancel>Cancelar</button>
-   <button type="submit">Crear</button>
+  <button class="pantry-create-close" type="button" aria-label="Cancelar">×</button>
+  <fieldset class="pantry-icon-options"><legend>Tipo de despensa</legend></fieldset>
+  <div class="pantry-create-progress" hidden>
+   <label for="pantry-loading-bar">Cargando alimentos en despensa</label>
+   <progress id="pantry-loading-bar"></progress>
   </div>
-  <p class="hint" role="status"></p>`;
- const iconOptions=form.querySelector('fieldset');
- const typeError=form.querySelector('#pantry-type-error');
- function clearTypeError(){
-  typeError.hidden=true;
-  typeError.textContent='';
- }
- iconOptions.onchange=clearTypeError;
+  <p class="hint" role="status"></p>
+  <p class="hint" role="alert" hidden></p>`;
+ const iconOptions=dialog.querySelector('fieldset');
+ const cancel=dialog.querySelector('.pantry-create-close');
+ const loading=dialog.querySelector('.pantry-create-progress');
+ const status=dialog.querySelector('[role="status"]');
+ const feedback=dialog.querySelector('[role="alert"]');
+ let creating=false;
  for(const [key,title,src] of pantryIcons){
-  const label=document.createElement('label');
-  const radio=document.createElement('input');
-  radio.type='radio';
-  radio.name='pantryIcon';
-  radio.value=key;
-  radio.required=true;
-  radio.disabled=key==='casa'||availablePantries.some(pantry=>
+  const button=document.createElement('button');
+  button.type='button';
+  button.disabled=key==='casa'||availablePantries.some(pantry=>
    (key==='playa'&&pantrySystemKey(pantry)==='playa')||
    folded(pantry.nombre)===folded(title)
   );
   const image=document.createElement('img');
   image.src=src;
   image.alt='';
-  label.append(radio,image,title);
-  iconOptions.append(label);
+  button.append(image,title);
+  button.onclick=()=>createPantry(key,title,button);
+  iconOptions.append(button);
  }
- const submit=form.querySelector('[type="submit"]');
- const cancel=form.querySelector('[data-cancel]');
- const status=form.querySelector('[role="status"]');
- const basicPantry=form.elements.loadBasicPantry;
- const notice=form.querySelector('.pantry-create-notice');
- const announcement=form.querySelector('.pantry-create-announcement');
- let noticeTimer;
- function hideBasicPantryNotice(){
-  clearTimeout(noticeTimer);
-  notice.hidden=true;
-  announcement.textContent='';
- }
- basicPantry.onchange=()=>{
-  basicPantry.checked=true;
-  hideBasicPantryNotice();
-  notice.hidden=false;
-  announcement.textContent=notice.textContent;
-  noticeTimer=setTimeout(hideBasicPantryNotice,4000);
- };
- dialog.addEventListener('close',hideBasicPantryNotice);
- dialog.append(form);
  create.onclick=()=>{
-  form.reset();
-  hideBasicPantryNotice();
-  clearTypeError();
-  status.textContent='';
+  feedback.hidden=true;
+  feedback.textContent='';
   dialog.showModal();
  };
- cancel.onclick=()=>{if(!submit.disabled)dialog.close();};
- dialog.addEventListener('cancel',event=>{if(submit.disabled)event.preventDefault();});
- form.onsubmit=async event=>{
-  event.preventDefault();
-  const icono=form.elements.pantryIcon.value;
-  const option=pantryIcons.find(([key])=>key===icono);
-  if(submit.disabled)return;
-  if(!option){
-   typeError.hidden=false;
-   typeError.textContent='Selecciona un tipo de despensa.';
-   iconOptions.focus();
-   return;
-  }
-  const nombre=option[1];
+ cancel.onclick=()=>{if(!creating)dialog.close();};
+ dialog.addEventListener('cancel',event=>{if(creating)event.preventDefault();});
+ async function createPantry(icono,nombre,button){
   const current=session;
-  submit.disabled=true;
-  status.textContent='Creando despensa…';
+  if(creating||!current||!dialog.open)return;
+  creating=true;
+  button.dataset.creating='';
+  iconOptions.disabled=cancel.disabled=true;
+  feedback.hidden=true;
+  feedback.textContent='';
+  loading.hidden=false;
+  status.textContent=loading.querySelector('label').textContent;
   const params={
    p_nombre:nombre,p_icono:icono,p_cargar_catalogo:true,
    p_frescos:Object.entries(freshCatalogGroups).flatMap(([categoria,names])=>
     names.map(nombre=>({categoria,nombre,icono:suggestedCategoryIcon(categoria)})))
   };
-  const {data:id,error}=await db.rpc('crear_despensa_personal',params);
+  let id;
+  try{
+   const {data,error}=await db.rpc('crear_despensa_personal',params);
+   if(error)throw error;
+   id=data;
+  }catch{
+   if(session===current){
+    feedback.hidden=false;
+    feedback.textContent='No se pudo crear la despensa. Inténtalo de nuevo.';
+   }
+   return;
+  }finally{
+   creating=false;
+   iconOptions.disabled=cancel.disabled=false;
+   delete button.dataset.creating;
+   loading.hidden=true;
+   status.textContent='';
+   if(!feedback.hidden&&dialog.open)button.focus();
+  }
   if(session!==current)return;
-  submit.disabled=false;
-  if(error){status.textContent='No se pudo crear la despensa. Inténtalo de nuevo.';return;}
   const pantry={id,nombre,icono};
   availablePantries.push(pantry);
   dialog.close();
   await openPantry(pantry);
- };
+ }
  pantryChooser.append(create,dialog);
  heading.focus();
 }
