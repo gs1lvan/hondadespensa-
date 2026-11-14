@@ -982,6 +982,7 @@
               <input id="personalCatalogName" maxlength="100" placeholder="Ej. Despensa española" required>
               <button type="submit">Guardar catálogo de esta despensa</button>
             </form>
+            <p class="hint">Los alimentos marcados se incluirán. Podrás recuperar los demás al editar el catálogo.</p>
             <button id="exportPersonalCatalog" class="secondary" type="button">Exportar catálogo personal</button>
             <p id="personalCatalogExportStatus" class="admin-msg" role="status" hidden></p>
             <p id="savedCatalogStatus" class="hint" role="status"></p>
@@ -1261,7 +1262,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=185"></script>
+  <script type="module" src="app.js?v=186"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

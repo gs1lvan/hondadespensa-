@@ -2847,28 +2847,33 @@ async function readPantryCatalogRows(readPage){
   rows.push(...page);
  }
 }
-async function readPersonalCatalog(pantry){
+async function readPersonalCatalog(pantry,{useAvailability=false}={}){
  const [categories,foods]=await Promise.all([
   readPantryCatalogRows(offset=>readPantryCategoriesPage(pantry.id,offset)),
-  readPantryCatalogRows(offset=>db.from('alimentos').select('id,nombre,categoria,categoria_id')
+  readPantryCatalogRows(offset=>db.from('alimentos').select('id,nombre,categoria,categoria_id,disponible')
    .eq('despensa_id',pantry.id).order('id').range(offset,offset+499))
  ]);
- return buildPersonalCatalog(categories,foods);
+ return buildPersonalCatalog(categories,foods,useAvailability);
 }
-function buildPersonalCatalog(categories,foods){
+function buildPersonalCatalog(categories,foods,useAvailability=false){
  const categoryIndex=new Map(categories.map(category=>[category.nombre,category]));
  const namesById=new Map(categories.map(category=>[category.id,category.nombre]));
  const foodsByCategory=new Map(categories.map(category=>[category.nombre,[]]));
  for(const food of foods){
   const name=namesById.get(food.categoria_id)??food.categoria;
   if(!foodsByCategory.has(name))foodsByCategory.set(name,[]);
-  foodsByCategory.get(name).push(food.nombre);
+  foodsByCategory.get(name).push(food);
  }
  const catalog={version:1,secos:[],frescos:[]};
  for(const category of orderedCategories(foodsByCategory.keys(),categoryIndex)){
   const group=isFreshCategory(category,categoryIndex)?catalog.frescos:catalog.secos;
+  const alimentos=[],excluidos=[];
+  for(const food of foodsByCategory.get(category).sort((a,b)=>esCompare(a.nombre,b.nombre))){
+   const list=useAvailability&&!food.disponible?excluidos:alimentos;
+   list.push(food.nombre);
+  }
   group.push({nombre:bareCategory(category),icono:categoryIndex.get(category)?.icono??suggestedCategoryIcon(category),
-   alimentos:foodsByCategory.get(category).sort(esCompare)});
+   alimentos,...(excluidos.length?{excluidos}:{})});
  }
  return catalog;
 }
@@ -2993,7 +2998,10 @@ savePantryCatalog.onsubmit=async event=>{
  button.disabled=true;
  try{
   if(await mutateSavedCatalog(async()=>{
-   const contenido=await readPersonalCatalog(pantry);
+   if(pendingCategoryAvailability?.pantryId===pantry.id||
+    [...pendingFoodAvailability.values()].some(change=>change.pantry===pantry))
+    throw new Error('Espera a que se guarden las casillas y vuelve a guardar el catálogo.');
+   const contenido=await readPersonalCatalog(pantry,{useAvailability:true});
    if(activePantry!==pantry||session!==account)throw new Error('Vuelve a abrir la despensa que quieres guardar.');
    const {error}=await db.from('catalogos_personales').insert({nombre,contenido});
    if(error)throw error;
