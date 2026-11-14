@@ -45,7 +45,10 @@ button:disabled{opacity:.5;cursor:wait}button.secondary{background:var(--control
 .item-toggle{display:flex;align-items:center;gap:13px;flex:1;min-width:0;padding:13px 0 13px 18px;cursor:pointer}
 .item-toggle:has(input:disabled){cursor:default}
 .item input[type=checkbox]{accent-color:#2fa8fb;width:21px;height:21px;flex:none;cursor:pointer}
-.item span{flex:1;overflow-wrap:anywhere}.item.done span{text-decoration:none;color:#a3b9ca}
+.item span{flex:1;overflow-wrap:anywhere}
+.item:not(.done,.inactive-category-item) .item-toggle > span{color:var(--food-missing-ink,#a3b9ca)}
+:root:is([style*="--textColor"],[data-bg-color$="-claro"]:not([data-custom-tone=dark]),[data-custom-tone=light]),
+#items[data-home=nevera-vintage]{--food-missing-ink:color-mix(in srgb,currentColor 70%,transparent)}
 .auth,.admin-panel{border:1px solid #527ba1;background:linear-gradient(140deg,#173d5d,#0b2844);border-radius:22px;padding:20px;margin:18px 0;box-shadow:0 6px 15px #0004}
 .auth p,.hint,.notice{color:var(--textColor,var(--muted));font-size:14px}
 .add{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}.add input,.add select{flex:1 1 175px}.add button{flex:none}
@@ -239,7 +242,7 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
  --card-inner:var(--customBackground);
  --card-edge:color-mix(in srgb,var(--customBackground),white 42%);
 }
-:root[style*="--textColor"] :is(.wrap,.wrap button,.wrap input,.wrap select,.wrap h1,.wrap small,.wrap .hint,.wrap .item.done span,.wrap .cat-count,.wrap .admin-link,.wrap dialog,.wrap label){color:var(--textColor)}
+:root[style*="--textColor"] :is(.wrap,.wrap button,.wrap input,.wrap select,.wrap h1,.wrap small,.wrap .hint,.wrap .cat-count,.wrap .admin-link,.wrap dialog,.wrap label){color:var(--textColor)}
 :root[style*="--textColor"] .wrap input::placeholder{color:var(--textColor);opacity:.8}
 :root[style*="--borderColor"] .wrap :is(.category,.item,.admin-panel,button,input,select,fieldset,dialog){border-color:var(--borderColor)}
 
@@ -317,7 +320,7 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
 [data-bg-color=ciruela-claro]{--app-bg-color:#f0e6f1;--card-light:#fff8ff;--card-dark:#e9d9ed;--card-inner:#f7eff8;--card-edge:#896b91}
 :is([data-bg-color$="-claro"]:not([data-custom-tone=dark]),[data-custom-tone=light]){--ink:#18232c;--muted:#344754;color-scheme:light}
 [data-custom-tone=dark]{--ink:#f5f9ff;--muted:#b9cee3;color-scheme:dark}
-:root:is([data-bg-color$="-claro"]:not([data-custom-tone=dark]),[data-custom-tone=light]) :is(.admin-link,.cat-count,.item.done span,.hint,.style-state,.style-description,.admin-account small,.text-action,input:not([type=color]),select,button:not(.danger)){color:var(--textColor,var(--ink))}
+:root:is([data-bg-color$="-claro"]:not([data-custom-tone=dark]),[data-custom-tone=light]) :is(.admin-link,.cat-count,.hint,.style-state,.style-description,.admin-account small,.text-action,input:not([type=color]),select,button:not(.danger)){color:var(--textColor,var(--ink))}
 :root:is([data-bg-color$="-claro"]:not([data-custom-tone=dark]),[data-custom-tone=light]) input::placeholder{color:var(--textColor,var(--muted));opacity:1}
 :root:is([data-bg-color$="-claro"]:not([data-custom-tone=dark]),[data-custom-tone=light]) .hero h1 img{filter:brightness(.42) saturate(.8)}
 :root:is([data-bg-color$="-claro"]:not([data-custom-tone=dark]),[data-custom-tone=light]) :is(.toolbar #search,.admin-panel input,.admin-panel select){box-shadow:none}
@@ -363,7 +366,7 @@ body,.background-preview{background-color:var(--customBackground,var(--app-bg-co
  border-radius:0;background:none;box-shadow:0 6px 7px -5px #284b46;
 }
 #items[data-home=nevera-vintage] .category:last-child{margin-bottom:0}
-#items[data-home=nevera-vintage] :is(.cat-name,.cat-count,.item,.item.done span,.empty){color:#243d3c}
+#items[data-home=nevera-vintage] :is(.cat-name,.cat-count,.item,.item-toggle,.empty){color:#243d3c}
 #items[data-home=nevera-vintage] .chevron{border-color:#345d54}
 #items[data-home=nevera-vintage] .item{background:#fff9;border-color:#93ada5}
 
