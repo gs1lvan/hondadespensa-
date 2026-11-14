@@ -1073,6 +1073,11 @@
           </section>
         </div>
       </details>
+      <section class="admin-section">
+        <button id="exportPersonalCatalog" class="secondary" type="button">Exportar catálogo personal</button>
+        <p class="hint">Descarga las categorías y los alimentos secos y frescos de esta despensa.</p>
+        <p id="personalCatalogExportStatus" class="admin-msg" role="status" hidden></p>
+      </section>
       <details class="admin-section admin-add-collapsible">
         <summary>➕ Añadir alimento</summary>
         <div id="adminAddMount"></div>
@@ -1221,7 +1226,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=181"></script>
+  <script type="module" src="app.js?v=182"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');
