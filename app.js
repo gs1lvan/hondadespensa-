@@ -2207,7 +2207,7 @@ pantryStyle.textContent=`
 .pantry-chooser .pantry-create { display:block; width:auto; margin:18px auto 0 }
 .pantry-create-dialog { width:min(440px, calc(100% - 28px)); max-height:calc(100dvh - 32px); overflow:auto; padding:18px; border:1px solid var(--theme-edge,#76a4c1); border-radius:18px; background:var(--control-surface,#0b2940); color:var(--control-ink,#fff1ce) }
 .pantry-create-dialog::backdrop { background:#03101cba }
-.pantry-create-dialog .pantry-create-close { position:absolute; inset-block-start:6px; inset-inline-end:6px; display:grid; place-items:center; width:44px; height:44px; margin:0; padding:0; background:none; border:0; box-shadow:none; font:24px/1 system-ui }
+.pantry-create-dialog .pantry-create-close { position:absolute; inset-block-start:6px; inset-inline-end:6px; display:flex; align-items:center; justify-content:center; width:44px; height:44px; margin:0; padding:0; background:none; border:0; box-shadow:none; font:24px/1 system-ui }
 .pantry-create-dialog [role=status] { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap }
 .pantry-create-progress { display:grid; gap:8px; margin-block-start:14px }
 .pantry-create-progress progress { width:100%; accent-color:var(--theme-accent,#76a4c1) }
