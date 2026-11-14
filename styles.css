@@ -857,6 +857,24 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 .catalog-rename-dialog input{min-width:0;padding:9px;border:1px solid var(--theme-edge,#7699b4);border-radius:8px}
 .catalog-rename-dialog .admin-msg{margin:0}
 .catalog-rename-dialog .admin-msg:empty{display:none}
+.personal-catalog-tools h2,.saved-catalog-card h3{margin:0 0 8px}
+#savePantryCatalog label{flex-basis:100%}
+.saved-catalog-card,.saved-catalog-group{
+ margin:10px 0;padding:10px;border:1px solid var(--theme-edge,#527b9d);border-radius:11px;
+}
+.saved-catalog-card p{margin:0 0 9px}
+.saved-catalog-card .admin-actions,.saved-catalog-dialog .admin-actions{display:flex;flex-wrap:wrap;gap:6px}
+.saved-catalog-card button,.saved-catalog-dialog button{min-height:44px}
+.saved-catalog-dialog{max-height:calc(100dvh - 28px);overflow:auto}
+.saved-catalog-group summary{cursor:pointer;font-weight:700;padding:5px 0}
+.saved-catalog-category{
+ min-inline-size:0;margin:10px 0;padding:8px;border:1px solid var(--theme-edge,#527b9d);border-radius:8px;
+}
+.saved-catalog-category label{display:grid;gap:4px;margin-bottom:8px}
+.saved-catalog-category textarea{
+ width:100%;padding:9px;border:1px solid var(--theme-edge,#527b9d);border-radius:8px;
+ font:inherit;color:inherit;background:var(--card-inner,#0b2940);resize:vertical;
+}
 
 /* Ajustes táctiles en dispositivos de ancho reducido. */
 @media(max-width:360px){

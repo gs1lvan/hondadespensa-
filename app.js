@@ -6,6 +6,9 @@ const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_WcQCzIlbBTktSMzva2qsQw_VnwYD4Aq
 const LOCAL_KEY = 'despensa_segunda_vivienda_v1';
 const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 const $ = id => document.getElementById(id);
+const administratorId='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
+const isAdministrator=()=>session?.user?.id===administratorId;
+let catalogSchemaAvailable;
 
 // Se conserva el listado de respaldo original, usado ÚNICAMENTE en la importación
 // inicial de una despensa vacía (nunca para reemplazar datos existentes de Supabase).
@@ -1913,6 +1916,7 @@ foodGroupOrder.onchange=()=>{
 };
 function isFreshCategory(category,categoryIndex=pantryCategoryByName){
  const row=categoryIndex.get(category);
+ if(row?.grupo_catalogo)return row.grupo_catalogo==='frescos';
  return Object.hasOwn(freshCategoryArt,row?.icono)
   || [category,...(row?.nombres_anteriores??[])].some(name=>freshCategoryIcon(name));
 }
@@ -2002,7 +2006,7 @@ function render(){
   const group=isFreshCategory(category)?'fresh':'dry';
   const inactive=!isFoodGroupVisible(group)&&!categoriesWithStock.has(category);
   const rows=shown.filter(x=>x.category===category);
-  if(!categoriesWithFoods.has(category)){
+  if(!categoriesWithFoods.has(category)&&!pantryCategoryByName.get(category)?.grupo_catalogo){
    const catalog=catalogByCategory.get(categoryIdentity(category));
    for(const name of catalog?.values()??[]){
     if(folded(name).includes(q)){
@@ -2153,7 +2157,7 @@ async function refresh(){
  const version=++refreshVersion;
  const [food,categories]=await Promise.all([
   db.from('alimentos').select('id,nombre,categoria,categoria_id,disponible').eq('despensa_id',pantryId).order('creado_en',{ascending:true}),
-  db.from('categorias_despensa').select('id,nombre,icono,nombres_anteriores').eq('despensa_id',pantryId).order('id')
+  readPantryCategoriesPage(pantryId)
  ]);
  if(version!==refreshVersion||!session)return;
  const {data:rows}=food,error=food.error??categories.error;
@@ -2627,7 +2631,7 @@ renamePantryButton.onclick=async()=>{
 };
 const deletePantryStatus=deletePantrySection.querySelector('[role="status"]');
 function canManagePantry(pantry){
- return !pantrySystemKey(pantry)||session?.user?.id==='d0f8ab40-f2ea-43e5-9bd0-d7cebdd1fa59';
+ return !pantrySystemKey(pantry)||isAdministrator();
 }
 let removingPantry=false;
 async function removePantry(pantry,button,status){
@@ -2696,6 +2700,10 @@ deletePantryButton.onclick=()=>removePantry(activePantry,deletePantryButton,dele
 
 async function signedIn(currentSession,restorePantry=false){
  session=currentSession;
+ $('adminToolsPanel').hidden=!isAdministrator();
+ $('savedCatalogs').replaceChildren();
+ $('savedCatalogStatus').textContent='';
+ $('personalCatalogName').value='';
  activePantry=null;
  applyPantryPostcard(null);
  availablePantries=[];
@@ -2793,6 +2801,7 @@ function syncAdminControls(){
  syncReferenceCity();
  refreshPantrySharing();
  $('personalCatalogExportStatus').hidden=true;
+ if(adminMode&&isAdministrator())loadSavedCatalogs();
  deletePantrySection.hidden=!adminMode||!activePantry;
  deletePantryButton.hidden=!canManagePantry(activePantry);
  renamePantryButton.hidden=!canManagePantry(activePantry);
@@ -2815,15 +2824,36 @@ function showPantryAdministration(enabled){
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-async function readPantryCatalogRows(table,columns,pantryId){
+async function readPantryCategoriesPage(pantryId,offset){
+ const fields='id,nombre,icono,nombres_anteriores';
+ const query=includeGroup=>{
+  const request=db.from('categorias_despensa').select(fields+(includeGroup?',grupo_catalogo':''))
+   .eq('despensa_id',pantryId).order('id');
+  return offset===undefined?request:request.range(offset,offset+499);
+ };
+ if(catalogSchemaAvailable===false)return query(false);
+ const result=await query(true);
+ if(!result.error){catalogSchemaAvailable=true;return result;}
+ if(result.error.code!=='42703'&&result.error.code!=='PGRST204')return result;
+ catalogSchemaAvailable=false;
+ return query(false);
+}
+async function readPantryCatalogRows(readPage){
  const rows=[];
  while(true){
-  const {data:page,error}=await db.from(table).select(columns).eq('despensa_id',pantryId)
-   .order('id').range(rows.length,rows.length+499);
+  const {data:page,error}=await readPage(rows.length);
   if(error)throw error;
   if(!page.length)return rows;
   rows.push(...page);
  }
+}
+async function readPersonalCatalog(pantry){
+ const [categories,foods]=await Promise.all([
+  readPantryCatalogRows(offset=>readPantryCategoriesPage(pantry.id,offset)),
+  readPantryCatalogRows(offset=>db.from('alimentos').select('id,nombre,categoria,categoria_id')
+   .eq('despensa_id',pantry.id).order('id').range(offset,offset+499))
+ ]);
+ return buildPersonalCatalog(categories,foods);
 }
 function buildPersonalCatalog(categories,foods){
  const categoryIndex=new Map(categories.map(category=>[category.nombre,category]));
@@ -2842,38 +2872,204 @@ function buildPersonalCatalog(categories,foods){
  }
  return catalog;
 }
+function downloadPersonalCatalog(catalog,filename='hondadespensa-catalogo-personal'){
+ const file=new Blob([JSON.stringify(catalog,null,2)+'\n'],{type:'application/json'});
+ const url=URL.createObjectURL(file);
+ const link=document.createElement('a');
+ link.href=url;
+ link.download=filename+'.json';
+ document.body.append(link);
+ try{link.click();}
+ finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
+}
 $('exportPersonalCatalog').onclick=async event=>{
  const pantry=activePantry,account=session;
  const button=event.currentTarget;
- if(!adminMode||!pantry||!account||button.disabled)return;
+ if(!adminMode||!pantry||!isAdministrator()||button.disabled)return;
  const status=$('personalCatalogExportStatus');
  status.hidden=false;
  status.textContent='Preparando el catálogo…';
  button.disabled=true;
  try{
-  const [categories,foods]=await Promise.all([
-   readPantryCatalogRows('categorias_despensa','id,nombre,icono,nombres_anteriores',pantry.id),
-   readPantryCatalogRows('alimentos','id,nombre,categoria,categoria_id',pantry.id)
-  ]);
+  const catalog=await readPersonalCatalog(pantry);
   if(activePantry!==pantry||session!==account||!adminMode)return;
-  const catalog=buildPersonalCatalog(categories,foods);
-  const file=new Blob([JSON.stringify(catalog,null,2)+'\n'],{type:'application/json'});
-  const url=URL.createObjectURL(file);
-  const link=document.createElement('a');
-  link.href=url;
-  link.download='hondadespensa-catalogo-personal.json';
-  document.body.append(link);
-  try{link.click();}
-  finally{
-   link.remove();
-   setTimeout(()=>URL.revokeObjectURL(url),30000);
-  }
+  downloadPersonalCatalog(catalog);
   status.textContent='Descarga iniciada.';
  }catch{
   if(activePantry===pantry&&session===account&&adminMode)
    status.textContent='No se pudo exportar el catálogo. Inténtalo de nuevo.';
  }finally{button.disabled=false;}
 };
+
+const savedCatalogStatus=$('savedCatalogStatus');
+const savedCatalogs=$('savedCatalogs');
+const savePantryCatalog=$('savePantryCatalog');
+let savedCatalogLoad=0;
+let savingCatalog=false;
+
+function catalogError(error){
+ if(['42P01','PGRST205','PGRST202'].includes(error.code))
+  return 'Para guardar catálogos, falta ejecutar la migración de Supabase.';
+ if(error.code==='23505')return 'Ya hay un catálogo con ese nombre.';
+ return error.message||'No se pudo completar la operación.';
+}
+
+async function loadSavedCatalogs(){
+ const account=session;
+ const request=++savedCatalogLoad;
+ const {data:catalogs,error}=await db.from('catalogos_personales')
+  .select('id,nombre,contenido,predeterminado').order('nombre');
+ if(session!==account||request!==savedCatalogLoad)return;
+ if(error){
+  savedCatalogs.replaceChildren();
+  savedCatalogStatus.textContent=catalogError(error);
+  return;
+ }
+ savedCatalogs.replaceChildren();
+ if(!catalogs.length){
+  savedCatalogStatus.textContent='Todavía no hay catálogos guardados.';
+  return;
+ }
+ const current=catalogs.find(catalog=>catalog.predeterminado);
+ savedCatalogStatus.textContent=current?'Predeterminado para nuevas despensas: '+current.nombre:'Las nuevas despensas cargan el catálogo básico original.';
+ for(const catalog of catalogs){
+  const card=document.createElement('section');card.className='saved-catalog-card';
+  const name=document.createElement('h3');name.textContent=catalog.nombre;
+  const groups=document.createElement('p');groups.className='hint';
+  groups.textContent=catalog.contenido.secos.length+' categorías de secos · '+catalog.contenido.frescos.length+' de frescos';
+  const actions=document.createElement('div');actions.className='admin-actions';
+  const controls=[
+   ['Editar',()=>openSavedCatalog(catalog)],
+   ['Exportar',()=>{
+    const filename='hondadespensa-'+folded(catalog.nombre).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    downloadPersonalCatalog({...catalog.contenido,nombre:catalog.nombre},filename);
+   }],
+   [catalog.predeterminado?'Quitar como predeterminado':'Usar por defecto',()=>mutateSavedCatalog(async()=>{
+    const {error}=await db.rpc('fijar_catalogo_predeterminado',{p_catalogo_id:catalog.predeterminado?null:catalog.id});
+    if(error)throw error;
+   })],
+   ['Eliminar',()=>{
+    const message='¿Eliminar el catálogo «'+catalog.nombre+'»?'+(catalog.predeterminado?' Las nuevas despensas volverán al catálogo básico original.':'');
+    if(confirm(message))return mutateSavedCatalog(async()=>{
+     const {error}=await db.from('catalogos_personales').delete().eq('id',catalog.id).select('id').single();
+     if(error)throw error;
+    });
+   }]
+  ];
+  for(const [label,action] of controls){
+   const button=document.createElement('button');button.type='button';button.className=label==='Eliminar'?'danger':'secondary';
+   button.textContent=label;
+   button.onclick=()=>{if(isAdministrator()&&!savingCatalog)action();};
+   actions.append(button);
+  }
+  card.append(name,groups,actions);
+  savedCatalogs.append(card);
+ }
+}
+
+async function mutateSavedCatalog(action,status=savedCatalogStatus){
+ if(!isAdministrator()||savingCatalog)return false;
+ const account=session;
+ savingCatalog=true;
+ status.textContent='Guardando…';
+ try{
+  await action();
+  if(session!==account)return false;
+  status.textContent='';
+  await loadSavedCatalogs();
+  return true;
+ }catch(error){
+  if(session===account)status.textContent=catalogError(error);
+  return false;
+ }finally{savingCatalog=false;}
+}
+
+savePantryCatalog.onsubmit=async event=>{
+ event.preventDefault();
+ const pantry=activePantry,account=session;
+ const input=$('personalCatalogName'),nombre=input.value.trim();
+ if(!adminMode||!nombre||!pantry)return;
+ const button=savePantryCatalog.querySelector('button');
+ button.disabled=true;
+ try{
+  if(await mutateSavedCatalog(async()=>{
+   const contenido=await readPersonalCatalog(pantry);
+   if(activePantry!==pantry||session!==account)throw new Error('Vuelve a abrir la despensa que quieres guardar.');
+   const {error}=await db.from('catalogos_personales').insert({nombre,contenido});
+   if(error)throw error;
+  }))input.value='';
+ }finally{button.disabled=false;}
+};
+
+function openSavedCatalog(catalog){
+ const dialog=$('savedCatalogDialog'),form=dialog.querySelector('form');
+ const name=$('savedCatalogName'),groups=$('savedCatalogGroups');
+ const status=$('savedCatalogEditStatus'),cancel=$('cancelSavedCatalog'),save=form.querySelector('[type=submit]');
+ name.value=catalog.nombre;
+ status.textContent='';
+ groups.replaceChildren();
+ const lists={};
+ for(const [key,title] of [['secos','Alimentos secos'],['frescos','Alimentos frescos']]){
+  const panel=document.createElement('details');panel.className='saved-catalog-group';
+  const heading=document.createElement('summary');heading.textContent=title;
+  const list=document.createElement('div');lists[key]=list;
+  const add=document.createElement('button');add.type='button';add.className='secondary';
+  add.textContent='Añadir categoría';
+  const addCategory=(category)=>{
+   const editor=document.createElement('fieldset');editor.className='saved-catalog-category';
+   const legend=document.createElement('legend');legend.textContent=category.nombre||'Nueva categoría';
+   const nameLabel=document.createElement('label');nameLabel.textContent='Nombre de la categoría';
+   const input=document.createElement('input');input.dataset.categoryName='';input.maxLength=120;input.required=true;input.value=category.nombre;
+   input.oninput=()=>{legend.textContent=input.value.trim()||'Nueva categoría';};
+   nameLabel.append(input);
+   const foodLabel=document.createElement('label');foodLabel.textContent='Un alimento por línea';
+   const foods=document.createElement('textarea');foods.value=category.alimentos.join('\n');foods.rows=4;
+   foodLabel.append(foods);
+   const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.textContent='Quitar categoría';
+   remove.onclick=()=>editor.remove();
+   editor.dataset.icon=category.icono??'';
+   editor.append(legend,nameLabel,foodLabel,remove);list.append(editor);
+   return input;
+  };
+  for(const category of catalog.contenido[key])addCategory(category);
+  add.onclick=()=>addCategory({nombre:'',alimentos:[]}).focus();
+  panel.append(heading,list,add);groups.append(panel);
+ }
+ cancel.onclick=()=>dialog.close();
+ dialog.oncancel=event=>{if(save.disabled)event.preventDefault();};
+ form.onsubmit=async event=>{
+  event.preventDefault();
+  if(save.disabled)return;
+  const nombre=name.value.trim();
+  if(!nombre){name.focus();return;}
+  const contenido={version:1};
+  for(const [key,list] of Object.entries(lists)){
+   contenido[key]=[];
+   for(const category of list.children){
+    const input=category.querySelector('[data-category-name]');
+    const title=input.value.trim();
+    if(!title){
+     list.parentElement.open=true;
+     status.textContent='Escribe un nombre para cada categoría.';
+     input.focus();
+     return;
+    }
+    const alimentos=category.querySelector('textarea').value.split(/\r?\n/).map(value=>value.trim()).filter(Boolean);
+    contenido[key].push({nombre:title,icono:category.dataset.icon||suggestedCategoryIcon(title),alimentos});
+   }
+  }
+  save.disabled=cancel.disabled=true;
+  try{
+   if(await mutateSavedCatalog(async()=>{
+    const {error}=await db.from('catalogos_personales').update({nombre,contenido}).eq('id',catalog.id).select('id').single();
+    if(error)throw error;
+   },status))dialog.close();
+  }finally{save.disabled=cancel.disabled=false;}
+ };
+ // Facilita la validación de nombres nuevos aunque se repliegue el grupo.
+ form.noValidate=true;
+ dialog.showModal();
+}
 
 $('upload').onclick=async()=>{
  if(busy||pantrySystemKey(activePantry)!=='playa')return;
@@ -2995,6 +3191,7 @@ const freshCatalogGroups={
 };
 const freshCatalogOpen=new Set();
 function renderCatalog(){
+ if(!isAdministrator())return;
  const groups=catalogReady?Object.entries(catalogRows.reduce((acc,x)=>{(acc[x.categoria]??=[]).push(x.nombre);return acc;},{})):Object.entries(initial);
  renderCatalogList($('catalogItems'),$('catalogSearch'),groups,catalogOpen);
  if($('freshCatalogItems')){

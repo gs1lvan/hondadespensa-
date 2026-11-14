@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=124">
+  <link rel="stylesheet" href="styles.css?v=125">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -971,10 +971,38 @@
     </section>
 
     <section id="adminPanel" class="admin-panel" hidden aria-label="Panel de administración">
-      <details class="admin-group-panel" id="adminToolsPanel" open>
+      <details class="admin-group-panel" id="adminToolsPanel" open hidden>
         <summary>Herramientas de administrador</summary>
         <div class="admin-group-content">
           <label class="alternate-home-setting"><input id="enableHomeCardRemoval" type="checkbox"> Activar eliminar tarjetas de inicio</label>
+          <section class="admin-section personal-catalog-tools">
+            <h2>Catálogos guardados</h2>
+            <form id="savePantryCatalog" class="add">
+              <label for="personalCatalogName">Nombre del catálogo</label>
+              <input id="personalCatalogName" maxlength="100" placeholder="Ej. Despensa española" required>
+              <button type="submit">Guardar catálogo de esta despensa</button>
+            </form>
+            <button id="exportPersonalCatalog" class="secondary" type="button">Exportar catálogo personal</button>
+            <p id="personalCatalogExportStatus" class="admin-msg" role="status" hidden></p>
+            <p id="savedCatalogStatus" class="hint" role="status"></p>
+            <div id="savedCatalogs"></div>
+          </section>
+          <details class="admin-group-panel" id="adminDefaultCategoriesPanel">
+            <summary>Añadir categorías por defecto</summary>
+            <div class="admin-group-content">
+              <p class="hint admin-default-categories-hint">Añade categorías y personalízalas en tu despensa.</p>
+              <details class="admin-section admin-catalog">
+                <summary>📚 Alimentos secos</summary>
+                <input id="catalogSearch" placeholder="Buscar en el catálogo…" aria-label="Buscar en catálogo">
+                <div id="catalogItems"></div>
+              </details>
+              <details class="admin-section admin-catalog" id="freshCatalog" hidden>
+                <summary>🥬 Alimentos frescos</summary>
+                <input id="freshCatalogSearch" placeholder="Buscar alimentos frescos…" aria-label="Buscar alimentos frescos">
+                <div id="freshCatalogItems"></div>
+              </details>
+            </div>
+          </details>
         </div>
       </details>
       <details class="admin-group-panel" id="adminProfilePanel" open>
@@ -1073,30 +1101,9 @@
           </section>
         </div>
       </details>
-      <section class="admin-section">
-        <button id="exportPersonalCatalog" class="secondary" type="button">Exportar catálogo personal</button>
-        <p class="hint">Descarga las categorías y los alimentos secos y frescos de esta despensa.</p>
-        <p id="personalCatalogExportStatus" class="admin-msg" role="status" hidden></p>
-      </section>
       <details class="admin-section admin-add-collapsible">
         <summary>➕ Añadir alimento</summary>
         <div id="adminAddMount"></div>
-      </details>
-      <details class="admin-group-panel" id="adminDefaultCategoriesPanel">
-        <summary>Añadir categorías por defecto</summary>
-        <div class="admin-group-content">
-          <p class="hint admin-default-categories-hint">Añade categorías y personalízalas en tu despensa.</p>
-          <details class="admin-section admin-catalog">
-            <summary>📚 Alimentos secos</summary>
-            <input id="catalogSearch" placeholder="Buscar en el catálogo…" aria-label="Buscar en catálogo">
-            <div id="catalogItems"></div>
-          </details>
-          <details class="admin-section admin-catalog" id="freshCatalog" hidden>
-            <summary>🥬 Alimentos frescos</summary>
-            <input id="freshCatalogSearch" placeholder="Buscar alimentos frescos…" aria-label="Buscar alimentos frescos">
-            <div id="freshCatalogItems"></div>
-          </details>
-        </div>
       </details>
       <details class="admin-section admin-catalog" hidden>
         <summary>✏️ Administrar catálogo</summary>
@@ -1193,6 +1200,19 @@
       <button type="button" class="fridge-add-note" hidden>Borrar<br>todas</button>
     </div>
   </template>
+  <dialog id="savedCatalogDialog" class="catalog-rename-dialog saved-catalog-dialog" aria-labelledby="savedCatalogTitle">
+    <form class="admin-edit">
+      <h2 id="savedCatalogTitle">Editar catálogo guardado</h2>
+      <label for="savedCatalogName">Nombre del catálogo</label>
+      <input id="savedCatalogName" maxlength="100" required>
+      <div id="savedCatalogGroups"></div>
+      <p id="savedCatalogEditStatus" class="admin-msg" role="status"></p>
+      <div class="admin-actions">
+        <button type="submit">Guardar cambios</button>
+        <button id="cancelSavedCatalog" type="button" class="secondary">Cancelar</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="catalogRenameDialog" class="catalog-rename-dialog" aria-labelledby="catalogRenameTitle">
     <form class="admin-edit">
       <h2 id="catalogRenameTitle">Renombrar</h2>
@@ -1238,7 +1258,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=183"></script>
+  <script type="module" src="app.js?v=184"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

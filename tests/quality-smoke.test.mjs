@@ -144,6 +144,9 @@ test('catálogos secos y frescos juntos en Añadir categorías por defecto',()=>
  assert.ok(start>=0&&end>start,'No existe el panel de categorías por defecto');
  const region=html.slice(start,end);
  assert.match(html,/<details class="admin-group-panel" id="adminDefaultCategoriesPanel">/,'El nuevo panel debe comenzar plegado');
+ const tools=html.slice(html.indexOf('id="adminToolsPanel"'),html.indexOf('id="adminProfilePanel"'));
+ for(const id of ['adminDefaultCategoriesPanel','exportPersonalCatalog','savePantryCatalog','savedCatalogs'])
+  assert.ok(tools.includes('id="'+id+'"'),'Falta en Herramientas de administrador: '+id);
  assert.match(region,/<summary>Añadir categorías por defecto<\/summary>/);
  assert.match(region,/Añade categorías y personalízalas en tu despensa/);
  assert.match(region,/<summary>📚 Alimentos secos<\/summary>/);
@@ -152,6 +155,7 @@ test('catálogos secos y frescos juntos en Añadir categorías por defecto',()=>
   assert.ok(region.includes('id="'+id+'"'),'No se ha conservado el control '+id);
  }
  const js=read('app.js');
+ assert.match(js,/function renderCatalog\(\)\{\s*if\(!isAdministrator\(\)\)return;/);
  assert.match(js,/renderCatalogList\(\$\('catalogItems'\),\$\('catalogSearch'\),groups,catalogOpen\)/);
  assert.match(js,/renderCatalogList\(\$\('freshCatalogItems'\),\$\('freshCatalogSearch'\),Object\.entries\(freshCatalogGroups\),freshCatalogOpen\)/);
  assert.match(js,/\$\('freshCatalog'\)\.hidden=false/,'El catálogo de frescos debe mantenerse operativo');
