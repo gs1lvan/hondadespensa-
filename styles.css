@@ -839,7 +839,11 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 #adminDefaultCategoriesPanel .catalog-products{display:block;padding:0 8px 6px}
 .catalog-category-actions{display:grid;gap:7px;margin:10px 0}
 .catalog-category-actions button{min-height:44px}
-.catalog-category-actions .catalog-rename-category{display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px}
+.catalog-category-actions .catalog-rename-category{
+ display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;min-width:0;padding-inline:6px;
+}
+.catalog-category-actions-with-eye{grid-template-columns:minmax(0,1fr) 44px}
+.catalog-category-actions .catalog-category-eye{display:grid;place-items:center;padding:0}
 .catalog-category-actions svg,.catalog-food-row svg{width:19px;height:19px;flex:none;pointer-events:none}
 #adminDefaultCategoriesPanel .catalog-food-row{
  min-height:44px;padding:0;background:none;container-type:inline-size;

@@ -1655,7 +1655,7 @@ function renderFridgeNotes(main,groupOrder,allDoorsClosed){
    $('automaticPantryNoteTitle').textContent='Lista de la compra';
    const missing={dry:[],fresh:[]};
    for(const food of data){
-    if(!food.have&&isFoodGroupVisible(isFreshCategory(food.category)?'fresh':'dry'))
+    if(!food.have&&isPantryCategoryVisible(food.category)&&isFoodGroupVisible(isFreshCategory(food.category)?'fresh':'dry'))
     missing[isFreshCategory(food.category)?'fresh':'dry'].push(food);
    }
    const list=$('automaticPantryNoteList');
@@ -1872,6 +1872,38 @@ function showApp(visible){
 // Preferencias visuales independientes por cuenta y despensa; no se borran datos.
 const foodGroupVisibility={dry:true,fresh:true};
 const isFoodGroupVisible=group=>foodGroupVisibility[group]!==false;
+const categoryVisibilityKey=id=>pantryStyleKey('show_category_'+id);
+const isPantryCategoryVisible=category=>{
+ const id=pantryCategoryByName.get(category)?.id;
+ return !id||session?.user?.user_metadata?.[categoryVisibilityKey(id)]!==false;
+};
+const savingCategoryVisibility=new Set();
+async function togglePantryCategoryVisibility(category,button){
+ const account=session;
+ const pantry=activePantry;
+ if(!account||!pantry)return;
+ const key=categoryVisibilityKey(category.id);
+ if(savingCategoryVisibility.has(key))return;
+ const visible=!isPantryCategoryVisible(category.nombre);
+ savingCategoryVisibility.add(key);
+ button.disabled=true;
+ try{
+  const {error}=await db.auth.updateUser({data:{[key]:visible}});
+  if(error)throw error;
+  if(session===account)account.user.user_metadata={...account.user.user_metadata,[key]:visible};
+ }catch(error){
+  if(session===account&&activePantry===pantry)alert('No se pudo guardar la visibilidad: '+error.message);
+  return;
+ }finally{
+  savingCategoryVisibility.delete(key);
+  button.disabled=false;
+ }
+ if(session===account&&activePantry===pantry){
+  const restoreFocus=document.activeElement===button;
+  render();
+  if(restoreFocus)document.getElementById(button.id)?.focus({preventScroll:true});
+ }
+}
 function syncFoodGroupVisibility(){
  for(const group of ['dry','fresh']){
   foodGroupVisibility[group]=pantryStylePreference('show_'+group+'_foods')!==false;
@@ -1963,12 +1995,13 @@ const foodAvailabilityKey=(pantryId,item)=>JSON.stringify([pantryId,item.categor
 
 function render(){
  const q=folded($('search').value.trim());
- const visibleData=data.filter(x=>isFoodGroupVisible(isFreshCategory(x.category)?'fresh':'dry'));
+ const categoryData=data.filter(x=>isPantryCategoryVisible(x.category));
+ const visibleData=categoryData.filter(x=>isFoodGroupVisible(isFreshCategory(x.category)?'fresh':'dry'));
  $('total').textContent=visibleData.length;
  $('have').textContent=visibleData.filter(x=>x.have).length;
  $('missing').textContent=visibleData.filter(x=>!x.have).length;
  const vintage=usesVintageHome();
- const shown=(vintage?visibleData:data).filter(x=>folded(x.name).includes(q));
+ const shown=(vintage?visibleData:categoryData).filter(x=>folded(x.name).includes(q));
  const categoriesWithStock=new Set(data.filter(item=>item.have).map(item=>item.category));
  for(const change of pendingFoodAvailability.values()){
   if(change.pantry===activePantry&&change.catalog)categoriesWithStock.add(change.category);
@@ -1982,6 +2015,7 @@ function render(){
   main.append(p);
  }
  const categories=orderedCategories(pantryCategories())
+  .filter(isPantryCategoryVisible)
   .filter(category=>!vintage||isFoodGroupVisible(isFreshCategory(category)?'fresh':'dry'))
   .sort((a,b)=>Number(categoriesWithStock.has(b))-Number(categoriesWithStock.has(a)));
  const groups={dry:document.createDocumentFragment(),fresh:document.createDocumentFragment()};
@@ -3289,7 +3323,8 @@ function renderCatalogList(holder,search,groups,openCategories){
   details.dataset.category=category;
   details.classList.toggle('catalog-category-added',!!existing);
   details.open=openCategories.has(category)||!!q;
-  const count=existing?'Ya añadida · '+entries.filter(({item})=>item?.have).length+'/'+entries.length+' marcados':
+  const visible=isPantryCategoryVisible(categoryName);
+  const count=existing?(visible?'Ya añadida':'Oculta en la despensa')+' · '+entries.filter(({item})=>item?.have).length+'/'+entries.length+' marcados':
    entries.length+' '+(entries.length===1?'alimento':'alimentos');
   details.append(categoryHeader(categoryName,count,existing?.icono??suggestedCategoryIcon(category)));
   const products=document.createElement('div');products.className='catalog-products';
@@ -3301,7 +3336,17 @@ function renderCatalogList(holder,search,groups,openCategories){
    rename.append('Renombrar categoría');
    rename.onclick=()=>openCatalogRename('Renombrar categoría',bareCategory(categoryName),120,
     name=>renamePantryCategory(categoryName,name,existing.icono));
-   actions.append(rename);
+   const eye=document.createElement('button');
+   eye.type='button';eye.className='secondary catalog-category-eye';
+   eye.id=holder.id+'-visibility-'+existing.id;
+   eye.title=(visible?'Ocultar ':'Mostrar ')+bareCategory(categoryName)+' en la despensa';
+   eye.setAttribute('aria-label','Visibilidad de '+bareCategory(categoryName)+' en la despensa');
+   eye.setAttribute('aria-pressed',String(visible));
+   eye.disabled=savingCategoryVisibility.has(categoryVisibilityKey(existing.id));
+   eye.append(foodGroupEyeIcon(visible));
+   eye.onclick=()=>togglePantryCategoryVisibility(existing,eye);
+   actions.classList.add('catalog-category-actions-with-eye');
+   actions.append(rename,eye);
   }else{
    for(const [markAll,label] of [[false,'Añadir categoría sin marcar'],[true,'Añadir todos marcados']]){
     const add=document.createElement('button');

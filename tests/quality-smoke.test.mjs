@@ -82,7 +82,7 @@ test('se pueden ocultar secos y frescos de forma independiente sin borrar los al
   const js = read('app.js');
   assert.doesNotMatch(html, /id="show(?:Dry|Fresh)Foods"/, 'No deben quedar casillas duplicadas');
   assert.match(js, /pantryStyleKey\('show_'\+group\+'_foods'\)/, 'La visibilidad debe guardarse por despensa');
-  assert.match(js, /const visibleData=data\.filter/, 'La lista debe respetar los grupos visibles');
+ assert.match(js, /const visibleData=categoryData\.filter\(x=>isFoodGroupVisible/, 'La lista debe respetar los grupos visibles');
   assert.match(js, /const categories=orderedCategories\(pantryCategories\(\)\)/, 'Las categorías deben filtrarse solo al mostrar');
   assert.match(js, /renderGroupedAdmin\(\$\('adminFoods'\),data,'food'/, 'Administración mantiene el inventario completo');
  assert.match(js,/actions\.append\(all,eye,move\)/, 'El ojo debe ir entre Todos y la flecha de ordenar');
