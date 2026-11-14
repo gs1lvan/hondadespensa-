@@ -3016,19 +3016,66 @@ function openSavedCatalog(catalog){
   const add=document.createElement('button');add.type='button';add.className='secondary';
   add.textContent='Añadir categoría';
   const addCategory=(category)=>{
-   const editor=document.createElement('fieldset');editor.className='saved-catalog-category';
-   const legend=document.createElement('legend');legend.textContent=category.nombre||'Nueva categoría';
-   const nameLabel=document.createElement('label');nameLabel.textContent='Nombre de la categoría';
-   const input=document.createElement('input');input.dataset.categoryName='';input.maxLength=120;input.required=true;input.value=category.nombre;
-   input.oninput=()=>{legend.textContent=input.value.trim()||'Nueva categoría';};
+   const editor=document.createElement('details');editor.className='saved-catalog-category';
+   editor.open=!category.nombre;
+   const heading=document.createElement('summary');
+   const categoryTitle=document.createElement('span');
+   const count=document.createElement('small');
+   heading.append(categoryTitle,count);
+   const nameLabel=document.createElement('label');nameLabel.className='saved-catalog-category-label';
+   nameLabel.textContent='Nombre de la categoría';
+   const input=document.createElement('input');input.dataset.categoryName='';input.maxLength=120;input.value=category.nombre;
+   input.setAttribute('aria-label','Nombre de la categoría');
    nameLabel.append(input);
-   const foodLabel=document.createElement('label');foodLabel.textContent='Un alimento por línea';
-   const foods=document.createElement('textarea');foods.value=category.alimentos.join('\n');foods.rows=4;
-   foodLabel.append(foods);
+   const allLabel=document.createElement('label');allLabel.className='saved-catalog-all';
+   const all=document.createElement('input');all.type='checkbox';
+   allLabel.append(all,' Todos');
+   const foodRows=document.createElement('div');
+   function syncSelection(){
+    const checks=[...foodRows.querySelectorAll('input[type=checkbox]')];
+    const included=checks.filter(check=>check.checked).length;
+    all.checked=!!checks.length&&included===checks.length;
+    all.indeterminate=included>0&&included<checks.length;
+    all.disabled=!checks.length;
+    categoryTitle.textContent=input.value.trim()||'Nueva categoría';
+    count.textContent=included+'/'+checks.length;
+   }
+   function addFood(food='',included=true){
+    const row=document.createElement('div');row.className='saved-catalog-food item';
+    const check=document.createElement('input');check.type='checkbox';check.checked=included;
+    const name=document.createElement('input');name.type='text';name.maxLength=100;
+    name.placeholder='Nuevo alimento';name.value=food;
+    const removeFood=document.createElement('button');removeFood.type='button';
+    setAdminIcon(removeFood,'trash','Quitar '+(food||'alimento'));
+    function syncRow(){
+     const label=name.value.trim()||'alimento nuevo';
+     check.setAttribute('aria-label','Incluir '+label);
+     name.setAttribute('aria-label','Editar nombre de '+label);
+     removeFood.setAttribute('aria-label','Quitar '+label);
+    }
+    name.oninput=syncRow;syncRow();
+    check.onchange=syncSelection;
+    removeFood.onclick=()=>{row.remove();syncSelection();};
+    row.append(check,name,removeFood);foodRows.append(row);
+    syncSelection();
+    return name;
+   }
+   all.onchange=()=>{
+    for(const check of foodRows.querySelectorAll('input[type=checkbox]'))check.checked=all.checked;
+    syncSelection();
+   };
+   input.oninput=syncSelection;
+   for(const food of category.alimentos)addFood(food);
+   for(const food of category.excluidos??[])addFood(food,false);
+   const addFoodButton=document.createElement('button');addFoodButton.type='button';addFoodButton.className='secondary';
+   addFoodButton.textContent='Añadir alimento';addFoodButton.onclick=()=>addFood().focus();
    const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.textContent='Quitar categoría';
    remove.onclick=()=>editor.remove();
+   const actions=document.createElement('div');actions.className='admin-actions';
+   actions.append(addFoodButton,remove);
    editor.dataset.icon=category.icono??'';
-   editor.append(legend,nameLabel,foodLabel,remove);list.append(editor);
+   editor.append(heading,nameLabel,allLabel,foodRows,actions);list.append(editor);
+   syncSelection();
    return input;
   };
   for(const category of catalog.contenido[key])addCategory(category);
@@ -3049,13 +3096,18 @@ function openSavedCatalog(catalog){
     const input=category.querySelector('[data-category-name]');
     const title=input.value.trim();
     if(!title){
-     list.parentElement.open=true;
+     list.parentElement.open=category.open=true;
      status.textContent='Escribe un nombre para cada categoría.';
      input.focus();
      return;
     }
-    const alimentos=category.querySelector('textarea').value.split(/\r?\n/).map(value=>value.trim()).filter(Boolean);
-    contenido[key].push({nombre:title,icono:category.dataset.icon||suggestedCategoryIcon(title),alimentos});
+    const alimentos=[],excluidos=[];
+    for(const row of category.querySelectorAll('.saved-catalog-food')){
+     const food=row.querySelector('input[type=text]').value.trim();
+     if(food)(row.querySelector('input[type=checkbox]').checked?alimentos:excluidos).push(food);
+    }
+    contenido[key].push({nombre:title,icono:category.dataset.icon||suggestedCategoryIcon(title),alimentos,
+     ...(excluidos.length?{excluidos}:{})});
    }
   }
   save.disabled=cancel.disabled=true;

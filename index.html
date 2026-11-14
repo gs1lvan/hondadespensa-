@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=126">
+  <link rel="stylesheet" href="styles.css?v=127">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -1205,11 +1205,14 @@
       <h2 id="savedCatalogTitle">Editar catálogo guardado</h2>
       <label for="savedCatalogName">Nombre del catálogo</label>
       <input id="savedCatalogName" maxlength="100" required>
+      <p class="hint">Las casillas indican qué alimentos se cargarán al usar este catálogo. Puedes renombrar cualquier alimento.</p>
       <div id="savedCatalogGroups"></div>
-      <p id="savedCatalogEditStatus" class="admin-msg" role="status"></p>
-      <div class="admin-actions">
-        <button type="submit">Guardar cambios</button>
-        <button id="cancelSavedCatalog" type="button" class="secondary">Cancelar</button>
+      <div class="saved-catalog-footer">
+        <p id="savedCatalogEditStatus" class="admin-msg" role="status"></p>
+        <div class="admin-actions">
+          <button type="submit">Guardar cambios</button>
+          <button id="cancelSavedCatalog" type="button" class="secondary">Cancelar</button>
+        </div>
       </div>
     </form>
   </dialog>
@@ -1258,7 +1261,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=184"></script>
+  <script type="module" src="app.js?v=185"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

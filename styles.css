@@ -887,11 +887,27 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 .saved-catalog-category{
  min-inline-size:0;margin:10px 0;padding:8px;border:1px solid var(--theme-edge,#527b9d);border-radius:8px;
 }
-.saved-catalog-category label{display:grid;gap:4px;margin-bottom:8px}
-.saved-catalog-category textarea{
- width:100%;padding:9px;border:1px solid var(--theme-edge,#527b9d);border-radius:8px;
- font:inherit;color:inherit;background:var(--card-inner,#0b2940);resize:vertical;
+.saved-catalog-category summary{
+ display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:38px;
 }
+.saved-catalog-category summary small{flex:none;color:var(--textColor,var(--muted))}
+.saved-catalog-category-label{display:grid;gap:4px;margin:8px 0}
+.saved-catalog-all{display:flex;align-items:center;gap:8px;min-height:36px}
+.saved-catalog-food.item{
+ align-items:center;gap:6px;min-height:44px;padding:3px 0;background:none;
+}
+.saved-catalog-food.item input[type=checkbox]{width:18px;height:18px;margin:0;padding:0}
+.saved-catalog-food input[type=text]{
+ flex:1;min-width:0;font-size:clamp(12px,3.6vw,15px);padding:6px 5px;color:inherit;
+ background:var(--card-inner,#0b2940);
+}
+.saved-catalog-food:has(input[type=checkbox]:not(:checked)) input[type=text]{color:var(--textColor,var(--muted))}
+.saved-catalog-food .admin-icon-button{
+ display:grid;place-items:center;flex:0 0 38px;padding:0;background:none;color:inherit;border-color:transparent;
+}
+.saved-catalog-food .admin-icon-button svg{width:17px;height:17px}
+.saved-catalog-category .admin-actions{margin-top:8px}
+.saved-catalog-footer{position:sticky;bottom:0;padding:8px 0;background:var(--card-dark,#1b4562)}
 
 /* Ajustes táctiles en dispositivos de ancho reducido. */
 @media(max-width:360px){
