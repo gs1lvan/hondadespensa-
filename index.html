@@ -32,7 +32,7 @@
       }catch{}
     })();
   </script>
-  <link rel="stylesheet" href="styles.css?v=123">
+  <link rel="stylesheet" href="styles.css?v=124">
   <style>html { background-color:var(--app-bg-color,#071c32); }</style>
 
   <style>
@@ -1085,14 +1085,14 @@
       <details class="admin-group-panel" id="adminDefaultCategoriesPanel">
         <summary>Añadir categorías por defecto</summary>
         <div class="admin-group-content">
-          <p class="hint admin-default-categories-hint">Si quieres empezar tu despensa y no tienes claro qué categorías añadir, aquí te proponemos unas básicas. Eres libre de añadir, eliminar o editar las que quieras.</p>
+          <p class="hint admin-default-categories-hint">Añade categorías y personalízalas en tu despensa.</p>
           <details class="admin-section admin-catalog">
-            <summary>📚 Añadir catálogo de alimentos secos</summary>
+            <summary>📚 Alimentos secos</summary>
             <input id="catalogSearch" placeholder="Buscar en el catálogo…" aria-label="Buscar en catálogo">
             <div id="catalogItems"></div>
           </details>
           <details class="admin-section admin-catalog" id="freshCatalog" hidden>
-            <summary>🥬 Añadir desde el catálogo de alimentos frescos</summary>
+            <summary>🥬 Alimentos frescos</summary>
             <input id="freshCatalogSearch" placeholder="Buscar alimentos frescos…" aria-label="Buscar alimentos frescos">
             <div id="freshCatalogItems"></div>
           </details>
@@ -1193,6 +1193,18 @@
       <button type="button" class="fridge-add-note" hidden>Borrar<br>todas</button>
     </div>
   </template>
+  <dialog id="catalogRenameDialog" class="catalog-rename-dialog" aria-labelledby="catalogRenameTitle">
+    <form class="admin-edit">
+      <h2 id="catalogRenameTitle">Renombrar</h2>
+      <label for="catalogRenameName">Nombre</label>
+      <input id="catalogRenameName" name="nombre" type="text" required>
+      <div class="admin-actions">
+        <button type="submit">Guardar</button>
+        <button id="catalogRenameCancel" type="button" class="secondary">Cancelar</button>
+      </div>
+      <p id="catalogRenameStatus" class="admin-msg" role="status"></p>
+    </form>
+  </dialog>
   <dialog id="automaticPantryNoteDialog" class="fridge-note-dialog" aria-labelledby="automaticPantryNoteTitle">
     <form method="dialog">
       <header class="note-header">
@@ -1226,7 +1238,7 @@
       </div>
     </form>
   </dialog>
-  <script type="module" src="app.js?v=182"></script>
+  <script type="module" src="app.js?v=183"></script>
   <script>
     function clearPantrySearch() {
       const search = document.getElementById('search');

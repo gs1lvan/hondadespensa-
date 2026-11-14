@@ -824,6 +824,39 @@ body:has(#items[data-home=nevera-vintage]:not([hidden])) .hero .polaroid {
 #adminCategoriesPanel .admin-toolbar{margin-top:7px}
 #adminCategoriesPanel .admin-group-content>.admin-section{border-top:0;padding-top:5px}
 #adminCategoriesPanel .admin-list{min-width:0}
+#adminDefaultCategoriesPanel .catalog-category>summary{
+ display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:3px 10px;align-items:center;
+ min-height:54px;padding:9px 11px;list-style:none;overflow-wrap:anywhere;
+}
+#adminDefaultCategoriesPanel .catalog-category>summary::-webkit-details-marker{display:none}
+#adminDefaultCategoriesPanel .catalog-category-added>summary{opacity:.63}
+#adminDefaultCategoriesPanel .catalog-category .cat-icon{grid-row:1/3;width:30px;height:30px;margin:0}
+#adminDefaultCategoriesPanel .catalog-category .cat-name{grid-column:2}
+#adminDefaultCategoriesPanel .catalog-category .cat-count{grid-column:2;grid-row:2;justify-self:start;font-size:12px;white-space:normal}
+#adminDefaultCategoriesPanel .catalog-category .chevron{grid-column:3;grid-row:1/3;margin:0 5px 0 3px}
+#adminDefaultCategoriesPanel .catalog-category[open]>summary .chevron{transform:rotate(225deg) translateY(-3px)}
+#adminDefaultCategoriesPanel .catalog-category :is(.cat-count,.chevron){color:inherit;border-color:currentColor}
+#adminDefaultCategoriesPanel .catalog-products{display:block;padding:0 11px 7px}
+.catalog-category-actions{display:grid;gap:7px;margin:10px 0}
+.catalog-category-actions button{min-height:44px}
+.catalog-category-actions .catalog-rename-category{display:flex;align-items:center;justify-content:center;gap:8px}
+.catalog-category-actions svg,.catalog-food-row svg{width:19px;height:19px;flex:none;pointer-events:none}
+.catalog-food-row.item{min-height:44px;padding:0;background:none}
+.catalog-food-row .item-toggle{padding:6px 0 6px 1px;gap:8px}
+.catalog-food-row.item input[type=checkbox]:not(:checked){background:transparent;box-shadow:none}
+#adminDefaultCategoriesPanel .catalog-food-row button{
+ display:grid;place-items:center;flex:0 0 44px;width:44px;min-height:44px;
+ padding:0;border:0;background:transparent;color:inherit;box-shadow:none;
+}
+.catalog-rename-dialog{
+ width:min(420px,calc(100% - 28px));padding:0;border:1px solid var(--theme-edge,#7699b4);
+ border-radius:16px;background:var(--control-surface,#0b2940);color:var(--control-ink,var(--ink));
+}
+.catalog-rename-dialog::backdrop{background:#03101cba}
+.catalog-rename-dialog h2{margin:0;font-size:20px}
+.catalog-rename-dialog input{min-width:0;padding:9px;border:1px solid var(--theme-edge,#7699b4);border-radius:8px}
+.catalog-rename-dialog .admin-msg{margin:0}
+.catalog-rename-dialog .admin-msg:empty{display:none}
 
 /* Ajustes táctiles en dispositivos de ancho reducido. */
 @media(max-width:360px){

@@ -145,10 +145,9 @@ test('catálogos secos y frescos juntos en Añadir categorías por defecto',()=>
  const region=html.slice(start,end);
  assert.match(html,/<details class="admin-group-panel" id="adminDefaultCategoriesPanel">/,'El nuevo panel debe comenzar plegado');
  assert.match(region,/<summary>Añadir categorías por defecto<\/summary>/);
- assert.match(region,/Si quieres empezar tu despensa y no tienes claro qué categorías añadir/);
- assert.match(region,/Eres libre de añadir, eliminar o editar las que quieras\./);
- assert.match(region,/Añadir catálogo de alimentos secos/);
- assert.match(region,/Añadir desde el catálogo de alimentos frescos/);
+ assert.match(region,/Añade categorías y personalízalas en tu despensa/);
+ assert.match(region,/<summary>📚 Alimentos secos<\/summary>/);
+ assert.match(region,/<summary>🥬 Alimentos frescos<\/summary>/);
  for(const id of ['catalogSearch','catalogItems','freshCatalog','freshCatalogSearch','freshCatalogItems']){
   assert.ok(region.includes('id="'+id+'"'),'No se ha conservado el control '+id);
  }
